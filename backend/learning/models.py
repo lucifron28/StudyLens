@@ -168,6 +168,13 @@ class ReadingProgress(models.Model):
             models.Index(fields=["owner", "module", "chapter"]),
             models.Index(fields=["owner", "status"]),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "module", "chapter"],
+                name="unique_reading_progress_per_target",
+                nulls_distinct=False,
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.owner} - {self.module} ({self.progress_percentage}%)"
