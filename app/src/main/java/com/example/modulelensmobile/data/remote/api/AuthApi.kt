@@ -2,6 +2,7 @@ package com.example.modulelensmobile.data.remote.api
 
 import com.example.modulelensmobile.data.remote.dto.LoginRequest
 import com.example.modulelensmobile.data.remote.dto.RegisterRequest
+import com.example.modulelensmobile.data.remote.dto.TokenRefreshResponse
 import com.example.modulelensmobile.data.remote.dto.TokenResponse
 import com.example.modulelensmobile.data.remote.dto.UserResponse
 import retrofit2.Response
@@ -17,7 +18,7 @@ interface AuthApi {
     suspend fun login(@Body request: LoginRequest): Response<TokenResponse>
 
     @POST("api/auth/token/refresh/")
-    suspend fun refreshToken(@Body request: Map<String, String>): Response<TokenResponse>
+    suspend fun refreshToken(@Body request: Map<String, String>): Response<TokenRefreshResponse>
 
     @GET("api/auth/me/")
     suspend fun getCurrentUser(): Response<UserResponse>

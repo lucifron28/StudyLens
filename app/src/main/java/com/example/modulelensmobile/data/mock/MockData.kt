@@ -9,9 +9,11 @@ import com.example.modulelensmobile.domain.model.User
 
 object MockData {
     val currentUser = User(
-        id = "u1",
-        name = "Student Name",
-        email = "student@example.com"
+        id = 0,
+        username = "demo_student",
+        email = "student@example.com",
+        firstName = "Student",
+        lastName = "Name"
     )
 
     val subjects = listOf(

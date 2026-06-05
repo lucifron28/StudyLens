@@ -11,13 +11,18 @@ data class RegisterRequest(
 )
 
 data class LoginRequest(
-    val email: String,
+    val email: String? = null,
+    val username: String? = null,
     val password: String
 )
 
 data class TokenResponse(
     val access: String,
     val refresh: String
+)
+
+data class TokenRefreshResponse(
+    val access: String
 )
 
 data class UserResponse(

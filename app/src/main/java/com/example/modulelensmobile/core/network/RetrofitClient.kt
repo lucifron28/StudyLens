@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    const val BASE_URL = "http://10.0.2.2:8000/"
 
     fun createRetrofit(tokenManager: TokenManager): Retrofit {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -19,6 +19,7 @@ object RetrofitClient {
         val client = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
+            .authenticator(TokenRefreshAuthenticator(tokenManager, BASE_URL))
             .build()
 
         return Retrofit.Builder()
