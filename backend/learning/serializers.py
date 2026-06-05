@@ -324,3 +324,53 @@ class SubjectPostSerializer(OwnedRelationMixin, serializers.ModelSerializer):
         if request and subject.owner_id != request.user.id:
             raise serializers.ValidationError("Subject does not belong to the current user.")
         return subject
+
+
+class DashboardStatsSerializer(serializers.Serializer):
+    modules_in_progress = serializers.IntegerField()
+    notes_saved = serializers.IntegerField()
+    quizzes_completed = serializers.IntegerField()
+    pending_tasks = serializers.IntegerField()
+
+
+class DashboardUpcomingItemSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    subject = serializers.IntegerField(allow_null=True)
+    subject_title = serializers.CharField(allow_blank=True)
+    module = serializers.IntegerField(allow_null=True, required=False)
+    module_title = serializers.CharField(allow_blank=True, required=False)
+    status = serializers.CharField(allow_blank=True, required=False)
+    priority = serializers.CharField(allow_blank=True, required=False)
+    due_at = serializers.DateTimeField(allow_null=True, required=False)
+    posted_at = serializers.DateTimeField(allow_null=True, required=False)
+
+
+class DashboardContinueLearningSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    module = serializers.IntegerField()
+    module_title = serializers.CharField()
+    chapter = serializers.IntegerField(allow_null=True)
+    chapter_title = serializers.CharField(allow_blank=True)
+    progress_percentage = serializers.IntegerField()
+    last_position = serializers.CharField(allow_blank=True)
+    status = serializers.CharField()
+    last_read_at = serializers.DateTimeField()
+
+
+class DashboardActivityItemSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    created_at = serializers.DateTimeField()
+
+
+class DashboardSerializer(serializers.Serializer):
+    overall_progress = serializers.IntegerField()
+    stats = DashboardStatsSerializer()
+    upcoming = DashboardUpcomingItemSerializer(many=True)
+    continue_learning = DashboardContinueLearningSerializer(many=True)
+    recent_activity = DashboardActivityItemSerializer(many=True)
