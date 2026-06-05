@@ -266,6 +266,7 @@ class ModuleViewSet(OwnedModelViewSet):
                 "content_type": "content_type",
             },
             integer_params={"subject"},
+            boolean_params={"is_pinned"},
         )
 
 
