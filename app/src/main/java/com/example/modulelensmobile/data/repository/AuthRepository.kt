@@ -14,11 +14,18 @@ class AuthRepository(
 ) {
     fun isLoggedIn(): Flow<Boolean> = tokenManager.accessToken.map { !it.isNullOrEmpty() }
 
-    suspend fun login(email: String, password: String): Result<Unit> {
+    suspend fun login(emailOrUsername: String, password: String): Result<Unit> {
         return try {
-            val response = authApi.login(LoginRequest(email = email, password = password))
+            val identifier = emailOrUsername.trim()
+            val request = if (identifier.contains("@")) {
+                LoginRequest(email = identifier, password = password)
+            } else {
+                LoginRequest(username = identifier, password = password)
+            }
+            val response = authApi.login(request)
             if (response.isSuccessful) {
-                val body = response.body()!!
+                val body = response.body()
+                    ?: return Result.failure(Exception("Login failed: empty server response."))
                 tokenManager.saveTokens(access = body.access, refresh = body.refresh)
                 Result.success(Unit)
             } else {
@@ -49,7 +56,6 @@ class AuthRepository(
                 )
             )
             if (response.isSuccessful) {
-                // Backend returns user object on register; auto-login afterwards
                 login(email, password)
             } else {
                 val errorMsg = when (response.code()) {
@@ -71,7 +77,8 @@ class AuthRepository(
         return try {
             val response = authApi.getCurrentUser()
             if (response.isSuccessful) {
-                val body = response.body()!!
+                val body = response.body()
+                    ?: return Result.failure(Exception("Could not fetch user: empty server response."))
                 Result.success(
                     User(
                         id = body.id,

@@ -30,6 +30,12 @@ class TokenManager(private val context: Context) {
         }
     }
 
+    suspend fun saveAccessToken(access: String) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCESS_TOKEN_KEY] = access
+        }
+    }
+
     suspend fun clearTokens() {
         context.dataStore.edit { preferences ->
             preferences.remove(ACCESS_TOKEN_KEY)

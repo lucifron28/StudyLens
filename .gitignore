@@ -71,6 +71,7 @@ node_modules/
 
 # Android
 .gradle/
+gradle/gradle-daemon-jvm.properties
 local.properties
 captures/
 .externalNativeBuild/

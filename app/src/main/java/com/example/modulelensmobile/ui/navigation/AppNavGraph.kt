@@ -35,22 +35,10 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(app.container.authRepository)
     )
-    val isLoggedIn by app.container.tokenManager.accessToken
-        .collectAsState(initial = null)
+    val accessToken by app.container.tokenManager.accessToken
+        .collectAsState(initial = "")
 
-    // null = still loading from DataStore, String? = determined
-    val startDestination = when {
-        isLoggedIn == null -> null // still loading
-        isLoggedIn!!.isNotEmpty() -> AppRoutes.HOME
-        else -> AppRoutes.LOGIN
-    }
-
-    if (startDestination == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
-    }
+    val startDestination = if (accessToken.isNullOrEmpty()) AppRoutes.LOGIN else AppRoutes.HOME
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

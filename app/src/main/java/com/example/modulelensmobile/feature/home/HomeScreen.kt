@@ -25,7 +25,7 @@ fun HomeScreen() {
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            Text("Hello, ${dashboard.user.name}!")
+            Text("Hello, ${dashboard.user.fullName}!")
             Spacer(modifier = Modifier.height(16.dp))
 
             ModuleLensCard {

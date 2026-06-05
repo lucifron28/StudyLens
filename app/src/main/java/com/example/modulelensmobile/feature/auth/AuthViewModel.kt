@@ -23,7 +23,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun login() {
         val state = _uiState.value
         if (state.email.isBlank() || state.password.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Email and password are required.") }
+            _uiState.update { it.copy(errorMessage = "Email or username and password are required.") }
             return
         }
         viewModelScope.launch {
@@ -38,10 +38,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun register() {
         val state = _uiState.value
-        if (state.firstName.isBlank() || state.lastName.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "First and last name are required.") }
-            return
-        }
         if (state.email.isBlank()) {
             _uiState.update { it.copy(errorMessage = "Email is required.") }
             return
