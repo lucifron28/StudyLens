@@ -3,6 +3,7 @@ package com.example.modulelensmobile.data.mock
 import com.example.modulelensmobile.domain.model.AcademicTask
 import com.example.modulelensmobile.domain.model.BoardScan
 import com.example.modulelensmobile.domain.model.Dashboard
+import com.example.modulelensmobile.domain.model.DashboardStats
 import com.example.modulelensmobile.domain.model.LearningModule
 import com.example.modulelensmobile.domain.model.Subject
 import com.example.modulelensmobile.domain.model.User
@@ -45,9 +46,15 @@ object MockData {
     )
 
     val dashboard = Dashboard(
-        user = currentUser,
         overallProgress = 45,
-        upcomingTasks = tasks,
-        recentActivity = recentActivity
+        stats = DashboardStats(
+            modulesInProgress = 1,
+            notesSaved = boardScans.size,
+            quizzesCompleted = 0,
+            pendingTasks = tasks.size
+        ),
+        upcoming = emptyList(),
+        continueLearning = emptyList(),
+        recentActivity = emptyList()
     )
 }

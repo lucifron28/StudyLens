@@ -1,14 +1,10 @@
 package com.example.modulelensmobile.ui.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -21,6 +17,8 @@ import com.example.modulelensmobile.feature.auth.AuthViewModelFactory
 import com.example.modulelensmobile.feature.auth.LoginScreen
 import com.example.modulelensmobile.feature.auth.RegisterScreen
 import com.example.modulelensmobile.feature.home.HomeScreen
+import com.example.modulelensmobile.feature.home.HomeViewModel
+import com.example.modulelensmobile.feature.home.HomeViewModelFactory
 import com.example.modulelensmobile.feature.modules.ModuleReaderScreen
 import com.example.modulelensmobile.feature.profile.ProfileScreen
 import com.example.modulelensmobile.feature.scans.BoardNotesScreen
@@ -86,7 +84,13 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
             }
             composable(AppRoutes.HOME) {
-                HomeScreen()
+                val homeViewModel: HomeViewModel = viewModel(
+                    factory = HomeViewModelFactory(
+                        dashboardRepository = app.container.dashboardRepository,
+                        authRepository = app.container.authRepository
+                    )
+                )
+                HomeScreen(viewModel = homeViewModel)
             }
             composable(AppRoutes.SUBJECTS) {
                 SubjectsScreen(
