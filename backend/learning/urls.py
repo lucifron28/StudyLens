@@ -1,9 +1,11 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from learning.views import (
     AcademicTaskViewSet,
     BoardScanViewSet,
     ChapterViewSet,
+    DashboardView,
     ModuleViewSet,
     ReadingProgressViewSet,
     SubjectViewSet,
@@ -22,4 +24,8 @@ router.register("reading-progress", ReadingProgressViewSet, basename="reading-pr
 router.register("tasks", AcademicTaskViewSet, basename="task")
 router.register("posts", SubjectPostViewSet, basename="post")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("dashboard/", DashboardView.as_view(), name="learning-dashboard"),
+]
+
+urlpatterns += router.urls
