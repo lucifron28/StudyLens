@@ -23,10 +23,40 @@ class OwnedRelationMixin:
 
 
 class SubjectSerializer(serializers.ModelSerializer):
+    module_count = serializers.SerializerMethodField()
+    task_count = serializers.SerializerMethodField()
+    board_scan_count = serializers.SerializerMethodField()
+    post_count = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
+    item_summary = serializers.SerializerMethodField()
+
     class Meta:
         model = Subject
-        fields = ["id", "title", "description", "color", "created_at", "updated_at"]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "title",
+            "description",
+            "color",
+            "module_count",
+            "task_count",
+            "board_scan_count",
+            "post_count",
+            "progress_percentage",
+            "item_summary",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "module_count",
+            "task_count",
+            "board_scan_count",
+            "post_count",
+            "progress_percentage",
+            "item_summary",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate_title(self, value: str) -> str:
         request = self.context.get("request")
@@ -39,6 +69,24 @@ class SubjectSerializer(serializers.ModelSerializer):
         if queryset.exists():
             raise serializers.ValidationError("You already have a subject with this title.")
         return value
+
+    def get_module_count(self, obj) -> int:
+        return getattr(obj, "module_count_value", None) or obj.modules.count()
+
+    def get_task_count(self, obj) -> int:
+        return getattr(obj, "task_count_value", None) or obj.tasks.count()
+
+    def get_board_scan_count(self, obj) -> int:
+        return getattr(obj, "board_scan_count_value", None) or obj.board_scans.count()
+
+    def get_post_count(self, obj) -> int:
+        return getattr(obj, "post_count_value", None) or obj.posts.count()
+
+    def get_progress_percentage(self, obj) -> int:
+        return round(getattr(obj, "progress_average", None) or 0)
+
+    def get_item_summary(self, obj) -> str:
+        return f"{self.get_module_count(obj)} Modules | {self.get_task_count(obj)} Tasks | {self.get_board_scan_count(obj)} Notes"
 
 
 class TagSerializer(serializers.ModelSerializer):

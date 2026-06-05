@@ -1,4 +1,4 @@
-from django.db.models import Avg
+from django.db.models import Avg, Count, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -160,6 +160,19 @@ class SubjectViewSet(OwnedModelViewSet):
     search_fields = ["title", "description"]
     ordering_fields = ["title", "created_at", "updated_at"]
     ordering = ["title"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.annotate(
+            module_count_value=Count("modules", distinct=True),
+            task_count_value=Count("tasks", distinct=True),
+            board_scan_count_value=Count("board_scans", distinct=True),
+            post_count_value=Count("posts", distinct=True),
+            progress_average=Avg(
+                "modules__reading_progress__progress_percentage",
+                filter=Q(modules__reading_progress__owner=self.request.user),
+            ),
+        )
 
 
 class ModuleViewSet(OwnedModelViewSet):
