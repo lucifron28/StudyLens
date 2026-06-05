@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val app = application as ModuleLensApp
         setContent {
             ModuleLensTheme {
                 Surface(
@@ -23,9 +24,9 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    AppNavGraph(navController = navController)
+                    AppNavGraph(navController = navController, app = app)
                 }
             }
         }
     }
-}
+}

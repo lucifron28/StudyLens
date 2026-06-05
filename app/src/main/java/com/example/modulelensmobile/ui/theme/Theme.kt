@@ -1,27 +1,34 @@
 package com.example.modulelensmobile.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
     primary = ModuleNavy,
-    secondary = ModuleTeal,
+    onPrimary = ModuleCard,
+    primaryContainer = ModuleTeal,
+    onPrimaryContainer = ModuleNavy,
+    secondary = ModuleTealDark,
+    onSecondary = ModuleCard,
+    secondaryContainer = ModuleTeal.copy(alpha = 0.45f),
+    tertiary = ModuleActionBlue,
     background = ModuleBackground,
+    onBackground = ModuleTextPrimary,
     surface = ModuleCard,
-    onPrimary = androidx.compose.ui.graphics.Color.White,
-    onSecondary = androidx.compose.ui.graphics.Color.White,
-    onBackground = ModuleNavy,
-    onSurface = ModuleNavy,
-    surfaceVariant = ModuleCard,
-    onSurfaceVariant = ModuleTextSecondary
+    onSurface = ModuleTextPrimary,
+    surfaceVariant = ModuleMutedSurface,
+    onSurfaceVariant = ModuleTextSecondary,
+    outline = ModuleTextSecondary.copy(alpha = 0.35f),
+    outlineVariant = ModuleMutedSurface,
+    error = ModuleError,
+    onError = Color.White,
 )
 
 @Composable
@@ -36,7 +43,7 @@ fun ModuleLensTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        else -> LightColorScheme // Enforce our custom theme for now, we can add DarkColorScheme later
+        else -> LightColorScheme
     }
 
     MaterialTheme(
