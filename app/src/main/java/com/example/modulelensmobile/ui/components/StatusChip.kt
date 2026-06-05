@@ -10,23 +10,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.modulelensmobile.ui.theme.ModuleTeal
 
 @Composable
 fun StatusChip(
     status: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = ModuleTeal.copy(alpha = 0.1f),
-    textColor: Color = ModuleTeal
+    backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+    textColor: Color = MaterialTheme.colorScheme.secondary
 ) {
     Box(
         modifier = modifier
-            .background(color = backgroundColor, shape = RoundedCornerShape(16.dp))
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .background(color = backgroundColor, shape = RoundedCornerShape(18.dp))
+            .padding(horizontal = 12.dp, vertical = 5.dp)
     ) {
         Text(
             text = status,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelLarge,
             color = textColor
         )
     }
