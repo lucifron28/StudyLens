@@ -64,7 +64,7 @@ Copy `.env.example` to `.env` and adjust values as needed.
 ```env
 SECRET_KEY=dev-secret-key
 DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,10.0.2.2
 DATABASE_NAME=modulelens_db
 DATABASE_USER=modulelens_user
 DATABASE_PASSWORD=modulelens_password
@@ -264,6 +264,8 @@ Android emulator:
 http://10.0.2.2:8000/
 ```
 
+Keep `10.0.2.2` in `ALLOWED_HOSTS` because Django receives emulator requests with `Host: 10.0.2.2:8000`.
+
 Physical Android device:
 
 ```text
@@ -273,7 +275,7 @@ http://YOUR_LAPTOP_LAN_IP:8000/
 For a physical phone, make sure the phone and laptop are on the same Wi-Fi network. Add the laptop LAN IP to `ALLOWED_HOSTS` in `.env`, for example:
 
 ```env
-ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,192.168.1.20
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,10.0.2.2,192.168.1.20
 ```
 
 Native Android apps do not need CORS, but CORS is enabled for browser-based tools during development.
