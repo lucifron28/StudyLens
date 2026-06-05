@@ -1,6 +1,6 @@
 from django.db.models import Avg, Count, Q
 from drf_spectacular.utils import extend_schema
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -336,6 +336,24 @@ class ReadingProgressViewSet(OwnedModelViewSet):
             },
             integer_params={"module", "chapter"},
         )
+
+    @extend_schema(request=ReadingProgressSerializer, responses=ReadingProgressSerializer)
+    @action(detail=False, methods=["post"], url_path="set")
+    def set(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data.copy()
+        module = validated_data.pop("module")
+        chapter = validated_data.pop("chapter", None)
+
+        progress, created = ReadingProgress.objects.update_or_create(
+            owner=request.user,
+            module=module,
+            chapter=chapter,
+            defaults=validated_data,
+        )
+        response_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(self.get_serializer(progress).data, status=response_status)
 
 
 class AcademicTaskViewSet(OwnedModelViewSet):
