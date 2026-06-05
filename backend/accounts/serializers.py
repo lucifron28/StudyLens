@@ -60,8 +60,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class EmailOrUsernameTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username = serializers.CharField(required=False, allow_blank=True)
-    email = serializers.EmailField(required=False, allow_blank=True)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields[self.username_field].required = False
+        self.fields[self.username_field].allow_blank = True
+        self.fields["email"] = serializers.EmailField(required=False, allow_blank=True)
 
     def validate(self, attrs):
         username = attrs.get("username", "").strip()
