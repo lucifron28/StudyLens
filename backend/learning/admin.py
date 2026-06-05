@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
+from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 
 
 @admin.register(Subject)
@@ -45,3 +45,16 @@ class ReadingProgressAdmin(admin.ModelAdmin):
     search_fields = ["owner__username", "module__title", "chapter__title", "last_position"]
     list_filter = ["status", "last_read_at"]
 
+
+@admin.register(AcademicTask)
+class AcademicTaskAdmin(admin.ModelAdmin):
+    list_display = ["title", "owner", "subject", "task_type", "status", "priority", "due_at", "completed_at"]
+    search_fields = ["title", "description", "owner__username", "subject__title", "module__title"]
+    list_filter = ["task_type", "status", "priority", "due_at", "created_at"]
+
+
+@admin.register(SubjectPost)
+class SubjectPostAdmin(admin.ModelAdmin):
+    list_display = ["title", "owner", "subject", "post_type", "is_pinned", "posted_at"]
+    search_fields = ["title", "content", "owner__username", "subject__title"]
+    list_filter = ["post_type", "is_pinned", "posted_at", "created_at"]
