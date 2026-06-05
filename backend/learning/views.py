@@ -1,6 +1,7 @@
 from django.db.models import Avg, Count, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
@@ -17,6 +18,7 @@ from learning.serializers import (
     ModuleSerializer,
     ReadingProgressSerializer,
     SubjectSerializer,
+    SubjectOverviewSerializer,
     SubjectPostSerializer,
     TagSerializer,
 )
@@ -172,6 +174,77 @@ class SubjectViewSet(OwnedModelViewSet):
                 "modules__reading_progress__progress_percentage",
                 filter=Q(modules__reading_progress__owner=self.request.user),
             ),
+        )
+
+    @extend_schema(responses=SubjectOverviewSerializer)
+    @action(detail=True, methods=["get"])
+    def overview(self, request, pk=None):
+        subject = self.get_object()
+        subject_data = SubjectSerializer(subject, context={"request": request}).data
+        user = request.user
+
+        latest_modules = Module.objects.filter(owner=user, subject=subject).order_by("-updated_at")[:5]
+        upcoming_tasks = AcademicTask.objects.filter(
+            owner=user,
+            subject=subject,
+            status__in=[AcademicTask.Status.PENDING, AcademicTask.Status.IN_PROGRESS, AcademicTask.Status.OVERDUE],
+        ).order_by("due_at", "-created_at")[:5]
+        recent_board_scans = BoardScan.objects.filter(owner=user, subject=subject).order_by("-created_at")[:5]
+        latest_posts = SubjectPost.objects.filter(owner=user, subject=subject).order_by("-is_pinned", "-posted_at")[:5]
+
+        return Response(
+            {
+                "id": subject.id,
+                "title": subject.title,
+                "description": subject.description,
+                "module_count": subject_data["module_count"],
+                "task_count": subject_data["task_count"],
+                "board_scan_count": subject_data["board_scan_count"],
+                "post_count": subject_data["post_count"],
+                "progress_percentage": subject_data["progress_percentage"],
+                "latest_modules": [
+                    {
+                        "id": module.id,
+                        "title": module.title,
+                        "description": module.description,
+                        "content_type": module.content_type,
+                        "is_favorite": module.is_favorite,
+                        "updated_at": module.updated_at,
+                    }
+                    for module in latest_modules
+                ],
+                "upcoming_tasks": [
+                    {
+                        "id": task.id,
+                        "title": task.title,
+                        "task_type": task.task_type,
+                        "status": task.status,
+                        "priority": task.priority,
+                        "due_at": task.due_at,
+                    }
+                    for task in upcoming_tasks
+                ],
+                "recent_board_scans": [
+                    {
+                        "id": scan.id,
+                        "cleaned_text": scan.cleaned_text,
+                        "review_status": scan.review_status,
+                        "created_at": scan.created_at,
+                    }
+                    for scan in recent_board_scans
+                ],
+                "latest_posts": [
+                    {
+                        "id": post.id,
+                        "title": post.title,
+                        "content": post.content,
+                        "post_type": post.post_type,
+                        "is_pinned": post.is_pinned,
+                        "posted_at": post.posted_at,
+                    }
+                    for post in latest_posts
+                ],
+            }
         )
 
 

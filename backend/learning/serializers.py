@@ -422,3 +422,18 @@ class DashboardSerializer(serializers.Serializer):
     upcoming = DashboardUpcomingItemSerializer(many=True)
     continue_learning = DashboardContinueLearningSerializer(many=True)
     recent_activity = DashboardActivityItemSerializer(many=True)
+
+
+class SubjectOverviewSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    module_count = serializers.IntegerField()
+    task_count = serializers.IntegerField()
+    board_scan_count = serializers.IntegerField()
+    post_count = serializers.IntegerField()
+    progress_percentage = serializers.IntegerField()
+    latest_modules = serializers.ListField(child=serializers.DictField())
+    upcoming_tasks = serializers.ListField(child=serializers.DictField())
+    recent_board_scans = serializers.ListField(child=serializers.DictField())
+    latest_posts = serializers.ListField(child=serializers.DictField())
