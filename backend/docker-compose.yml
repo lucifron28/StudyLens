@@ -25,7 +25,7 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key}
       DEBUG: ${DEBUG:-True}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,10.0.2.2}
       DATABASE_NAME: ${DATABASE_NAME:-modulelens_db}
       DATABASE_USER: ${DATABASE_USER:-modulelens_user}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-modulelens_password}
