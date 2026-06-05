@@ -84,19 +84,24 @@ Default AI behavior uses Ollama through the backend. Gemini is present as a plac
 
 Authentication:
 
-- `POST /api/auth/register/`
-- `POST /api/auth/token/`
+- `POST /api/auth/register/` accepts email/password and optional username
+- `POST /api/auth/token/` accepts username/password or email/password
 - `POST /api/auth/token/refresh/`
 - `GET /api/auth/me/`
 
 Learning:
 
+- `GET /api/learning/dashboard/`
 - `/api/learning/subjects/`
+- `GET /api/learning/subjects/{id}/overview/`
 - `/api/learning/modules/`
 - `/api/learning/chapters/`
 - `/api/learning/tags/`
 - `/api/learning/board-scans/`
 - `/api/learning/reading-progress/`
+- `POST /api/learning/reading-progress/set/`
+- `/api/learning/tasks/`
+- `/api/learning/posts/`
 
 Study tools:
 
@@ -133,6 +138,10 @@ Useful query parameters:
 - `?source_type=module`
 - `?difficulty=easy`
 - `?status=in_progress`
+- `?task_type=deadline`
+- `?priority=high`
+- `?post_type=announcement`
+- `?is_pinned=true`
 
 ## Sample API Test
 
@@ -141,15 +150,15 @@ Register:
 ```powershell
 curl.exe -X POST http://localhost:8000/api/auth/register/ `
   -H "Content-Type: application/json" `
-  -d "{\"username\":\"student1\",\"email\":\"student1@example.com\",\"password\":\"password123\",\"first_name\":\"Student\"}"
+  -d "{\"email\":\"student1@example.com\",\"password\":\"password123\",\"first_name\":\"Student\"}"
 ```
 
-Get JWT tokens:
+Get JWT tokens with email:
 
 ```powershell
 curl.exe -X POST http://localhost:8000/api/auth/token/ `
   -H "Content-Type: application/json" `
-  -d "{\"username\":\"student1\",\"password\":\"password123\"}"
+  -d "{\"email\":\"student1@example.com\",\"password\":\"password123\"}"
 ```
 
 Create a subject:
@@ -166,6 +175,47 @@ List subjects:
 ```powershell
 curl.exe http://localhost:8000/api/learning/subjects/ `
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Open dashboard data:
+
+```powershell
+curl.exe http://localhost:8000/api/learning/dashboard/ `
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Open a subject overview:
+
+```powershell
+curl.exe http://localhost:8000/api/learning/subjects/1/overview/ `
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Create an academic task:
+
+```powershell
+curl.exe -X POST http://localhost:8000/api/learning/tasks/ `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" `
+  -d "{\"subject\":1,\"title\":\"Finish module reading\",\"task_type\":\"reading\",\"priority\":\"medium\",\"status\":\"pending\"}"
+```
+
+Create a subject post:
+
+```powershell
+curl.exe -X POST http://localhost:8000/api/learning/posts/ `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" `
+  -d "{\"subject\":1,\"title\":\"Quiz reminder\",\"content\":\"Review Kotlin basics before Friday.\",\"post_type\":\"reminder\",\"is_pinned\":true}"
+```
+
+Upsert reading progress:
+
+```powershell
+curl.exe -X POST http://localhost:8000/api/learning/reading-progress/set/ `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" `
+  -d "{\"module\":1,\"chapter\":2,\"progress_percentage\":65,\"last_position\":\"page-4\",\"status\":\"reading\"}"
 ```
 
 Generate a summary from saved module text:
