@@ -1,14 +1,23 @@
 package com.example.modulelensmobile.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.modulelensmobile.ModuleLensApp
+import com.example.modulelensmobile.feature.auth.AuthViewModel
+import com.example.modulelensmobile.feature.auth.AuthViewModelFactory
 import com.example.modulelensmobile.feature.auth.LoginScreen
 import com.example.modulelensmobile.feature.auth.RegisterScreen
 import com.example.modulelensmobile.feature.home.HomeScreen
@@ -22,7 +31,27 @@ import com.example.modulelensmobile.feature.subjects.SubjectsScreen
 import com.example.modulelensmobile.ui.components.BottomNavigationBar
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
+fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(app.container.authRepository)
+    )
+    val isLoggedIn by app.container.tokenManager.accessToken
+        .collectAsState(initial = null)
+
+    // null = still loading from DataStore, String? = determined
+    val startDestination = when {
+        isLoggedIn == null -> null // still loading
+        isLoggedIn!!.isNotEmpty() -> AppRoutes.HOME
+        else -> AppRoutes.LOGIN
+    }
+
+    if (startDestination == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -32,7 +61,6 @@ fun AppNavGraph(navController: NavHostController) {
         AppRoutes.SCANS,
         AppRoutes.PROFILE
     )
-
     val showBottomNav = currentRoute in bottomNavRoutes
 
     Scaffold(
@@ -44,19 +72,29 @@ fun AppNavGraph(navController: NavHostController) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = AppRoutes.HOME,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(AppRoutes.LOGIN) {
                 LoginScreen(
-                    onLoginSuccess = { navController.navigate(AppRoutes.HOME) },
+                    viewModel = authViewModel,
+                    onLoginSuccess = {
+                        navController.navigate(AppRoutes.HOME) {
+                            popUpTo(AppRoutes.LOGIN) { inclusive = true }
+                        }
+                    },
                     onNavigateToRegister = { navController.navigate(AppRoutes.REGISTER) }
                 )
             }
             composable(AppRoutes.REGISTER) {
                 RegisterScreen(
-                    onRegisterSuccess = { navController.navigate(AppRoutes.HOME) },
-                    onNavigateToLogin = { navController.navigate(AppRoutes.LOGIN) }
+                    viewModel = authViewModel,
+                    onRegisterSuccess = {
+                        navController.navigate(AppRoutes.HOME) {
+                            popUpTo(AppRoutes.LOGIN) { inclusive = true }
+                        }
+                    },
+                    onNavigateToLogin = { navController.popBackStack() }
                 )
             }
             composable(AppRoutes.HOME) {
@@ -96,7 +134,12 @@ fun AppNavGraph(navController: NavHostController) {
             }
             composable(AppRoutes.PROFILE) {
                 ProfileScreen(
-                    onLogout = { navController.navigate(AppRoutes.LOGIN) }
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(AppRoutes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
         }
