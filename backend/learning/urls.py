@@ -7,6 +7,7 @@ from learning.views import (
     ModuleViewSet,
     ReadingProgressViewSet,
     SubjectViewSet,
+    SubjectPostViewSet,
     TagViewSet,
 )
 
@@ -19,5 +20,6 @@ router.register("tags", TagViewSet, basename="tag")
 router.register("board-scans", BoardScanViewSet, basename="board-scan")
 router.register("reading-progress", ReadingProgressViewSet, basename="reading-progress")
 router.register("tasks", AcademicTaskViewSet, basename="task")
+router.register("posts", SubjectPostViewSet, basename="post")
 
 urlpatterns = router.urls

@@ -4,7 +4,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from accounts.permissions import IsOwner
 from learning.filters import apply_exact_query_filters
-from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
+from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 from learning.serializers import (
     AcademicTaskSerializer,
     BoardScanSerializer,
@@ -12,6 +12,7 @@ from learning.serializers import (
     ModuleSerializer,
     ReadingProgressSerializer,
     SubjectSerializer,
+    SubjectPostSerializer,
     TagSerializer,
 )
 
@@ -149,4 +150,25 @@ class AcademicTaskViewSet(OwnedModelViewSet):
                 "priority": "priority",
             },
             integer_params={"subject", "module"},
+        )
+
+
+class SubjectPostViewSet(OwnedModelViewSet):
+    queryset = SubjectPost.objects.select_related("subject").all()
+    serializer_class = SubjectPostSerializer
+    search_fields = ["title", "content", "subject__title"]
+    ordering_fields = ["posted_at", "created_at", "updated_at", "is_pinned"]
+    ordering = ["-is_pinned", "-posted_at", "-created_at"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return apply_exact_query_filters(
+            queryset,
+            self.request.query_params,
+            {
+                "subject": "subject_id",
+                "post_type": "post_type",
+                "is_pinned": "is_pinned",
+            },
+            integer_params={"subject"},
         )

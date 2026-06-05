@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
+from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 
 
 class OwnedRelationMixin:
@@ -296,3 +296,31 @@ class AcademicTaskSerializer(OwnedRelationMixin, serializers.ModelSerializer):
                 raise serializers.ValidationError({"chapter": "Chapter must belong to the selected subject."})
 
         return attrs
+
+
+class SubjectPostSerializer(OwnedRelationMixin, serializers.ModelSerializer):
+    subject_title = serializers.CharField(source="subject.title", read_only=True)
+
+    owned_relation_fields = {"subject": Subject}
+
+    class Meta:
+        model = SubjectPost
+        fields = [
+            "id",
+            "subject",
+            "subject_title",
+            "title",
+            "content",
+            "post_type",
+            "posted_at",
+            "is_pinned",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "subject_title", "created_at", "updated_at"]
+
+    def validate_subject(self, subject: Subject) -> Subject:
+        request = self.context.get("request")
+        if request and subject.owner_id != request.user.id:
+            raise serializers.ValidationError("Subject does not belong to the current user.")
+        return subject
