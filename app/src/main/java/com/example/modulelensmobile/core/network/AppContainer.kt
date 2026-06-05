@@ -12,4 +12,8 @@ class AppContainer(private val context: Context) {
     val retrofit: Retrofit by lazy {
         RetrofitClient.createRetrofit(tokenManager)
     }
+
+    val authApi: AuthApi by lazy {
+        retrofit.create(AuthApi::class.java)
+    }
 }
