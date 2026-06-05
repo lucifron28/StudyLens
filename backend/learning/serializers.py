@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
+from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
 
 
 class OwnedRelationMixin:
@@ -245,5 +245,54 @@ class ReadingProgressSerializer(OwnedRelationMixin, serializers.ModelSerializer)
             raise serializers.ValidationError({"chapter": "Chapter must belong to the selected module."})
         if progress is not None and not 0 <= progress <= 100:
             raise serializers.ValidationError({"progress_percentage": "Progress must be between 0 and 100."})
+
+        return attrs
+
+
+class AcademicTaskSerializer(OwnedRelationMixin, serializers.ModelSerializer):
+    subject_title = serializers.CharField(source="subject.title", read_only=True)
+    module_title = serializers.CharField(source="module.title", read_only=True)
+    chapter_title = serializers.CharField(source="chapter.title", read_only=True)
+
+    owned_relation_fields = {"subject": Subject, "module": Module, "chapter": Chapter}
+
+    class Meta:
+        model = AcademicTask
+        fields = [
+            "id",
+            "subject",
+            "subject_title",
+            "module",
+            "module_title",
+            "chapter",
+            "chapter_title",
+            "title",
+            "description",
+            "task_type",
+            "status",
+            "priority",
+            "due_at",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "subject_title", "module_title", "chapter_title", "created_at", "updated_at"]
+
+    def validate(self, attrs):
+        instance = self.instance
+        subject = attrs.get("subject", instance.subject if instance else None)
+        module = attrs.get("module", instance.module if instance else None)
+        chapter = attrs.get("chapter", instance.chapter if instance else None)
+
+        if module and subject and module.subject_id != subject.id:
+            raise serializers.ValidationError({"module": "Module must belong to the selected subject."})
+        if chapter:
+            if module and chapter.module_id != module.id:
+                raise serializers.ValidationError({"chapter": "Chapter must belong to the selected module."})
+            if not module:
+                attrs["module"] = chapter.module
+                module = chapter.module
+            if subject and module.subject_id != subject.id:
+                raise serializers.ValidationError({"chapter": "Chapter must belong to the selected subject."})
 
         return attrs

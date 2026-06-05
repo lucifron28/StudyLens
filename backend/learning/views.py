@@ -4,8 +4,9 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from accounts.permissions import IsOwner
 from learning.filters import apply_exact_query_filters
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
+from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, Tag
 from learning.serializers import (
+    AcademicTaskSerializer,
     BoardScanSerializer,
     ChapterSerializer,
     ModuleSerializer,
@@ -127,3 +128,25 @@ class ReadingProgressViewSet(OwnedModelViewSet):
             integer_params={"module", "chapter"},
         )
 
+
+class AcademicTaskViewSet(OwnedModelViewSet):
+    queryset = AcademicTask.objects.select_related("subject", "module", "chapter").all()
+    serializer_class = AcademicTaskSerializer
+    search_fields = ["title", "description", "subject__title", "module__title"]
+    ordering_fields = ["due_at", "created_at", "updated_at", "priority", "status"]
+    ordering = ["due_at", "-created_at"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return apply_exact_query_filters(
+            queryset,
+            self.request.query_params,
+            {
+                "subject": "subject_id",
+                "module": "module_id",
+                "status": "status",
+                "task_type": "task_type",
+                "priority": "priority",
+            },
+            integer_params={"subject", "module"},
+        )
