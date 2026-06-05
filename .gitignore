@@ -80,6 +80,9 @@ captures/
 *.log
 logs/
 
+# Local archives
+*.zip
+
 # IDEs and editors
 .vscode/
 .idea/
