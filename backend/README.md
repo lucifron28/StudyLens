@@ -2,6 +2,8 @@
 
 ModuleLens is a student-only Django REST Framework backend for a native Android course module reader. It includes JWT authentication, PostgreSQL in Docker, subject/module/chapter management, board scan OCR note storage, reading progress, study tools, media uploads, CORS, admin, AI service endpoints, and Swagger/OpenAPI docs.
 
+For the full project guide, including the Android app setup and development workflow, see `../README.md`.
+
 DOCX/PPTX conversion is intentionally left for later phases.
 
 ## Tech Stack
