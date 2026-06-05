@@ -57,3 +57,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class EmailOrUsernameTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        username = attrs.get("username", "").strip()
+        email = attrs.get("email", "").strip()
+
+        if not username and not email:
+            raise serializers.ValidationError("Provide either username or email.")
+
+        if email and not username:
+            user = User.objects.filter(email__iexact=email).first()
+            if user:
+                attrs["username"] = user.get_username()
+            else:
+                # Keep the error generic so login does not reveal registered emails.
+                attrs["username"] = email
+
+        return super().validate(attrs)
