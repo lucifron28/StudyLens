@@ -3,7 +3,9 @@ package com.example.modulelensmobile.data.remote.api
 import com.example.modulelensmobile.data.remote.dto.BoardScanDto
 import com.example.modulelensmobile.data.remote.dto.BoardScanUpdateRequest
 import com.example.modulelensmobile.data.remote.dto.DashboardDto
+import com.example.modulelensmobile.data.remote.dto.ModuleDto
 import com.example.modulelensmobile.data.remote.dto.PaginatedBoardScansDto
+import com.example.modulelensmobile.data.remote.dto.PaginatedChaptersDto
 import com.example.modulelensmobile.data.remote.dto.PaginatedSubjectsDto
 import com.example.modulelensmobile.data.remote.dto.SubjectOverviewDto
 import retrofit2.Response
@@ -45,5 +47,15 @@ interface LearningApi {
         @Path("scanId") scanId: String,
         @Body request: BoardScanUpdateRequest
     ): Response<BoardScanDto>
-}
 
+    @GET("api/learning/modules/{moduleId}/")
+    suspend fun getModule(
+        @Path("moduleId") moduleId: String
+    ): Response<ModuleDto>
+
+    @GET("api/learning/chapters/")
+    suspend fun getChapters(
+        @Query("module") moduleId: String,
+        @Query("ordering") ordering: String = "order"
+    ): Response<PaginatedChaptersDto>
+}
