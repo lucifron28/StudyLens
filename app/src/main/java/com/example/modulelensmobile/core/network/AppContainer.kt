@@ -2,8 +2,10 @@ package com.example.modulelensmobile.core.network
 
 import android.content.Context
 import com.example.modulelensmobile.core.datastore.TokenManager
+import com.example.modulelensmobile.data.remote.api.AiApi
 import com.example.modulelensmobile.data.remote.api.AuthApi
 import com.example.modulelensmobile.data.remote.api.LearningApi
+import com.example.modulelensmobile.data.repository.AiRepository
 import com.example.modulelensmobile.data.repository.AuthRepository
 import com.example.modulelensmobile.data.repository.BoardScansRepository
 import com.example.modulelensmobile.data.repository.DashboardRepository
@@ -28,6 +30,10 @@ class AppContainer(private val context: Context) {
         retrofit.create(LearningApi::class.java)
     }
 
+    val aiApi: AiApi by lazy {
+        retrofit.create(AiApi::class.java)
+    }
+
     val authRepository: AuthRepository by lazy {
         AuthRepository(authApi, tokenManager)
     }
@@ -46,5 +52,9 @@ class AppContainer(private val context: Context) {
 
     val modulesRepository: ModulesRepository by lazy {
         ModulesRepository(learningApi)
+    }
+
+    val aiRepository: AiRepository by lazy {
+        AiRepository(aiApi)
     }
 }
