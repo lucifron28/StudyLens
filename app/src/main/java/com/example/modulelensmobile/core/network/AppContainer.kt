@@ -5,6 +5,7 @@ import com.example.modulelensmobile.core.datastore.TokenManager
 import com.example.modulelensmobile.data.remote.api.AuthApi
 import com.example.modulelensmobile.data.remote.api.LearningApi
 import com.example.modulelensmobile.data.repository.AuthRepository
+import com.example.modulelensmobile.data.repository.BoardScansRepository
 import com.example.modulelensmobile.data.repository.DashboardRepository
 import com.example.modulelensmobile.data.repository.SubjectsRepository
 import retrofit2.Retrofit
@@ -36,5 +37,9 @@ class AppContainer(private val context: Context) {
 
     val subjectsRepository: SubjectsRepository by lazy {
         SubjectsRepository(learningApi)
+    }
+
+    val boardScansRepository: BoardScansRepository by lazy {
+        BoardScansRepository(learningApi)
     }
 }
