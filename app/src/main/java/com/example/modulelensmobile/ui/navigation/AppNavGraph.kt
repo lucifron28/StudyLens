@@ -117,7 +117,10 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
                 SubjectDetailScreen(
                     viewModel = subjectDetailViewModel,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onNavigateToModuleReader = { moduleId ->
+                        navController.navigate(AppRoutes.createModuleReaderRoute(moduleId))
+                    }
                 )
             }
             composable(AppRoutes.MODULE_READER) { backStackEntry ->

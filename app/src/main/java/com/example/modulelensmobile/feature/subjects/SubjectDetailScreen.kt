@@ -43,7 +43,8 @@ import com.example.modulelensmobile.ui.components.StatusChip
 @Composable
 fun SubjectDetailScreen(
     viewModel: SubjectDetailViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToModuleReader: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val overview = uiState.overview
@@ -94,6 +95,7 @@ fun SubjectDetailScreen(
                     errorMessage = uiState.errorMessage,
                     isRefreshing = uiState.isRefreshing,
                     onRetry = viewModel::loadOverview,
+                    onNavigateToModuleReader = onNavigateToModuleReader,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -107,6 +109,7 @@ private fun SubjectOverviewContent(
     errorMessage: String?,
     isRefreshing: Boolean,
     onRetry: () -> Unit,
+    onNavigateToModuleReader: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -133,7 +136,10 @@ private fun SubjectOverviewContent(
             }
         } else {
             items(overview.latestModules, key = { it.id }) { module ->
-                ModulePreviewCard(module = module)
+                ModulePreviewCard(
+                    module = module,
+                    onClick = { onNavigateToModuleReader(module.id) }
+                )
             }
         }
 
@@ -241,8 +247,11 @@ private fun HeaderCard(
 }
 
 @Composable
-private fun ModulePreviewCard(module: SubjectModulePreview) {
-    ModuleLensCard {
+private fun ModulePreviewCard(
+    module: SubjectModulePreview,
+    onClick: () -> Unit
+) {
+    ModuleLensCard(onClick = onClick) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
