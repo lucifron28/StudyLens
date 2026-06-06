@@ -192,7 +192,13 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
                 AiSummaryScreen(
                     viewModel = aiSummaryViewModel,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onCreateFlashcards = { type, id ->
+                        navController.navigate(AppRoutes.createFlashcardsRoute(type, id))
+                    },
+                    onPracticeQuiz = { type, id ->
+                        navController.navigate(AppRoutes.createQuizRoute(type, id))
+                    }
                 )
             }
             composable(AppRoutes.FLASHCARDS) { backStackEntry ->

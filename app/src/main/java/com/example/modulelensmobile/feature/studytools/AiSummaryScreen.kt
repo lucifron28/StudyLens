@@ -34,7 +34,9 @@ import com.example.modulelensmobile.ui.components.StatusChip
 @Composable
 fun AiSummaryScreen(
     viewModel: AiSummaryViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onCreateFlashcards: (String, String) -> Unit,
+    onPracticeQuiz: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val summary = uiState.summary
@@ -84,6 +86,8 @@ fun AiSummaryScreen(
                     summary = summary,
                     errorMessage = uiState.errorMessage,
                     onRetry = viewModel::generateSummary,
+                    onCreateFlashcards = onCreateFlashcards,
+                    onPracticeQuiz = onPracticeQuiz,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -96,8 +100,12 @@ private fun SummaryContent(
     summary: Summary,
     errorMessage: String?,
     onRetry: () -> Unit,
+    onCreateFlashcards: (String, String) -> Unit,
+    onPracticeQuiz: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val sourceId = summary.sourceIdForActions()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -156,6 +164,22 @@ private fun SummaryContent(
                         modifier = Modifier.padding(16.dp)
                     )
                 }
+            }
+        }
+
+        if (sourceId != null) {
+            SectionHeader(title = "Next Actions")
+            Button(
+                onClick = { onCreateFlashcards(summary.sourceType, sourceId) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Create Flashcards")
+            }
+            Button(
+                onClick = { onPracticeQuiz(summary.sourceType, sourceId) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Practice Quiz")
             }
         }
     }
@@ -229,4 +253,13 @@ private fun String.toDisplayLabel(): String {
     return split("_", "-", " ")
         .filter { it.isNotBlank() }
         .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
+}
+
+private fun Summary.sourceIdForActions(): String? {
+    return when (sourceType) {
+        "module" -> moduleId
+        "chapter" -> chapterId
+        "board_scan" -> boardScanId
+        else -> null
+    }
 }
