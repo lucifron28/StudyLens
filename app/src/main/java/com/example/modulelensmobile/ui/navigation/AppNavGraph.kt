@@ -32,6 +32,12 @@ import com.example.modulelensmobile.feature.scans.OcrResultViewModelFactory
 import com.example.modulelensmobile.feature.studytools.AiSummaryScreen
 import com.example.modulelensmobile.feature.studytools.AiSummaryViewModel
 import com.example.modulelensmobile.feature.studytools.AiSummaryViewModelFactory
+import com.example.modulelensmobile.feature.studytools.FlashcardsScreen
+import com.example.modulelensmobile.feature.studytools.FlashcardsViewModel
+import com.example.modulelensmobile.feature.studytools.FlashcardsViewModelFactory
+import com.example.modulelensmobile.feature.studytools.QuizScreen
+import com.example.modulelensmobile.feature.studytools.QuizViewModel
+import com.example.modulelensmobile.feature.studytools.QuizViewModelFactory
 import com.example.modulelensmobile.feature.subjects.SubjectDetailScreen
 import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModel
 import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModelFactory
@@ -186,6 +192,36 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
                 AiSummaryScreen(
                     viewModel = aiSummaryViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppRoutes.FLASHCARDS) { backStackEntry ->
+                val sourceType = backStackEntry.arguments?.getString("sourceType") ?: ""
+                val sourceId = backStackEntry.arguments?.getString("sourceId") ?: ""
+                val flashcardsViewModel: FlashcardsViewModel = viewModel(
+                    factory = FlashcardsViewModelFactory(
+                        sourceType = sourceType,
+                        sourceId = sourceId,
+                        aiRepository = app.container.aiRepository
+                    )
+                )
+                FlashcardsScreen(
+                    viewModel = flashcardsViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppRoutes.QUIZ) { backStackEntry ->
+                val sourceType = backStackEntry.arguments?.getString("sourceType") ?: ""
+                val sourceId = backStackEntry.arguments?.getString("sourceId") ?: ""
+                val quizViewModel: QuizViewModel = viewModel(
+                    factory = QuizViewModelFactory(
+                        sourceType = sourceType,
+                        sourceId = sourceId,
+                        aiRepository = app.container.aiRepository
+                    )
+                )
+                QuizScreen(
+                    viewModel = quizViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
