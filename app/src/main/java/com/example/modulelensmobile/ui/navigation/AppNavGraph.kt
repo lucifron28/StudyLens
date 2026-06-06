@@ -25,7 +25,11 @@ import com.example.modulelensmobile.feature.scans.BoardNotesScreen
 import com.example.modulelensmobile.feature.scans.OcrResultScreen
 import com.example.modulelensmobile.feature.studytools.AiSummaryScreen
 import com.example.modulelensmobile.feature.subjects.SubjectDetailScreen
+import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModel
+import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModelFactory
 import com.example.modulelensmobile.feature.subjects.SubjectsScreen
+import com.example.modulelensmobile.feature.subjects.SubjectsViewModel
+import com.example.modulelensmobile.feature.subjects.SubjectsViewModelFactory
 import com.example.modulelensmobile.ui.components.BottomNavigationBar
 
 @Composable
@@ -93,7 +97,11 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 HomeScreen(viewModel = homeViewModel)
             }
             composable(AppRoutes.SUBJECTS) {
+                val subjectsViewModel: SubjectsViewModel = viewModel(
+                    factory = SubjectsViewModelFactory(app.container.subjectsRepository)
+                )
                 SubjectsScreen(
+                    viewModel = subjectsViewModel,
                     onNavigateToSubjectDetail = { subjectId ->
                         navController.navigate(AppRoutes.createSubjectDetailRoute(subjectId))
                     }
@@ -101,8 +109,14 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
             }
             composable(AppRoutes.SUBJECT_DETAIL) { backStackEntry ->
                 val subjectId = backStackEntry.arguments?.getString("subjectId") ?: ""
+                val subjectDetailViewModel: SubjectDetailViewModel = viewModel(
+                    factory = SubjectDetailViewModelFactory(
+                        subjectId = subjectId,
+                        subjectsRepository = app.container.subjectsRepository
+                    )
+                )
                 SubjectDetailScreen(
-                    subjectId = subjectId,
+                    viewModel = subjectDetailViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
