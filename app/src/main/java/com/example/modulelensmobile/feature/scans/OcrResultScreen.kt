@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,7 +84,12 @@ fun OcrResultScreen(
             else -> {
                 OcrResultContent(
                     scan = scan,
+                    editedCleanedText = uiState.editedCleanedText,
+                    isSaving = uiState.isSaving,
                     errorMessage = uiState.errorMessage,
+                    saveMessage = uiState.saveMessage,
+                    onCleanedTextChange = viewModel::updateCleanedText,
+                    onSaveNote = { viewModel.saveNote() },
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -94,7 +100,12 @@ fun OcrResultScreen(
 @Composable
 private fun OcrResultContent(
     scan: BoardScan,
+    editedCleanedText: String,
+    isSaving: Boolean,
     errorMessage: String?,
+    saveMessage: String?,
+    onCleanedTextChange: (String) -> Unit,
+    onSaveNote: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -116,12 +127,30 @@ private fun OcrResultContent(
             }
         }
 
-        TextCard(
+        OcrTextEditorCard(
             title = "Extracted Text",
-            text = scan.cleanedText.ifBlank { scan.rawOcrText }.ifBlank { "No OCR text yet." }
+            text = editedCleanedText,
+            isSaving = isSaving,
+            onTextChange = onCleanedTextChange
         )
 
         FilingDetailsCard(scan = scan)
+
+        if (saveMessage != null) {
+            Text(
+                text = saveMessage,
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Button(
+            onClick = onSaveNote,
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (isSaving) "Saving..." else "Save Note")
+        }
     }
 }
 
@@ -168,9 +197,11 @@ private fun HeaderCard(scan: BoardScan) {
 }
 
 @Composable
-private fun TextCard(
+private fun OcrTextEditorCard(
     title: String,
-    text: String
+    text: String,
+    isSaving: Boolean,
+    onTextChange: (String) -> Unit
 ) {
     ModuleLensCard {
         Column(
@@ -184,11 +215,15 @@ private fun TextCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = text,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 12.dp)
+            OutlinedTextField(
+                value = text,
+                onValueChange = onTextChange,
+                enabled = !isSaving,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                minLines = 6,
+                placeholder = { Text("Cleaned OCR text") }
             )
         }
     }
