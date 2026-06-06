@@ -6,6 +6,7 @@ import com.example.modulelensmobile.data.remote.api.AuthApi
 import com.example.modulelensmobile.data.remote.api.LearningApi
 import com.example.modulelensmobile.data.repository.AuthRepository
 import com.example.modulelensmobile.data.repository.DashboardRepository
+import com.example.modulelensmobile.data.repository.ModulesRepository
 import com.example.modulelensmobile.data.repository.SubjectsRepository
 import retrofit2.Retrofit
 
@@ -36,5 +37,9 @@ class AppContainer(private val context: Context) {
 
     val subjectsRepository: SubjectsRepository by lazy {
         SubjectsRepository(learningApi)
+    }
+
+    val modulesRepository: ModulesRepository by lazy {
+        ModulesRepository(learningApi)
     }
 }
