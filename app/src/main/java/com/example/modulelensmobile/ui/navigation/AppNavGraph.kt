@@ -22,6 +22,8 @@ import com.example.modulelensmobile.feature.home.HomeViewModelFactory
 import com.example.modulelensmobile.feature.modules.ModuleReaderScreen
 import com.example.modulelensmobile.feature.profile.ProfileScreen
 import com.example.modulelensmobile.feature.scans.BoardNotesScreen
+import com.example.modulelensmobile.feature.scans.BoardNotesViewModel
+import com.example.modulelensmobile.feature.scans.BoardNotesViewModelFactory
 import com.example.modulelensmobile.feature.scans.OcrResultScreen
 import com.example.modulelensmobile.feature.studytools.AiSummaryScreen
 import com.example.modulelensmobile.feature.subjects.SubjectDetailScreen
@@ -128,7 +130,15 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
             }
             composable(AppRoutes.SCANS) {
-                BoardNotesScreen()
+                val boardNotesViewModel: BoardNotesViewModel = viewModel(
+                    factory = BoardNotesViewModelFactory(app.container.boardScansRepository)
+                )
+                BoardNotesScreen(
+                    viewModel = boardNotesViewModel,
+                    onNavigateToOcrResult = { scanId ->
+                        navController.navigate(AppRoutes.createOcrResultRoute(scanId))
+                    }
+                )
             }
             composable(AppRoutes.OCR_RESULT) {
                 OcrResultScreen(
