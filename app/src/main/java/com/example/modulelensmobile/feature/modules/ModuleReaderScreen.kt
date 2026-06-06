@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -25,8 +26,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.modulelensmobile.domain.model.LearningChapter
 import com.example.modulelensmobile.domain.model.LearningModule
 import com.example.modulelensmobile.ui.components.ModuleLensCard
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
@@ -37,7 +41,8 @@ import com.example.modulelensmobile.ui.components.StatusChip
 @Composable
 fun ModuleReaderScreen(
     viewModel: ModuleReaderViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToSummary: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val module = uiState.module
@@ -86,6 +91,7 @@ fun ModuleReaderScreen(
                 ModuleReaderContent(
                     module = module,
                     isRefreshing = uiState.isRefreshing,
+                    onNavigateToSummary = onNavigateToSummary,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -97,6 +103,7 @@ fun ModuleReaderScreen(
 private fun ModuleReaderContent(
     module: LearningModule,
     isRefreshing: Boolean,
+    onNavigateToSummary: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -117,6 +124,33 @@ private fun ModuleReaderContent(
                 title = module.title,
                 text = module.readerText().ifBlank { "No readable content yet." }
             )
+        }
+
+        item {
+            SectionHeader(title = "Chapters")
+        }
+
+        if (module.chapters.isEmpty()) {
+            item {
+                EmptyCard(text = "No chapters added yet.")
+            }
+        } else {
+            items(module.chapters, key = { it.id }) { chapter ->
+                ChapterCard(chapter = chapter)
+            }
+        }
+
+        item {
+            SectionHeader(title = "Study Tools")
+        }
+
+        item {
+            Button(
+                onClick = onNavigateToSummary,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Generate Summary")
+            }
         }
     }
 }
@@ -207,6 +241,54 @@ private fun ReaderTextCard(
 }
 
 @Composable
+private fun ChapterCard(chapter: LearningChapter) {
+    val text = chapter.readerText()
+
+    ModuleLensCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = chapter.title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                StatusChip(status = "Ch. ${chapter.order}")
+            }
+            if (text.isBlank()) {
+                Text(
+                    text = "No readable text yet.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.padding(top = 10.dp)
+                )
+            } else {
+                Text(
+                    text = text,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 6,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 10.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun LoadingContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
@@ -247,6 +329,22 @@ private fun ErrorContent(
     }
 }
 
+@Composable
+private fun EmptyCard(text: String) {
+    ModuleLensCard {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
 private fun LearningModule.readerText(): String {
+    return markdownContent.ifBlank { extractedText }
+}
+
+private fun LearningChapter.readerText(): String {
     return markdownContent.ifBlank { extractedText }
 }

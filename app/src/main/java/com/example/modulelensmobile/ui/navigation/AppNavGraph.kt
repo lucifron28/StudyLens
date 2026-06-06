@@ -135,7 +135,8 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
                 ModuleReaderScreen(
                     viewModel = moduleReaderViewModel,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onNavigateToSummary = { navController.navigate(AppRoutes.AI_SUMMARY) }
                 )
             }
             composable(AppRoutes.SCANS) {
