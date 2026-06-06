@@ -30,6 +30,8 @@ import com.example.modulelensmobile.feature.scans.OcrResultScreen
 import com.example.modulelensmobile.feature.scans.OcrResultViewModel
 import com.example.modulelensmobile.feature.scans.OcrResultViewModelFactory
 import com.example.modulelensmobile.feature.studytools.AiSummaryScreen
+import com.example.modulelensmobile.feature.studytools.AiSummaryViewModel
+import com.example.modulelensmobile.feature.studytools.AiSummaryViewModelFactory
 import com.example.modulelensmobile.feature.subjects.SubjectDetailScreen
 import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModel
 import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModelFactory
@@ -169,8 +171,20 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(AppRoutes.AI_SUMMARY) {
-                AiSummaryScreen()
+            composable(AppRoutes.AI_SUMMARY) { backStackEntry ->
+                val sourceType = backStackEntry.arguments?.getString("sourceType") ?: ""
+                val sourceId = backStackEntry.arguments?.getString("sourceId") ?: ""
+                val aiSummaryViewModel: AiSummaryViewModel = viewModel(
+                    factory = AiSummaryViewModelFactory(
+                        sourceType = sourceType,
+                        sourceId = sourceId,
+                        aiRepository = app.container.aiRepository
+                    )
+                )
+                AiSummaryScreen(
+                    viewModel = aiSummaryViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(AppRoutes.PROFILE) {
                 ProfileScreen(
