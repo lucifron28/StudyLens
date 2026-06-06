@@ -36,7 +36,8 @@ import com.example.modulelensmobile.ui.components.StatusChip
 @Composable
 fun OcrResultScreen(
     viewModel: OcrResultViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToSummary: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scan = uiState.boardScan
@@ -90,6 +91,7 @@ fun OcrResultScreen(
                     saveMessage = uiState.saveMessage,
                     onCleanedTextChange = viewModel::updateCleanedText,
                     onSaveNote = { viewModel.saveNote() },
+                    onNavigateToSummary = onNavigateToSummary,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -106,6 +108,7 @@ private fun OcrResultContent(
     saveMessage: String?,
     onCleanedTextChange: (String) -> Unit,
     onSaveNote: () -> Unit,
+    onNavigateToSummary: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -150,6 +153,13 @@ private fun OcrResultContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(if (isSaving) "Saving..." else "Save Note")
+        }
+
+        Button(
+            onClick = { onNavigateToSummary(scan.id) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Generate Summary")
         }
     }
 }

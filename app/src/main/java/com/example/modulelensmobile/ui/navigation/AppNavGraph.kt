@@ -168,7 +168,10 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
                 OcrResultScreen(
                     viewModel = ocrResultViewModel,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onNavigateToSummary = { boardScanId ->
+                        navController.navigate(AppRoutes.createAiSummaryRoute("board_scan", boardScanId))
+                    }
                 )
             }
             composable(AppRoutes.AI_SUMMARY) { backStackEntry ->
