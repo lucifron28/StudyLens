@@ -24,7 +24,11 @@ import com.example.modulelensmobile.feature.modules.ModuleReaderViewModel
 import com.example.modulelensmobile.feature.modules.ModuleReaderViewModelFactory
 import com.example.modulelensmobile.feature.profile.ProfileScreen
 import com.example.modulelensmobile.feature.scans.BoardNotesScreen
+import com.example.modulelensmobile.feature.scans.BoardNotesViewModel
+import com.example.modulelensmobile.feature.scans.BoardNotesViewModelFactory
 import com.example.modulelensmobile.feature.scans.OcrResultScreen
+import com.example.modulelensmobile.feature.scans.OcrResultViewModel
+import com.example.modulelensmobile.feature.scans.OcrResultViewModelFactory
 import com.example.modulelensmobile.feature.studytools.AiSummaryScreen
 import com.example.modulelensmobile.feature.subjects.SubjectDetailScreen
 import com.example.modulelensmobile.feature.subjects.SubjectDetailViewModel
@@ -140,11 +144,27 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
                 )
             }
             composable(AppRoutes.SCANS) {
-                BoardNotesScreen()
+                val boardNotesViewModel: BoardNotesViewModel = viewModel(
+                    factory = BoardNotesViewModelFactory(app.container.boardScansRepository)
+                )
+                BoardNotesScreen(
+                    viewModel = boardNotesViewModel,
+                    onNavigateToOcrResult = { scanId ->
+                        navController.navigate(AppRoutes.createOcrResultRoute(scanId))
+                    }
+                )
             }
-            composable(AppRoutes.OCR_RESULT) {
+            composable(AppRoutes.OCR_RESULT) { backStackEntry ->
+                val scanId = backStackEntry.arguments?.getString("scanId") ?: ""
+                val ocrResultViewModel: OcrResultViewModel = viewModel(
+                    factory = OcrResultViewModelFactory(
+                        scanId = scanId,
+                        boardScansRepository = app.container.boardScansRepository
+                    )
+                )
                 OcrResultScreen(
-                    onSaveNote = { navController.popBackStack() }
+                    viewModel = ocrResultViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(AppRoutes.AI_SUMMARY) {
