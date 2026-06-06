@@ -20,6 +20,8 @@ import com.example.modulelensmobile.feature.home.HomeScreen
 import com.example.modulelensmobile.feature.home.HomeViewModel
 import com.example.modulelensmobile.feature.home.HomeViewModelFactory
 import com.example.modulelensmobile.feature.modules.ModuleReaderScreen
+import com.example.modulelensmobile.feature.modules.ModuleReaderViewModel
+import com.example.modulelensmobile.feature.modules.ModuleReaderViewModelFactory
 import com.example.modulelensmobile.feature.profile.ProfileScreen
 import com.example.modulelensmobile.feature.scans.BoardNotesScreen
 import com.example.modulelensmobile.feature.scans.OcrResultScreen
@@ -125,9 +127,15 @@ fun AppNavGraph(navController: NavHostController, app: ModuleLensApp) {
             }
             composable(AppRoutes.MODULE_READER) { backStackEntry ->
                 val moduleId = backStackEntry.arguments?.getString("moduleId") ?: ""
+                val moduleReaderViewModel: ModuleReaderViewModel = viewModel(
+                    factory = ModuleReaderViewModelFactory(
+                        moduleId = moduleId,
+                        modulesRepository = app.container.modulesRepository
+                    )
+                )
                 ModuleReaderScreen(
-                    moduleId = moduleId,
-                    onNavigateToSummary = { navController.navigate(AppRoutes.AI_SUMMARY) }
+                    viewModel = moduleReaderViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(AppRoutes.SCANS) {
