@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -25,26 +25,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.modulelensmobile.domain.model.Summary
+import com.example.modulelensmobile.domain.model.Flashcard
 import com.example.modulelensmobile.ui.components.ModuleLensCard
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
-import com.example.modulelensmobile.ui.components.SectionHeader
 import com.example.modulelensmobile.ui.components.StatusChip
 
 @Composable
-fun AiSummaryScreen(
-    viewModel: AiSummaryViewModel,
-    onBack: () -> Unit,
-    onCreateFlashcards: (String, String) -> Unit,
-    onPracticeQuiz: (String, String) -> Unit
+fun FlashcardsScreen(
+    viewModel: FlashcardsViewModel,
+    onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val summary = uiState.summary
 
     Scaffold(
         topBar = {
             ModuleLensTopBar(
-                title = "AI Summary",
+                title = "Flashcards",
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -54,10 +50,10 @@ fun AiSummaryScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::generateSummary) {
+                    IconButton(onClick = viewModel::generateFlashcards) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Regenerate summary"
+                            contentDescription = "Regenerate flashcards"
                         )
                     }
                 }
@@ -72,22 +68,20 @@ fun AiSummaryScreen(
                         .fillMaxSize()
                 )
             }
-            summary == null -> {
+            uiState.flashcards.isEmpty() && uiState.errorMessage != null -> {
                 ErrorContent(
-                    message = uiState.errorMessage ?: "Summary is unavailable.",
-                    onRetry = viewModel::generateSummary,
+                    message = uiState.errorMessage ?: "Flashcards are unavailable.",
+                    onRetry = viewModel::generateFlashcards,
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             else -> {
-                SummaryContent(
-                    summary = summary,
+                FlashcardsContent(
+                    flashcards = uiState.flashcards,
                     errorMessage = uiState.errorMessage,
-                    onRetry = viewModel::generateSummary,
-                    onCreateFlashcards = onCreateFlashcards,
-                    onPracticeQuiz = onPracticeQuiz,
+                    onRetry = viewModel::generateFlashcards,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -96,91 +90,75 @@ fun AiSummaryScreen(
 }
 
 @Composable
-private fun SummaryContent(
-    summary: Summary,
+private fun FlashcardsContent(
+    flashcards: List<Flashcard>,
     errorMessage: String?,
     onRetry: () -> Unit,
-    onCreateFlashcards: (String, String) -> Unit,
-    onPracticeQuiz: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val sourceId = summary.sourceIdForActions()
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (errorMessage != null) {
-            InlineError(message = errorMessage, onRetry = onRetry)
+        if (errorMessage != null && flashcards.isNotEmpty()) {
+            item {
+                InlineError(message = errorMessage, onRetry = onRetry)
+            }
         }
 
-        ModuleLensCard {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
+        if (flashcards.isEmpty()) {
+            item {
+                EmptyCard(text = "No flashcards generated yet.")
+            }
+        } else {
+            items(flashcards, key = { it.id }) { flashcard ->
+                FlashcardItem(flashcard = flashcard)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FlashcardItem(flashcard: Flashcard) {
+    ModuleLensCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Key Summary",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    StatusChip(status = summary.sourceType.toDisplayLabel())
-                }
-                if (summary.title.isNotBlank()) {
-                    Text(
-                        text = summary.title,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 6.dp)
-                    )
-                }
                 Text(
-                    text = summary.content,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 16.dp)
+                    text = "Question",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
+                StatusChip(status = flashcard.difficulty)
             }
-        }
-
-        if (summary.keyTakeaways.isNotEmpty()) {
-            SectionHeader(title = "Key Takeaways")
-            summary.keyTakeaways.forEach { takeaway ->
-                ModuleLensCard {
-                    Text(
-                        text = takeaway,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-        }
-
-        if (sourceId != null) {
-            SectionHeader(title = "Next Actions")
-            Button(
-                onClick = { onCreateFlashcards(summary.sourceType, sourceId) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Create Flashcards")
-            }
-            Button(
-                onClick = { onPracticeQuiz(summary.sourceType, sourceId) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Practice Quiz")
-            }
+            Text(
+                text = flashcard.question,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+            Text(
+                text = "Answer",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 18.dp)
+            )
+            Text(
+                text = flashcard.answer,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
@@ -194,7 +172,7 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
     ) {
         CircularProgressIndicator()
         Text(
-            text = "Generating summary...",
+            text = "Generating flashcards...",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 12.dp)
         )
@@ -249,17 +227,14 @@ private fun InlineError(
     }
 }
 
-private fun String.toDisplayLabel(): String {
-    return split("_", "-", " ")
-        .filter { it.isNotBlank() }
-        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
-}
-
-private fun Summary.sourceIdForActions(): String? {
-    return when (sourceType) {
-        "module" -> moduleId
-        "chapter" -> chapterId
-        "board_scan" -> boardScanId
-        else -> null
+@Composable
+private fun EmptyCard(text: String) {
+    ModuleLensCard {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
