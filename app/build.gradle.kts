@@ -10,11 +10,12 @@ android {
     defaultConfig {
         applicationId = "com.example.modulelensmobile"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
     }
 
     buildTypes {
@@ -32,6 +33,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -42,12 +44,12 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.coil.compose)
-    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
