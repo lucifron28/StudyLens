@@ -1,5 +1,8 @@
 package com.example.modulelensmobile.data.repository
 
+import com.example.modulelensmobile.core.format.toDisplayLabel
+import com.example.modulelensmobile.core.format.toReadableDate
+import com.example.modulelensmobile.data.remote.apiResult
 import com.example.modulelensmobile.data.remote.api.LearningApi
 import com.example.modulelensmobile.data.remote.dto.SubjectBoardScanPreviewDto
 import com.example.modulelensmobile.data.remote.dto.SubjectDto
@@ -18,32 +21,17 @@ class SubjectsRepository(
     private val learningApi: LearningApi
 ) {
     suspend fun getSubjects(search: String? = null): Result<List<Subject>> {
-        return try {
-            val response = learningApi.getSubjects(search = search?.takeIf { it.isNotBlank() })
-            if (response.isSuccessful) {
-                val body = response.body()
-                    ?: return Result.failure(Exception("Subjects failed: empty server response."))
-                Result.success(body.results.map { it.toDomain() })
-            } else {
-                Result.failure(Exception("Subjects failed (${response.code()}). Please try again."))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+        return apiResult(
+            label = "Subjects",
+            call = { learningApi.getSubjects(search = search?.takeIf { it.isNotBlank() }) }
+        ) { body ->
+            body.results.map { it.toDomain() }
         }
     }
 
     suspend fun getSubjectOverview(subjectId: String): Result<SubjectOverview> {
-        return try {
-            val response = learningApi.getSubjectOverview(subjectId)
-            if (response.isSuccessful) {
-                val body = response.body()
-                    ?: return Result.failure(Exception("Subject overview failed: empty server response."))
-                Result.success(body.toDomain())
-            } else {
-                Result.failure(Exception("Subject overview failed (${response.code()}). Please try again."))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+        return apiResult("Subject overview", { learningApi.getSubjectOverview(subjectId) }) {
+            it.toDomain()
         }
     }
 }
@@ -126,14 +114,4 @@ private fun String.toSubjectCode(id: Int): String {
         .take(3)
         .joinToString("") { word -> word.first().uppercaseChar().toString() }
     return if (letters.isBlank()) "S$id" else "$letters$id"
-}
-
-private fun String.toDisplayLabel(): String {
-    return split("_", "-", " ")
-        .filter { it.isNotBlank() }
-        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
-}
-
-private fun String.toReadableDate(): String {
-    return takeIf { it.length >= 10 }?.substring(0, 10) ?: this
 }

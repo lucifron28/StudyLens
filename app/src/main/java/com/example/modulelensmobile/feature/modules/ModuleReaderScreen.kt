@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import com.example.modulelensmobile.domain.model.LearningChapter
 import com.example.modulelensmobile.domain.model.LearningModule
 import com.example.modulelensmobile.ui.components.ModuleLensCard
+import com.example.modulelensmobile.ui.components.ModuleLensEmptyState
+import com.example.modulelensmobile.ui.components.ModuleLensErrorState
+import com.example.modulelensmobile.ui.components.ModuleLensLoadingState
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
 import com.example.modulelensmobile.ui.components.ProgressBar
 import com.example.modulelensmobile.ui.components.SectionHeader
@@ -72,14 +74,15 @@ fun ModuleReaderScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                LoadingContent(
+                ModuleLensLoadingState(
+                    message = "Loading module...",
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             module == null -> {
-                ErrorContent(
+                ModuleLensErrorState(
                     message = uiState.errorMessage ?: "Module is unavailable.",
                     onRetry = viewModel::loadModule,
                     modifier = Modifier
@@ -132,7 +135,7 @@ private fun ModuleReaderContent(
 
         if (module.chapters.isEmpty()) {
             item {
-                EmptyCard(text = "No chapters added yet.")
+                ModuleLensEmptyState(text = "No chapters added yet.")
             }
         } else {
             items(module.chapters, key = { it.id }) { chapter ->
@@ -285,59 +288,6 @@ private fun ChapterCard(chapter: LearningChapter) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator()
-        Text(
-            text = "Loading module...",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun EmptyCard(text: String) {
-    ModuleLensCard {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }
 

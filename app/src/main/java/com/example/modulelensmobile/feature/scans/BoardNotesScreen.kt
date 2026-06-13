@@ -16,8 +16,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +33,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.modulelensmobile.domain.model.BoardScan
 import com.example.modulelensmobile.ui.components.ModuleLensCard
+import com.example.modulelensmobile.ui.components.ModuleLensEmptyState
+import com.example.modulelensmobile.ui.components.ModuleLensErrorState
+import com.example.modulelensmobile.ui.components.ModuleLensInlineError
+import com.example.modulelensmobile.ui.components.ModuleLensLoadingState
+import com.example.modulelensmobile.ui.components.ModuleLensRefreshingIndicator
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
 import com.example.modulelensmobile.ui.components.StatusChip
 
@@ -62,14 +65,15 @@ fun BoardNotesScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                LoadingContent(
+                ModuleLensLoadingState(
+                    message = "Loading board notes...",
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             uiState.boardScans.isEmpty() && uiState.errorMessage != null -> {
-                ErrorContent(
+                ModuleLensErrorState(
                     message = uiState.errorMessage ?: "Board notes are unavailable.",
                     onRetry = viewModel::loadBoardScans,
                     modifier = Modifier
@@ -90,7 +94,6 @@ fun BoardNotesScreen(
         }
     }
 }
-
 @Composable
 private fun BoardNotesContent(
     uiState: BoardNotesUiState,
@@ -125,24 +128,19 @@ private fun BoardNotesContent(
 
         if (uiState.errorMessage != null && uiState.boardScans.isNotEmpty()) {
             item {
-                InlineError(message = uiState.errorMessage, onRetry = onRetry)
+                ModuleLensInlineError(message = uiState.errorMessage, onRetry = onRetry)
             }
         }
 
         if (uiState.isRefreshing) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.padding(vertical = 8.dp))
-                }
+                ModuleLensRefreshingIndicator()
             }
         }
 
         if (uiState.boardScans.isEmpty()) {
             item {
-                EmptyCard(text = "No board notes saved yet.")
+                ModuleLensEmptyState(text = "No board notes saved yet.")
             }
         } else {
             items(uiState.boardScans, key = { it.id }) { scan ->
@@ -154,7 +152,6 @@ private fun BoardNotesContent(
         }
     }
 }
-
 @Composable
 private fun BoardScanCard(
     scan: BoardScan,
@@ -203,81 +200,5 @@ private fun BoardScanCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator()
-        Text(
-            text = "Loading board notes...",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun InlineError(
-    message: String,
-    onRetry: () -> Unit
-) {
-    ModuleLensCard {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f)
-            )
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyCard(text: String) {
-    ModuleLensCard {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }

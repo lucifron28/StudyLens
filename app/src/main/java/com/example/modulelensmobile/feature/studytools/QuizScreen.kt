@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +26,10 @@ import androidx.compose.ui.unit.dp
 import com.example.modulelensmobile.domain.model.Quiz
 import com.example.modulelensmobile.domain.model.QuizQuestion
 import com.example.modulelensmobile.ui.components.ModuleLensCard
+import com.example.modulelensmobile.ui.components.ModuleLensEmptyState
+import com.example.modulelensmobile.ui.components.ModuleLensErrorState
+import com.example.modulelensmobile.ui.components.ModuleLensInlineError
+import com.example.modulelensmobile.ui.components.ModuleLensLoadingState
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
 import com.example.modulelensmobile.ui.components.StatusChip
 
@@ -64,14 +66,15 @@ fun QuizScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                LoadingContent(
+                ModuleLensLoadingState(
+                    message = "Generating quiz...",
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             quiz == null -> {
-                ErrorContent(
+                ModuleLensErrorState(
                     message = uiState.errorMessage ?: "Quiz is unavailable.",
                     onRetry = viewModel::generateQuiz,
                     modifier = Modifier
@@ -109,13 +112,13 @@ private fun QuizContent(
 
         if (errorMessage != null) {
             item {
-                InlineError(message = errorMessage, onRetry = onRetry)
+                ModuleLensInlineError(message = errorMessage, onRetry = onRetry)
             }
         }
 
         if (quiz.questions.isEmpty()) {
             item {
-                EmptyCard(text = "No quiz questions generated yet.")
+                ModuleLensEmptyState(text = "No quiz questions generated yet.")
             }
         } else {
             items(quiz.questions, key = { it.id }) { question ->
@@ -214,81 +217,5 @@ private fun QuizQuestionCard(question: QuizQuestion) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator()
-        Text(
-            text = "Generating quiz...",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun InlineError(
-    message: String,
-    onRetry: () -> Unit
-) {
-    ModuleLensCard {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f)
-            )
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyCard(text: String) {
-    ModuleLensCard {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }

@@ -1,5 +1,10 @@
 package com.example.modulelensmobile.data.repository
 
+import com.example.modulelensmobile.core.format.toDisplayLabel
+import com.example.modulelensmobile.core.format.toPreview
+import com.example.modulelensmobile.core.format.toReadableDate
+import com.example.modulelensmobile.data.remote.networkFailure
+import com.example.modulelensmobile.data.remote.toResult
 import com.example.modulelensmobile.data.remote.api.LearningApi
 import com.example.modulelensmobile.data.remote.dto.ChapterDto
 import com.example.modulelensmobile.data.remote.dto.ModuleDto
@@ -11,23 +16,16 @@ class ModulesRepository(
 ) {
     suspend fun getModuleReader(moduleId: String): Result<LearningModule> {
         return try {
-            val moduleResponse = learningApi.getModule(moduleId)
-            if (!moduleResponse.isSuccessful) {
-                return Result.failure(Exception("Module failed (${moduleResponse.code()}). Please try again."))
-            }
+            val module = learningApi.getModule(moduleId)
+                .toResult("Module") { it }
+                .getOrElse { return Result.failure(it) }
+            val chapters = learningApi.getChapters(moduleId = moduleId)
+                .toResult("Chapters") { it.results }
+                .getOrElse { return Result.failure(it) }
 
-            val module = moduleResponse.body()
-                ?: return Result.failure(Exception("Module failed: empty server response."))
-
-            val chaptersResponse = learningApi.getChapters(moduleId = moduleId)
-            if (!chaptersResponse.isSuccessful) {
-                return Result.failure(Exception("Chapters failed (${chaptersResponse.code()}). Please try again."))
-            }
-
-            val chapters = chaptersResponse.body()?.results.orEmpty()
             Result.success(module.toDomain(chapters))
         } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+            networkFailure(e)
         }
     }
 }
@@ -65,21 +63,4 @@ private fun ChapterDto.toDomain(): LearningChapter {
         extractedText = extractedText,
         updatedAt = updatedAt.toReadableDate()
     )
-}
-
-private fun String.toPreview(): String {
-    return replace("\n", " ")
-        .replace(Regex("\\s+"), " ")
-        .trim()
-        .take(140)
-}
-
-private fun String.toDisplayLabel(): String {
-    return split("_", "-", " ")
-        .filter { it.isNotBlank() }
-        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
-}
-
-private fun String.toReadableDate(): String {
-    return takeIf { it.length >= 10 }?.substring(0, 10) ?: this
 }

@@ -1,5 +1,6 @@
 package com.example.modulelensmobile.core.network
 
+import com.example.modulelensmobile.BuildConfig
 import com.example.modulelensmobile.core.datastore.TokenManager
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -7,23 +8,27 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    const val BASE_URL = "http://10.0.2.2:8000/"
+    private val baseUrl: String = BuildConfig.API_BASE_URL
 
     fun createRetrofit(tokenManager: TokenManager): Retrofit {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
-        
+
         val authInterceptor = AuthInterceptor(tokenManager)
 
         val client = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
-            .authenticator(TokenRefreshAuthenticator(tokenManager, BASE_URL))
+            .authenticator(TokenRefreshAuthenticator(tokenManager, baseUrl))
             .build()
 
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

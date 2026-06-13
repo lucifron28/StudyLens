@@ -41,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -49,11 +48,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-private val NavyColor = Color(0xFF102A43)
-private val TealColor = Color(0xFF14B8A6)
-private val BackgroundColor = Color(0xFFF7F9FB)
 
 @Composable
 fun LoginScreen(
@@ -80,7 +74,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -93,29 +87,29 @@ fun LoginScreen(
 
             Text(
                 text = "ModuleLens",
-                fontSize = 32.sp,
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
-                color = NavyColor
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = "Your learning workspace",
-                fontSize = 14.sp,
-                color = Color(0xFF64748B),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 40.dp)
             )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
                         text = "Sign In",
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = NavyColor,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 20.dp)
                     )
 
@@ -173,12 +167,22 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = TealColor)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
                     ) {
                         if (uiState.isLoading) {
-                            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.height(20.dp))
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.height(20.dp)
+                            )
                         } else {
-                            Text("Sign In", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            Text(
+                                text = "Sign In",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 }
@@ -187,8 +191,15 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = onNavigateToRegister) {
-                Text("Don't have an account? ", color = Color(0xFF64748B))
-                Text("Register", color = TealColor, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "Don't have an account? ",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Register",
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
 
@@ -196,7 +207,10 @@ fun LoginScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         ) { snackbarData ->
-            Snackbar(snackbarData = snackbarData, containerColor = Color(0xFF102A43))
+            Snackbar(
+                snackbarData = snackbarData,
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

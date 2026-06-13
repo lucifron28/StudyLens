@@ -1,5 +1,8 @@
 package com.example.modulelensmobile.data.repository
 
+import com.example.modulelensmobile.core.format.toDisplayLabel
+import com.example.modulelensmobile.core.format.toReadableDate
+import com.example.modulelensmobile.data.remote.apiResult
 import com.example.modulelensmobile.data.remote.api.AiApi
 import com.example.modulelensmobile.data.remote.dto.FlashcardDto
 import com.example.modulelensmobile.data.remote.dto.GenerateFlashcardsRequest
@@ -25,17 +28,8 @@ class AiRepository(
             boardScanId = source.boardScanId
         )
 
-        return try {
-            val response = aiApi.summarize(request)
-            if (response.isSuccessful) {
-                val body = response.body()
-                    ?: return Result.failure(Exception("Summary failed: empty server response."))
-                Result.success(body.toDomain())
-            } else {
-                Result.failure(Exception("Summary failed (${response.code()}). Please try again."))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+        return apiResult("Summary", { aiApi.summarize(request) }) {
+            it.toDomain()
         }
     }
 
@@ -53,17 +47,8 @@ class AiRepository(
             count = count
         )
 
-        return try {
-            val response = aiApi.generateFlashcards(request)
-            if (response.isSuccessful) {
-                val body = response.body()
-                    ?: return Result.failure(Exception("Flashcards failed: empty server response."))
-                Result.success(body.map { it.toDomain() })
-            } else {
-                Result.failure(Exception("Flashcards failed (${response.code()}). Please try again."))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+        return apiResult("Flashcards", { aiApi.generateFlashcards(request) }) { flashcards ->
+            flashcards.map { it.toDomain() }
         }
     }
 
@@ -81,17 +66,8 @@ class AiRepository(
             count = count
         )
 
-        return try {
-            val response = aiApi.generateQuiz(request)
-            if (response.isSuccessful) {
-                val body = response.body()
-                    ?: return Result.failure(Exception("Quiz failed: empty server response."))
-                Result.success(body.toDomain())
-            } else {
-                Result.failure(Exception("Quiz failed (${response.code()}). Please try again."))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+        return apiResult("Quiz", { aiApi.generateQuiz(request) }) { quiz ->
+            quiz.toDomain()
         }
     }
 }
@@ -177,14 +153,4 @@ private fun String.extractTakeaways(): List<String> {
         .map { it.trim().trimStart('-', '*').trim() }
         .filter { it.length >= 12 }
         .take(4)
-}
-
-private fun String.toDisplayLabel(): String {
-    return split("_", "-", " ")
-        .filter { it.isNotBlank() }
-        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
-}
-
-private fun String.toReadableDate(): String {
-    return takeIf { it.length >= 10 }?.substring(0, 10) ?: this
 }

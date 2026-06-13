@@ -1,5 +1,7 @@
 package com.example.modulelensmobile.data.repository
 
+import com.example.modulelensmobile.core.format.toReadableDate
+import com.example.modulelensmobile.data.remote.apiResult
 import com.example.modulelensmobile.data.remote.api.LearningApi
 import com.example.modulelensmobile.data.remote.dto.DashboardActivityItemDto
 import com.example.modulelensmobile.data.remote.dto.DashboardContinueLearningDto
@@ -15,18 +17,7 @@ class DashboardRepository(
     private val learningApi: LearningApi
 ) {
     suspend fun getDashboard(): Result<Dashboard> {
-        return try {
-            val response = learningApi.getDashboard()
-            if (response.isSuccessful) {
-                val body = response.body()
-                    ?: return Result.failure(Exception("Dashboard failed: empty server response."))
-                Result.success(body.toDomain())
-            } else {
-                Result.failure(Exception("Dashboard failed (${response.code()}). Please try again."))
-            }
-        } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
-        }
+        return apiResult("Dashboard", learningApi::getDashboard) { it.toDomain() }
     }
 }
 
@@ -84,9 +75,5 @@ private fun DashboardActivityItemDto.toDomain(): DashboardActivityItem {
         description = description,
         createdAt = createdAt.toReadableDate()
     )
-}
-
-private fun String.toReadableDate(): String {
-    return takeIf { it.length >= 10 }?.substring(0, 10) ?: this
 }
 

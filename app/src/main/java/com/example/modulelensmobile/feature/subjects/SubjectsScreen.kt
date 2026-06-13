@@ -16,8 +16,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +33,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.modulelensmobile.domain.model.Subject
 import com.example.modulelensmobile.ui.components.ModuleLensCard
+import com.example.modulelensmobile.ui.components.ModuleLensEmptyState
+import com.example.modulelensmobile.ui.components.ModuleLensErrorState
+import com.example.modulelensmobile.ui.components.ModuleLensInlineError
+import com.example.modulelensmobile.ui.components.ModuleLensLoadingState
+import com.example.modulelensmobile.ui.components.ModuleLensRefreshingIndicator
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
 import com.example.modulelensmobile.ui.components.ProgressBar
 import com.example.modulelensmobile.ui.components.StatusChip
@@ -63,14 +66,15 @@ fun SubjectsScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                LoadingContent(
+                ModuleLensLoadingState(
+                    message = "Loading subjects...",
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             uiState.subjects.isEmpty() && uiState.errorMessage != null -> {
-                ErrorContent(
+                ModuleLensErrorState(
                     message = uiState.errorMessage ?: "Subjects are unavailable.",
                     onRetry = viewModel::loadSubjects,
                     modifier = Modifier
@@ -91,7 +95,6 @@ fun SubjectsScreen(
         }
     }
 }
-
 @Composable
 private fun SubjectsContent(
     uiState: SubjectsUiState,
@@ -126,24 +129,19 @@ private fun SubjectsContent(
 
         if (uiState.errorMessage != null && uiState.subjects.isNotEmpty()) {
             item {
-                InlineError(message = uiState.errorMessage, onRetry = onRetry)
+                ModuleLensInlineError(message = uiState.errorMessage, onRetry = onRetry)
             }
         }
 
         if (uiState.isRefreshing) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.padding(vertical = 8.dp))
-                }
+                ModuleLensRefreshingIndicator()
             }
         }
 
         if (uiState.subjects.isEmpty()) {
             item {
-                EmptyCard(text = "No subjects found yet.")
+                ModuleLensEmptyState(text = "No subjects found yet.")
             }
         } else {
             items(uiState.subjects, key = { it.id }) { subject ->
@@ -155,7 +153,6 @@ private fun SubjectsContent(
         }
     }
 }
-
 @Composable
 private fun SubjectCard(
     subject: Subject,
@@ -209,81 +206,5 @@ private fun SubjectCard(
                 modifier = Modifier.padding(top = 10.dp)
             )
         }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator()
-        Text(
-            text = "Loading subjects...",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun InlineError(
-    message: String,
-    onRetry: () -> Unit
-) {
-    ModuleLensCard {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f)
-            )
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyCard(text: String) {
-    ModuleLensCard {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }

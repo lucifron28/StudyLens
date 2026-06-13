@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +33,10 @@ import com.example.modulelensmobile.domain.model.SubjectOverview
 import com.example.modulelensmobile.domain.model.SubjectPostPreview
 import com.example.modulelensmobile.domain.model.SubjectTaskPreview
 import com.example.modulelensmobile.ui.components.ModuleLensCard
+import com.example.modulelensmobile.ui.components.ModuleLensEmptyState
+import com.example.modulelensmobile.ui.components.ModuleLensErrorState
+import com.example.modulelensmobile.ui.components.ModuleLensInlineError
+import com.example.modulelensmobile.ui.components.ModuleLensLoadingState
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
 import com.example.modulelensmobile.ui.components.ProgressBar
 import com.example.modulelensmobile.ui.components.SectionHeader
@@ -74,14 +76,15 @@ fun SubjectDetailScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                LoadingContent(
+                ModuleLensLoadingState(
+                    message = "Loading subject...",
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             overview == null -> {
-                ErrorContent(
+                ModuleLensErrorState(
                     message = uiState.errorMessage ?: "Subject details are unavailable.",
                     onRetry = viewModel::loadOverview,
                     modifier = Modifier
@@ -102,7 +105,6 @@ fun SubjectDetailScreen(
         }
     }
 }
-
 @Composable
 private fun SubjectOverviewContent(
     overview: SubjectOverview,
@@ -123,7 +125,7 @@ private fun SubjectOverviewContent(
 
         if (errorMessage != null && !isRefreshing) {
             item {
-                InlineError(message = errorMessage, onRetry = onRetry)
+                ModuleLensInlineError(message = errorMessage, onRetry = onRetry)
             }
         }
 
@@ -132,7 +134,7 @@ private fun SubjectOverviewContent(
         }
         if (overview.latestModules.isEmpty()) {
             item {
-                EmptyCard(text = "No modules added yet.")
+                ModuleLensEmptyState(text = "No modules added yet.")
             }
         } else {
             items(overview.latestModules, key = { it.id }) { module ->
@@ -148,7 +150,7 @@ private fun SubjectOverviewContent(
         }
         if (overview.upcomingTasks.isEmpty()) {
             item {
-                EmptyCard(text = "No upcoming tasks for this subject.")
+                ModuleLensEmptyState(text = "No upcoming tasks for this subject.")
             }
         } else {
             items(overview.upcomingTasks, key = { it.id }) { task ->
@@ -161,7 +163,7 @@ private fun SubjectOverviewContent(
         }
         if (overview.recentBoardScans.isEmpty()) {
             item {
-                EmptyCard(text = "No board notes saved for this subject.")
+                ModuleLensEmptyState(text = "No board notes saved for this subject.")
             }
         } else {
             items(overview.recentBoardScans, key = { it.id }) { boardScan ->
@@ -174,7 +176,7 @@ private fun SubjectOverviewContent(
         }
         if (overview.latestPosts.isEmpty()) {
             item {
-                EmptyCard(text = "No posts for this subject yet.")
+                ModuleLensEmptyState(text = "No posts for this subject yet.")
             }
         } else {
             items(overview.latestPosts, key = { it.id }) { post ->
@@ -183,7 +185,6 @@ private fun SubjectOverviewContent(
         }
     }
 }
-
 @Composable
 private fun HeaderCard(
     overview: SubjectOverview,
@@ -383,81 +384,5 @@ private fun PostPreviewCard(post: SubjectPostPreview) {
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator()
-        Text(
-            text = "Loading subject...",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun InlineError(
-    message: String,
-    onRetry: () -> Unit
-) {
-    ModuleLensCard {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f)
-            )
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyCard(text: String) {
-    ModuleLensCard {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }

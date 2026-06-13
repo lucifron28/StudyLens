@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -52,11 +51,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-private val NavyColor2 = Color(0xFF102A43)
-private val TealColor2 = Color(0xFF14B8A6)
-private val BackgroundColor2 = Color(0xFFF7F9FB)
 
 @Composable
 fun RegisterScreen(
@@ -84,7 +78,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor2)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -97,29 +91,29 @@ fun RegisterScreen(
 
             Text(
                 text = "ModuleLens",
-                fontSize = 32.sp,
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
-                color = NavyColor2
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = "Create your account",
-                fontSize = 14.sp,
-                color = Color(0xFF64748B),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
             )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
                         text = "Register",
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = NavyColor2,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 20.dp)
                     )
 
@@ -223,12 +217,22 @@ fun RegisterScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = TealColor2)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
                     ) {
                         if (uiState.isLoading) {
-                            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.height(20.dp))
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.height(20.dp)
+                            )
                         } else {
-                            Text("Create Account", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            Text(
+                                text = "Create Account",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 }
@@ -237,8 +241,15 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = onNavigateToLogin) {
-                Text("Already have an account? ", color = Color(0xFF64748B))
-                Text("Sign In", color = TealColor2, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "Already have an account? ",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Sign In",
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -248,7 +259,10 @@ fun RegisterScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         ) { snackbarData ->
-            Snackbar(snackbarData = snackbarData, containerColor = Color(0xFF102A43))
+            Snackbar(
+                snackbarData = snackbarData,
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

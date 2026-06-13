@@ -1,6 +1,7 @@
 package com.example.modulelensmobile.data.repository
 
 import com.example.modulelensmobile.core.datastore.TokenManager
+import com.example.modulelensmobile.data.remote.networkFailure
 import com.example.modulelensmobile.data.remote.api.AuthApi
 import com.example.modulelensmobile.data.remote.dto.LoginRequest
 import com.example.modulelensmobile.data.remote.dto.RegisterRequest
@@ -36,7 +37,7 @@ class AuthRepository(
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+            networkFailure(e)
         }
     }
 
@@ -65,7 +66,7 @@ class AuthRepository(
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+            networkFailure(e)
         }
     }
 
@@ -92,7 +93,7 @@ class AuthRepository(
                 Result.failure(Exception("Could not fetch user (${response.code()})."))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+            networkFailure(e)
         }
     }
 }

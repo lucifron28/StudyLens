@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +25,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.modulelensmobile.core.format.toDisplayLabel
 import com.example.modulelensmobile.domain.model.Dashboard
 import com.example.modulelensmobile.domain.model.DashboardActivityItem
 import com.example.modulelensmobile.domain.model.DashboardContinueLearningItem
 import com.example.modulelensmobile.domain.model.DashboardUpcomingItem
+import com.example.modulelensmobile.ui.components.ModuleLensEmptyState
+import com.example.modulelensmobile.ui.components.ModuleLensErrorState
+import com.example.modulelensmobile.ui.components.ModuleLensInlineError
+import com.example.modulelensmobile.ui.components.ModuleLensLoadingState
 import com.example.modulelensmobile.ui.components.ModuleLensCard
 import com.example.modulelensmobile.ui.components.ModuleLensTopBar
 import com.example.modulelensmobile.ui.components.ProgressBar
@@ -59,14 +62,15 @@ fun HomeScreen(viewModel: HomeViewModel) {
     ) { padding ->
         when {
             uiState.isLoading -> {
-                LoadingContent(
+                ModuleLensLoadingState(
+                    message = "Loading dashboard...",
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
                 )
             }
             dashboard == null -> {
-                ErrorContent(
+                ModuleLensErrorState(
                     message = uiState.errorMessage ?: "Dashboard is unavailable.",
                     onRetry = viewModel::loadDashboard,
                     modifier = Modifier
@@ -120,7 +124,7 @@ private fun DashboardContent(
 
         if (errorMessage != null && !isRefreshing) {
             item {
-                InlineError(message = errorMessage, onRetry = onRetry)
+                ModuleLensInlineError(message = errorMessage, onRetry = onRetry)
             }
         }
 
@@ -137,7 +141,7 @@ private fun DashboardContent(
         }
         if (dashboard.upcoming.isEmpty()) {
             item {
-                EmptyCard(text = "No upcoming tasks or posts yet.")
+                ModuleLensEmptyState(text = "No upcoming tasks or posts yet.")
             }
         } else {
             items(dashboard.upcoming, key = { "${it.type}-${it.id}" }) { item ->
@@ -150,7 +154,7 @@ private fun DashboardContent(
         }
         if (dashboard.continueLearning.isEmpty()) {
             item {
-                EmptyCard(text = "Open a module to start tracking reading progress.")
+                ModuleLensEmptyState(text = "Open a module to start tracking reading progress.")
             }
         } else {
             items(dashboard.continueLearning, key = { it.id }) { item ->
@@ -163,7 +167,7 @@ private fun DashboardContent(
         }
         if (dashboard.recentActivity.isEmpty()) {
             item {
-                EmptyCard(text = "Your recent study activity will appear here.")
+                ModuleLensEmptyState(text = "Your recent study activity will appear here.")
             }
         } else {
             items(dashboard.recentActivity, key = { "${it.type}-${it.id}" }) { item ->
@@ -278,7 +282,7 @@ private fun UpcomingCard(item: DashboardUpcomingItem) {
                 Text(
                     text = listOf(item.subjectTitle, item.type.toDisplayLabel())
                         .filter { it.isNotBlank() }
-                        .joinToString(" • "),
+                        .joinToString(" - "),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
@@ -364,86 +368,4 @@ private fun ActivityRow(item: DashboardActivityItem) {
             )
         }
     }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator()
-        Text(
-            text = "Loading dashboard...",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun InlineError(
-    message: String,
-    onRetry: () -> Unit
-) {
-    ModuleLensCard {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f)
-            )
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyCard(text: String) {
-    ModuleLensCard {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
-    }
-}
-
-private fun String.toDisplayLabel(): String {
-    return split("_")
-        .filter { it.isNotBlank() }
-        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
 }
