@@ -9,6 +9,7 @@ The Android app is a native Kotlin project using Jetpack Compose. It talks to th
 - [Architecture](architecture.md)
 - [Project Structure](project-structure.md)
 - [File Map](file-map.md)
+- [Code Walkthrough](code-walkthrough.md)
 - [Build and Dependencies](build-and-dependencies.md)
 - [Networking and Authentication](networking-auth.md)
 - [Data Layer](data-layer.md)
