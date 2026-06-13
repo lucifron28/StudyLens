@@ -7,7 +7,7 @@ This folder contains the tracked Markdown documentation for ModuleLens.
 - [Project Overview](overview.md)
 - [Setup Guide](setup.md)
 - [Backend Guide](backend.md)
-- [Android Guide](android.md)
+- [Android Guide](android/README.md)
 - [API Guide](api.md)
 - [AI Service Guide](ai.md)
 - [Development Workflow](development.md)

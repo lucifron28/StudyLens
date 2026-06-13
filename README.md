@@ -15,7 +15,7 @@ Students can read course modules, save classroom whiteboard OCR notes, review bo
 - [Project Overview](docs/overview.md)
 - [Setup Guide](docs/setup.md)
 - [Backend Guide](docs/backend.md)
-- [Android Guide](docs/android.md)
+- [Android Guide](docs/android/README.md)
 - [API Guide](docs/api.md)
 - [AI Service Guide](docs/ai.md)
 - [Development Workflow](docs/development.md)
