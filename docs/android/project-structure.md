@@ -23,13 +23,13 @@ Purpose:
 ## Main Package
 
 ```text
-app/src/main/java/com/example/modulelensmobile/
+app/src/main/java/com/example/studylensmobile/
 ```
 
 Top-level files:
 
 - `MainActivity.kt`: Android entry activity. Sets the Compose content.
-- `ModuleLensApp.kt`: application class. Creates the shared `AppContainer`.
+- `StudyLensApp.kt`: application class. Creates the shared `AppContainer`.
 
 ## core
 

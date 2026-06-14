@@ -6,7 +6,7 @@ from studytools.models import Difficulty, Flashcard, Quiz, QuizQuestion, SourceT
 
 
 class Command(BaseCommand):
-    help = "Create beginner-friendly ModuleLens sample data for local testing."
+    help = "Create beginner-friendly StudyLens sample data for local testing."
 
     def add_arguments(self, parser):
         parser.add_argument("--username", default="demo_student")

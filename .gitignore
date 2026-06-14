@@ -101,7 +101,7 @@ pip-wheel-metadata/
 
 # Local prototype assets and generated submission documents
 docs/prototype/
-docs/stitch_modulelens_ai_learning_companion/
+docs/stitch_*_ai_learning_companion/
 docs/*.docx
 docs/*.pdf
-docs/ModuleLens_Project_Context_For_AI_Agents.md
+docs/*_Project_Context_For_AI_Agents.md

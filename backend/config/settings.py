@@ -74,9 +74,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DATABASE_NAME", "modulelens_db"),
-        "USER": os.getenv("DATABASE_USER", "modulelens_user"),
-        "PASSWORD": os.getenv("DATABASE_PASSWORD", "modulelens_password"),
+        "NAME": os.getenv("DATABASE_NAME", "studylens_db"),
+        "USER": os.getenv("DATABASE_USER", "studylens_user"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD", "studylens_password"),
         "HOST": os.getenv("DATABASE_HOST", "db"),
         "PORT": os.getenv("DATABASE_PORT", "5432"),
     }
@@ -127,7 +127,7 @@ SIMPLE_JWT = {
 
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "ModuleLens API",
+    "TITLE": "StudyLens API",
     "DESCRIPTION": "Student-only backend for course modules, OCR notes, study tools, and AI tutor mode.",
     "VERSION": "1.0.0-phase-4",
     "SERVE_INCLUDE_SCHEMA": False,

@@ -15,7 +15,7 @@ This guide explains how to run the backend and Android app locally.
 Copy the example environment file:
 
 ```powershell
-cd C:\Users\Ron\Documents\projects\ModuleLens\backend
+cd <repo-root>\backend
 Copy-Item .env.example .env
 ```
 
@@ -25,9 +25,9 @@ Default development values:
 SECRET_KEY=dev-secret-key
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,10.0.2.2
-DATABASE_NAME=modulelens_db
-DATABASE_USER=modulelens_user
-DATABASE_PASSWORD=modulelens_password
+DATABASE_NAME=studylens_db
+DATABASE_USER=studylens_user
+DATABASE_PASSWORD=studylens_password
 DATABASE_HOST=db
 DATABASE_PORT=5432
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
@@ -41,7 +41,7 @@ GEMINI_MODEL=
 ## Run Backend with Docker
 
 ```powershell
-cd C:\Users\Ron\Documents\projects\ModuleLens\backend
+cd <repo-root>\backend
 docker compose up -d --build
 docker compose exec -T web python manage.py migrate
 ```
@@ -84,7 +84,7 @@ docker compose up -d --force-recreate web
 Open the repository root in Android Studio:
 
 ```text
-C:\Users\Ron\Documents\projects\ModuleLens
+<repo-root>
 ```
 
 Start the backend first, then run the app on an emulator.

@@ -6,11 +6,11 @@ This guide shows important snippets from the Android codebase and explains why t
 
 Source files:
 
-- `app/src/main/java/com/example/modulelensmobile/MainActivity.kt`
-- `app/src/main/java/com/example/modulelensmobile/ModuleLensApp.kt`
+- `app/src/main/java/com/example/studylensmobile/MainActivity.kt`
+- `app/src/main/java/com/example/studylensmobile/StudyLensApp.kt`
 
 ```kotlin
-class ModuleLensApp : Application() {
+class StudyLensApp : Application() {
     lateinit var container: AppContainer
 
     override fun onCreate() {
@@ -20,7 +20,7 @@ class ModuleLensApp : Application() {
 }
 ```
 
-`ModuleLensApp` is created once when Android starts the app process. It creates `AppContainer`, which holds shared app dependencies such as Retrofit APIs and repositories.
+`StudyLensApp` is created once when Android starts the app process. It creates `AppContainer`, which holds shared app dependencies such as Retrofit APIs and repositories.
 
 This is used instead of creating repositories inside every screen. The benefit is that the app has one clear dependency source.
 
@@ -29,10 +29,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val app = application as ModuleLensApp
+        val app = application as StudyLensApp
 
         setContent {
-            ModuleLensTheme {
+            StudyLensTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -59,7 +59,7 @@ Why this is clean:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/core/network/AppContainer.kt`
+- `app/src/main/java/com/example/studylensmobile/core/network/AppContainer.kt`
 
 ```kotlin
 class AppContainer(private val context: Context) {
@@ -146,7 +146,7 @@ Why `BuildConfig` is used:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/core/network/RetrofitClient.kt`
+- `app/src/main/java/com/example/studylensmobile/core/network/RetrofitClient.kt`
 
 ```kotlin
 object RetrofitClient {
@@ -196,7 +196,7 @@ Why this is better than manual HTTP code:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/core/datastore/TokenManager.kt`
+- `app/src/main/java/com/example/studylensmobile/core/datastore/TokenManager.kt`
 
 ```kotlin
 private val Context.dataStore by preferencesDataStore(name = "auth_prefs")
@@ -249,7 +249,7 @@ Why DataStore is used:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/core/network/AuthInterceptor.kt`
+- `app/src/main/java/com/example/studylensmobile/core/network/AuthInterceptor.kt`
 
 ```kotlin
 class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
@@ -296,7 +296,7 @@ Why this is useful:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/data/remote/api/LearningApi.kt`
+- `app/src/main/java/com/example/studylensmobile/data/remote/api/LearningApi.kt`
 
 ```kotlin
 interface LearningApi {
@@ -342,7 +342,7 @@ Why this is readable:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/data/remote/ApiResult.kt`
+- `app/src/main/java/com/example/studylensmobile/data/remote/ApiResult.kt`
 
 ```kotlin
 suspend fun <Dto, Domain> apiResult(
@@ -388,7 +388,7 @@ Why `Result<T>` is used:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/data/repository/SubjectsRepository.kt`
+- `app/src/main/java/com/example/studylensmobile/data/repository/SubjectsRepository.kt`
 
 ```kotlin
 class SubjectsRepository(
@@ -438,7 +438,7 @@ Why mapping matters:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/feature/subjects/SubjectsUiState.kt`
+- `app/src/main/java/com/example/studylensmobile/feature/subjects/SubjectsUiState.kt`
 
 ```kotlin
 data class SubjectsUiState(
@@ -470,7 +470,7 @@ Why this is clean:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/feature/subjects/SubjectsViewModel.kt`
+- `app/src/main/java/com/example/studylensmobile/feature/subjects/SubjectsViewModel.kt`
 
 ```kotlin
 class SubjectsViewModel(
@@ -531,7 +531,7 @@ Why old content is kept:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/feature/subjects/SubjectsScreen.kt`
+- `app/src/main/java/com/example/studylensmobile/feature/subjects/SubjectsScreen.kt`
 
 ```kotlin
 @Composable
@@ -543,7 +543,7 @@ fun SubjectsScreen(
 
     Scaffold(
         topBar = {
-            ModuleLensTopBar(
+            StudyLensTopBar(
                 title = "Subjects",
                 actions = {
                     IconButton(onClick = viewModel::loadSubjects) {
@@ -558,13 +558,13 @@ fun SubjectsScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                ModuleLensLoadingState(
+                StudyLensLoadingState(
                     message = "Loading subjects...",
                     modifier = Modifier.padding(padding).fillMaxSize()
                 )
             }
             uiState.subjects.isEmpty() && uiState.errorMessage != null -> {
-                ModuleLensErrorState(
+                StudyLensErrorState(
                     message = uiState.errorMessage ?: "Subjects are unavailable.",
                     onRetry = viewModel::loadSubjects,
                     modifier = Modifier.padding(padding).fillMaxSize()
@@ -603,7 +603,7 @@ Why this is a good Compose pattern:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/ui/navigation/AppRoutes.kt`
+- `app/src/main/java/com/example/studylensmobile/ui/navigation/AppRoutes.kt`
 
 ```kotlin
 object AppRoutes {
@@ -630,7 +630,7 @@ Why builder functions are used:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/ui/navigation/AppNavGraph.kt`
+- `app/src/main/java/com/example/studylensmobile/ui/navigation/AppNavGraph.kt`
 
 ```kotlin
 composable(AppRoutes.SUBJECTS) {
@@ -663,7 +663,7 @@ Why callbacks are used:
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/core/viewmodel/ViewModelFactory.kt`
+- `app/src/main/java/com/example/studylensmobile/core/viewmodel/ViewModelFactory.kt`
 
 ```kotlin
 inline fun <reified VM : ViewModel> viewModelFactory(
@@ -699,18 +699,18 @@ viewModel(
 Why this helper exists:
 
 - Android's default `viewModel()` only works easily with empty constructors.
-- Most ModuleLens ViewModels need repositories or route IDs.
+- Most StudyLens ViewModels need repositories or route IDs.
 - This avoids creating one factory class for every ViewModel.
 
 ## Shared Screen States
 
 Source file:
 
-- `app/src/main/java/com/example/modulelensmobile/ui/components/ScreenState.kt`
+- `app/src/main/java/com/example/studylensmobile/ui/components/ScreenState.kt`
 
 ```kotlin
 @Composable
-fun ModuleLensErrorState(
+fun StudyLensErrorState(
     message: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -748,9 +748,9 @@ Why this is better than repeating error UI:
 
 Source files:
 
-- `app/src/main/java/com/example/modulelensmobile/data/remote/api/AiApi.kt`
-- `app/src/main/java/com/example/modulelensmobile/data/repository/AiRepository.kt`
-- `app/src/main/java/com/example/modulelensmobile/feature/studytools/AiSummaryViewModel.kt`
+- `app/src/main/java/com/example/studylensmobile/data/remote/api/AiApi.kt`
+- `app/src/main/java/com/example/studylensmobile/data/repository/AiRepository.kt`
+- `app/src/main/java/com/example/studylensmobile/feature/studytools/AiSummaryViewModel.kt`
 
 ```kotlin
 interface AiApi {

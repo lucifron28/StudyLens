@@ -1,6 +1,6 @@
-# ModuleLens Backend
+# StudyLens Backend
 
-ModuleLens is a student-only Django REST Framework backend for a native Android course module reader. It includes JWT authentication, PostgreSQL in Docker, subject/module/chapter management, board scan OCR note storage, reading progress, study tools, media uploads, CORS, admin, AI service endpoints, and Swagger/OpenAPI docs.
+StudyLens is a student-only Django REST Framework backend for a native Android course module reader. It includes JWT authentication, PostgreSQL in Docker, subject/module/chapter management, board scan OCR note storage, reading progress, study tools, media uploads, CORS, admin, AI service endpoints, and Swagger/OpenAPI docs.
 
 For the full project guide, including the Android app setup and development workflow, see `../README.md`.
 
@@ -20,7 +20,7 @@ DOCX/PPTX conversion is intentionally left for later phases.
 ## Setup
 
 ```powershell
-cd C:\Users\Ron\Documents\projects\ModuleLens\backend
+cd <repo-root>\backend
 Copy-Item .env.example .env
 docker compose build
 docker compose up -d db
@@ -67,9 +67,9 @@ Copy `.env.example` to `.env` and adjust values as needed.
 SECRET_KEY=dev-secret-key
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,10.0.2.2
-DATABASE_NAME=modulelens_db
-DATABASE_USER=modulelens_user
-DATABASE_PASSWORD=modulelens_password
+DATABASE_NAME=studylens_db
+DATABASE_USER=studylens_user
+DATABASE_PASSWORD=studylens_password
 DATABASE_HOST=db
 DATABASE_PORT=5432
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000

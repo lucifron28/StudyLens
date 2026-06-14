@@ -1,6 +1,6 @@
 # Android Documentation
 
-This directory explains the Android side of ModuleLens in more detail than the root README.
+This directory explains the Android side of StudyLens in more detail than the root README.
 
 The Android app is a native Kotlin project using Jetpack Compose. It talks to the Django backend through Retrofit, stores JWT tokens with DataStore, and keeps UI code separated into feature screens, ViewModels, repositories, DTOs, domain models, and shared components.
 
@@ -22,8 +22,8 @@ The Android app is a native Kotlin project using Jetpack Compose. It talks to th
 ## Quick Facts
 
 - App module: `app`
-- Package: `com.example.modulelensmobile`
-- Root Gradle project name: `ModuleLensMobile`
+- Package: `com.example.studylensmobile`
+- Root Gradle project name: `StudyLensMobile`
 - Minimum SDK: `24`
 - Compile SDK: `37`
 - Target SDK: `37`

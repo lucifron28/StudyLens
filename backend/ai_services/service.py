@@ -123,7 +123,7 @@ def resolve_source(user, data: dict, allow_text: bool = True) -> SourceBundle:
     else:
         source_type = SourceType.COMBINED
 
-    title = " + ".join(title_parts) if title_parts else "ModuleLens source"
+    title = " + ".join(title_parts) if title_parts else "StudyLens source"
     return SourceBundle(
         title=title,
         text=truncate_text(combined_text),

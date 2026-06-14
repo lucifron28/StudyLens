@@ -79,7 +79,7 @@ ViewModel
   stores error.message in UiState
 
 Screen
-  shows ModuleLensErrorState or ModuleLensInlineError
+  shows StudyLensErrorState or StudyLensInlineError
 ```
 
 This keeps exception handling out of screens.

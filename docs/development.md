@@ -40,7 +40,7 @@ fix(scans): handle empty OCR text
 ## Backend Checks
 
 ```powershell
-cd C:\Users\Ron\Documents\projects\ModuleLens\backend
+cd <repo-root>\backend
 docker compose exec -T web python manage.py check
 docker compose exec -T web python manage.py test
 ```

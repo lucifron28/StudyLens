@@ -13,7 +13,7 @@ ui/theme/Type.kt
 
 ## Color.kt
 
-Contains ModuleLens color tokens.
+Contains StudyLens color tokens.
 
 Why:
 
@@ -52,15 +52,15 @@ Why:
 
 ```text
 BottomNavigationBar.kt
-ModuleLensCard.kt
-ModuleLensTopBar.kt
+StudyLensCard.kt
+StudyLensTopBar.kt
 ProgressBar.kt
 ScreenState.kt
 SectionHeader.kt
 StatusChip.kt
 ```
 
-## ModuleLensCard
+## StudyLensCard
 
 Reusable card wrapper.
 
@@ -69,7 +69,7 @@ Why:
 - keeps card shape, color, and elevation consistent
 - avoids repeating Material card setup
 
-## ModuleLensTopBar
+## StudyLensTopBar
 
 Reusable top app bar.
 
@@ -100,11 +100,11 @@ Why:
 
 Shared screen state components:
 
-- `ModuleLensLoadingState`
-- `ModuleLensErrorState`
-- `ModuleLensInlineError`
-- `ModuleLensEmptyState`
-- `ModuleLensRefreshingIndicator`
+- `StudyLensLoadingState`
+- `StudyLensErrorState`
+- `StudyLensInlineError`
+- `StudyLensEmptyState`
+- `StudyLensRefreshingIndicator`
 
 Why:
 

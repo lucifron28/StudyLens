@@ -120,7 +120,7 @@ sets errorMessage on failure
 Screen:
 
 ```text
-shows ModuleLensErrorState or ModuleLensInlineError
+shows StudyLensErrorState or StudyLensInlineError
 ```
 
 This keeps the app consistent across features.

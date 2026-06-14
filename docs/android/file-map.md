@@ -7,7 +7,7 @@ This file explains the current Kotlin files in the Android app. Use it as a quic
 | File | Purpose |
 | --- | --- |
 | `MainActivity.kt` | Launches the app and sets the Compose content. |
-| `ModuleLensApp.kt` | Custom `Application` class that creates the shared `AppContainer`. |
+| `StudyLensApp.kt` | Custom `Application` class that creates the shared `AppContainer`. |
 
 Why these files exist:
 
@@ -200,8 +200,8 @@ Why it is currently simple:
 | File | Purpose |
 | --- | --- |
 | `ui/components/BottomNavigationBar.kt` | Shared bottom navigation UI. |
-| `ui/components/ModuleLensCard.kt` | Shared card wrapper for consistent card styling. |
-| `ui/components/ModuleLensTopBar.kt` | Shared top bar for page titles, back buttons, and actions. |
+| `ui/components/StudyLensCard.kt` | Shared card wrapper for consistent card styling. |
+| `ui/components/StudyLensTopBar.kt` | Shared top bar for page titles, back buttons, and actions. |
 | `ui/components/ProgressBar.kt` | Shared progress display. |
 | `ui/components/ScreenState.kt` | Shared loading, error, empty, inline error, and refreshing states. |
 | `ui/components/SectionHeader.kt` | Shared section title row. |
@@ -231,7 +231,7 @@ Why navigation is centralized:
 
 | File | Purpose |
 | --- | --- |
-| `ui/theme/Color.kt` | ModuleLens color tokens. |
+| `ui/theme/Color.kt` | StudyLens color tokens. |
 | `ui/theme/Shape.kt` | Shared Material shape values. |
 | `ui/theme/Type.kt` | Shared typography styles. |
 | `ui/theme/Theme.kt` | Applies Material 3 color, shape, and type settings. |

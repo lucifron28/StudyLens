@@ -1,6 +1,6 @@
-# ModuleLens
+# StudyLens
 
-ModuleLens is a student-only course learning companion with a Django REST Framework backend and a native Android app built with Kotlin and Jetpack Compose.
+StudyLens is a student-only course learning companion with a Django REST Framework backend and a native Android app built with Kotlin and Jetpack Compose.
 
 Students can read course modules, save classroom whiteboard OCR notes, review board scans, generate study materials, and use AI-assisted study flows. The Android app never calls AI providers directly; it talks to the backend, and the backend talks to the configured local AI provider.
 
@@ -25,7 +25,7 @@ Students can read course modules, save classroom whiteboard OCR notes, review bo
 ## Quick Backend Run
 
 ```powershell
-cd C:\Users\Ron\Documents\projects\ModuleLens\backend
+cd <repo-root>\backend
 Copy-Item .env.example .env
 docker compose up -d --build
 docker compose exec -T web python manage.py migrate
@@ -43,7 +43,7 @@ Admin:   http://localhost:8000/admin/
 Open the repository root in Android Studio:
 
 ```text
-C:\Users\Ron\Documents\projects\ModuleLens
+<repo-root>
 ```
 
 Run the app on an emulator while the backend is running. The emulator uses:

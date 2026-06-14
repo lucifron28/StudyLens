@@ -1,6 +1,6 @@
 # Project Overview
 
-ModuleLens is a student-only learning companion for course modules and classroom notes. It combines a Django REST Framework backend with a native Android app.
+StudyLens is a student-only learning companion for course modules and classroom notes. It combines a Django REST Framework backend with a native Android app.
 
 ## Main Goal
 
@@ -81,7 +81,7 @@ Ollama on host machine
 ## Repository Layout
 
 ```text
-ModuleLens/
+StudyLens/
   README.md
   app/
   backend/

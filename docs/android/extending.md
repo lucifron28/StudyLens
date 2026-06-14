@@ -27,9 +27,9 @@ NewFeatureUiState.kt
 6. Reuse shared state components:
 
 ```kotlin
-ModuleLensLoadingState(...)
-ModuleLensErrorState(...)
-ModuleLensEmptyState(...)
+StudyLensLoadingState(...)
+StudyLensErrorState(...)
+StudyLensEmptyState(...)
 ```
 
 ## Add a New API Call

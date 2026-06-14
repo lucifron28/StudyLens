@@ -1,6 +1,6 @@
-# ModuleLens Documentation
+# StudyLens Documentation
 
-This folder contains the tracked Markdown documentation for ModuleLens.
+This folder contains the tracked Markdown documentation for StudyLens.
 
 ## Guides
 
