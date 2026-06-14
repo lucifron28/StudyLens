@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.modulelensmobile"
+    namespace = "com.example.studylensmobile"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.modulelensmobile"
+        applicationId = "com.example.studylensmobile"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

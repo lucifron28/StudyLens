@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ModuleLensMobile"
+rootProject.name = "StudyLensMobile"
 include(":app")
