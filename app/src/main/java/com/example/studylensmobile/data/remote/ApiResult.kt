@@ -14,6 +14,22 @@ suspend fun <Dto, Domain> apiResult(
     }
 }
 
+suspend fun emptyApiResult(
+    label: String,
+    call: suspend () -> Response<Unit>
+): Result<Unit> {
+    return try {
+        val response = call()
+        if (response.isSuccessful) {
+            Result.success(Unit)
+        } else {
+            Result.failure(Exception("$label failed (${response.code()}). Please try again."))
+        }
+    } catch (e: Exception) {
+        networkFailure(e)
+    }
+}
+
 fun <Dto, Domain> Response<Dto>.toResult(
     label: String,
     map: (Dto) -> Domain

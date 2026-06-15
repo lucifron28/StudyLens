@@ -2,17 +2,24 @@ package com.example.studylensmobile.data.remote.api
 
 import com.example.studylensmobile.data.remote.dto.BoardScanDto
 import com.example.studylensmobile.data.remote.dto.BoardScanUpdateRequest
+import com.example.studylensmobile.data.remote.dto.BoardScanWriteRequest
 import com.example.studylensmobile.data.remote.dto.DashboardDto
 import com.example.studylensmobile.data.remote.dto.ModuleDto
+import com.example.studylensmobile.data.remote.dto.ModuleWriteRequest
 import com.example.studylensmobile.data.remote.dto.PaginatedBoardScansDto
 import com.example.studylensmobile.data.remote.dto.PaginatedChaptersDto
+import com.example.studylensmobile.data.remote.dto.PaginatedModulesDto
 import com.example.studylensmobile.data.remote.dto.PaginatedSubjectsDto
+import com.example.studylensmobile.data.remote.dto.SubjectDto
 import com.example.studylensmobile.data.remote.dto.SubjectOverviewDto
+import com.example.studylensmobile.data.remote.dto.SubjectWriteRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.Path
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface LearningApi {
@@ -29,6 +36,22 @@ interface LearningApi {
     suspend fun getSubjectOverview(
         @Path("subjectId") subjectId: String
     ): Response<SubjectOverviewDto>
+
+    @POST("api/learning/subjects/")
+    suspend fun createSubject(
+        @Body request: SubjectWriteRequest
+    ): Response<SubjectDto>
+
+    @PATCH("api/learning/subjects/{subjectId}/")
+    suspend fun updateSubject(
+        @Path("subjectId") subjectId: String,
+        @Body request: SubjectWriteRequest
+    ): Response<SubjectDto>
+
+    @DELETE("api/learning/subjects/{subjectId}/")
+    suspend fun deleteSubject(
+        @Path("subjectId") subjectId: String
+    ): Response<Unit>
 
     @GET("api/learning/board-scans/")
     suspend fun getBoardScans(
@@ -48,10 +71,48 @@ interface LearningApi {
         @Body request: BoardScanUpdateRequest
     ): Response<BoardScanDto>
 
+    @POST("api/learning/board-scans/")
+    suspend fun createBoardScan(
+        @Body request: BoardScanWriteRequest
+    ): Response<BoardScanDto>
+
+    @PATCH("api/learning/board-scans/{scanId}/")
+    suspend fun updateBoardScanDetails(
+        @Path("scanId") scanId: String,
+        @Body request: BoardScanWriteRequest
+    ): Response<BoardScanDto>
+
+    @DELETE("api/learning/board-scans/{scanId}/")
+    suspend fun deleteBoardScan(
+        @Path("scanId") scanId: String
+    ): Response<Unit>
+
+    @GET("api/learning/modules/")
+    suspend fun getModules(
+        @Query("subject") subjectId: String? = null,
+        @Query("ordering") ordering: String = "title"
+    ): Response<PaginatedModulesDto>
+
     @GET("api/learning/modules/{moduleId}/")
     suspend fun getModule(
         @Path("moduleId") moduleId: String
     ): Response<ModuleDto>
+
+    @POST("api/learning/modules/")
+    suspend fun createModule(
+        @Body request: ModuleWriteRequest
+    ): Response<ModuleDto>
+
+    @PATCH("api/learning/modules/{moduleId}/")
+    suspend fun updateModule(
+        @Path("moduleId") moduleId: String,
+        @Body request: ModuleWriteRequest
+    ): Response<ModuleDto>
+
+    @DELETE("api/learning/modules/{moduleId}/")
+    suspend fun deleteModule(
+        @Path("moduleId") moduleId: String
+    ): Response<Unit>
 
     @GET("api/learning/chapters/")
     suspend fun getChapters(

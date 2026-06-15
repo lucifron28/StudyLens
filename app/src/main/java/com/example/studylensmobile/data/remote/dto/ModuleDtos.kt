@@ -19,6 +19,23 @@ data class ModuleDto(
     @SerializedName("updated_at") val updatedAt: String
 )
 
+data class PaginatedModulesDto(
+    val count: Int,
+    val next: String?,
+    val previous: String?,
+    val results: List<ModuleDto>
+)
+
+data class ModuleWriteRequest(
+    val subject: Int? = null,
+    val title: String? = null,
+    val description: String? = null,
+    @SerializedName("content_type") val contentType: String? = null,
+    @SerializedName("markdown_content") val markdownContent: String? = null,
+    @SerializedName("extracted_text") val extractedText: String? = null,
+    @SerializedName("is_favorite") val isFavorite: Boolean? = null
+)
+
 data class PaginatedChaptersDto(
     val count: Int,
     val next: String?,

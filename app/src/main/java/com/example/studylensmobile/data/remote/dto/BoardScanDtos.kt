@@ -29,6 +29,17 @@ data class BoardScanDto(
     @SerializedName("updated_at") val updatedAt: String
 )
 
+data class BoardScanWriteRequest(
+    val subject: Int? = null,
+    val module: Int? = null,
+    val chapter: Int? = null,
+    @SerializedName("raw_ocr_text") val rawOcrText: String? = null,
+    @SerializedName("cleaned_text") val cleanedText: String? = null,
+    val summary: String? = null,
+    @SerializedName("review_status") val reviewStatus: String? = null,
+    val tags: List<Int>? = null
+)
+
 data class BoardScanTagDto(
     val id: Int,
     val name: String,

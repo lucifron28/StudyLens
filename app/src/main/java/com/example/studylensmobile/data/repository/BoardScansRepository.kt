@@ -4,10 +4,12 @@ import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.core.format.toPreview
 import com.example.studylensmobile.core.format.toReadableDate
 import com.example.studylensmobile.data.remote.apiResult
+import com.example.studylensmobile.data.remote.emptyApiResult
 import com.example.studylensmobile.data.remote.api.LearningApi
 import com.example.studylensmobile.data.remote.dto.BoardScanDto
 import com.example.studylensmobile.data.remote.dto.BoardScanTagDto
 import com.example.studylensmobile.data.remote.dto.BoardScanUpdateRequest
+import com.example.studylensmobile.data.remote.dto.BoardScanWriteRequest
 import com.example.studylensmobile.domain.model.BoardScan
 import com.example.studylensmobile.domain.model.BoardScanTag
 
@@ -57,6 +59,74 @@ class BoardScansRepository(
             it.toDomain()
         }
     }
+
+    suspend fun createBoardScan(
+        rawOcrText: String,
+        cleanedText: String,
+        summary: String,
+        reviewStatus: String,
+        subjectId: String? = null,
+        moduleId: String? = null,
+        chapterId: String? = null
+    ): Result<Unit> {
+        return apiResult(
+            label = "Create note",
+            call = {
+                learningApi.createBoardScan(
+                    BoardScanWriteRequest(
+                        subject = subjectId.toNullableId(),
+                        module = moduleId.toNullableId(),
+                        chapter = chapterId.toNullableId(),
+                        rawOcrText = rawOcrText.trim(),
+                        cleanedText = cleanedText.trim(),
+                        summary = summary.trim(),
+                        reviewStatus = reviewStatus.toApiReviewStatus(),
+                        tags = emptyList()
+                    )
+                )
+            }
+        ) {
+            Unit
+        }
+    }
+
+    suspend fun updateBoardScanDetails(
+        scanId: String,
+        rawOcrText: String,
+        cleanedText: String,
+        summary: String,
+        reviewStatus: String,
+        subjectId: String? = null,
+        moduleId: String? = null,
+        chapterId: String? = null
+    ): Result<Unit> {
+        return apiResult(
+            label = "Update note",
+            call = {
+                learningApi.updateBoardScanDetails(
+                    scanId = scanId,
+                    request = BoardScanWriteRequest(
+                        subject = subjectId.toNullableId(),
+                        module = moduleId.toNullableId(),
+                        chapter = chapterId.toNullableId(),
+                        rawOcrText = rawOcrText.trim(),
+                        cleanedText = cleanedText.trim(),
+                        summary = summary.trim(),
+                        reviewStatus = reviewStatus.toApiReviewStatus()
+                    )
+                )
+            }
+        ) {
+            Unit
+        }
+    }
+
+    suspend fun deleteBoardScan(scanId: String): Result<Unit> {
+        return emptyApiResult(
+            label = "Delete note",
+            call = { learningApi.deleteBoardScan(scanId) }
+        )
+    }
 }
 
 private fun BoardScanDto.toDomain(): BoardScan {
@@ -104,4 +174,15 @@ private fun String.toSubjectCode(id: Int?): String {
         .take(3)
         .joinToString("") { word -> word.first().uppercaseChar().toString() }
     return if (letters.isBlank()) "S${id ?: ""}" else letters
+}
+
+private fun String?.toNullableId(): Int? {
+    return this?.trim()?.takeIf { it.isNotBlank() }?.toIntOrNull()
+}
+
+private fun String.toApiReviewStatus(): String {
+    return trim()
+        .lowercase()
+        .replace(" ", "_")
+        .ifBlank { "new" }
 }

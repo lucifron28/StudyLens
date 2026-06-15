@@ -24,6 +24,12 @@ data class SubjectDto(
     @SerializedName("updated_at") val updatedAt: String
 )
 
+data class SubjectWriteRequest(
+    val title: String,
+    val description: String = "",
+    val color: String = ""
+)
+
 data class SubjectOverviewDto(
     val id: Int,
     val title: String,
