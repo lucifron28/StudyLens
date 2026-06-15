@@ -137,7 +137,7 @@ private fun SubjectOverviewContent(
                 StudyLensEmptyState(text = "No modules added yet.")
             }
         } else {
-            items(overview.latestModules, key = { it.id }) { module ->
+            items(overview.latestModules, key = { "module-${it.id}" }) { module ->
                 ModulePreviewCard(
                     module = module,
                     onClick = { onNavigateToModuleReader(module.id) }
@@ -153,7 +153,7 @@ private fun SubjectOverviewContent(
                 StudyLensEmptyState(text = "No upcoming tasks for this subject.")
             }
         } else {
-            items(overview.upcomingTasks, key = { it.id }) { task ->
+            items(overview.upcomingTasks, key = { "task-${it.id}" }) { task ->
                 TaskPreviewCard(task = task)
             }
         }
@@ -166,7 +166,7 @@ private fun SubjectOverviewContent(
                 StudyLensEmptyState(text = "No board notes saved for this subject.")
             }
         } else {
-            items(overview.recentBoardScans, key = { it.id }) { boardScan ->
+            items(overview.recentBoardScans, key = { "board-scan-${it.id}" }) { boardScan ->
                 BoardScanPreviewCard(boardScan = boardScan)
             }
         }
@@ -179,7 +179,7 @@ private fun SubjectOverviewContent(
                 StudyLensEmptyState(text = "No posts for this subject yet.")
             }
         } else {
-            items(overview.latestPosts, key = { it.id }) { post ->
+            items(overview.latestPosts, key = { "post-${it.id}" }) { post ->
                 PostPreviewCard(post = post)
             }
         }

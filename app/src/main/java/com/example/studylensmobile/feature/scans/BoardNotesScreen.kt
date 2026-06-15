@@ -143,7 +143,7 @@ private fun BoardNotesContent(
                 StudyLensEmptyState(text = "No board notes saved yet.")
             }
         } else {
-            items(uiState.boardScans, key = { it.id }) { scan ->
+            items(uiState.boardScans, key = { "board-scan-${it.id}" }) { scan ->
                 BoardScanCard(
                     scan = scan,
                     onClick = { onNavigateToOcrResult(scan.id) }

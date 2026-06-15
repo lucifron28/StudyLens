@@ -115,7 +115,7 @@ private fun FlashcardsContent(
                 StudyLensEmptyState(text = "No flashcards generated yet.")
             }
         } else {
-            items(flashcards, key = { it.id }) { flashcard ->
+            items(flashcards, key = { "flashcard-${it.id}" }) { flashcard ->
                 FlashcardItem(flashcard = flashcard)
             }
         }

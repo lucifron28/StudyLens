@@ -121,7 +121,7 @@ private fun QuizContent(
                 StudyLensEmptyState(text = "No quiz questions generated yet.")
             }
         } else {
-            items(quiz.questions, key = { it.id }) { question ->
+            items(quiz.questions, key = { "question-${it.id}" }) { question ->
                 QuizQuestionCard(question = question)
             }
         }

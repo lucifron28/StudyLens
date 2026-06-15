@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.core.format.toDisplayLabel
@@ -157,7 +158,7 @@ private fun DashboardContent(
                 StudyLensEmptyState(text = "Open a module to start tracking reading progress.")
             }
         } else {
-            items(dashboard.continueLearning, key = { it.id }) { item ->
+            items(dashboard.continueLearning, key = { "continue-${it.id}" }) { item ->
                 ContinueLearningCard(item = item)
             }
         }
@@ -244,18 +245,24 @@ private fun StatCard(
 ) {
     StudyLensCard(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(vertical = 14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = value,
                 color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
             Text(
                 text = label,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

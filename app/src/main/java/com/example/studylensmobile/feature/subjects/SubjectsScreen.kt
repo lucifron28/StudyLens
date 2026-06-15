@@ -144,7 +144,7 @@ private fun SubjectsContent(
                 StudyLensEmptyState(text = "No subjects found yet.")
             }
         } else {
-            items(uiState.subjects, key = { it.id }) { subject ->
+            items(uiState.subjects, key = { "subject-${it.id}" }) { subject ->
                 SubjectCard(
                     subject = subject,
                     onClick = { onNavigateToSubjectDetail(subject.id) }

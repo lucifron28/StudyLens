@@ -138,7 +138,7 @@ private fun ModuleReaderContent(
                 StudyLensEmptyState(text = "No chapters added yet.")
             }
         } else {
-            items(module.chapters, key = { it.id }) { chapter ->
+            items(module.chapters, key = { "chapter-${it.id}" }) { chapter ->
                 ChapterCard(chapter = chapter)
             }
         }
