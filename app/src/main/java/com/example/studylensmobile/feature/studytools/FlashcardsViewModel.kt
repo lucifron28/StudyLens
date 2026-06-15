@@ -23,6 +23,8 @@ class FlashcardsViewModel(
 
     fun generateFlashcards() {
         viewModelScope.launch {
+            val count = _uiState.value.requestedCount
+
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -32,16 +34,52 @@ class FlashcardsViewModel(
 
             val result = aiRepository.generateFlashcards(
                 sourceType = sourceType,
-                sourceId = sourceId
+                sourceId = sourceId,
+                count = count
             )
 
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     flashcards = result.getOrNull() ?: it.flashcards,
+                    currentIndex = 0,
+                    isAnswerVisible = false,
                     errorMessage = result.exceptionOrNull()?.message
                 )
             }
         }
+    }
+
+    fun setRequestedCount(count: Int) {
+        _uiState.update {
+            it.copy(requestedCount = count.coerceIn(MIN_FLASHCARDS, MAX_FLASHCARDS))
+        }
+    }
+
+    fun toggleAnswer() {
+        _uiState.update { it.copy(isAnswerVisible = !it.isAnswerVisible) }
+    }
+
+    fun previousCard() {
+        _uiState.update {
+            it.copy(
+                currentIndex = (it.currentIndex - 1).coerceAtLeast(0),
+                isAnswerVisible = false
+            )
+        }
+    }
+
+    fun nextCard() {
+        _uiState.update {
+            it.copy(
+                currentIndex = (it.currentIndex + 1).coerceAtMost(it.flashcards.lastIndex.coerceAtLeast(0)),
+                isAnswerVisible = false
+            )
+        }
+    }
+
+    private companion object {
+        const val MIN_FLASHCARDS = 3
+        const val MAX_FLASHCARDS = 10
     }
 }
