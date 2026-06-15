@@ -13,15 +13,25 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +42,7 @@ import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
 import com.example.studylensmobile.domain.model.SubjectTaskPreview
+import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -50,6 +61,9 @@ fun SubjectDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val overview = uiState.overview
+    var showCreateModuleDialog by remember { mutableStateOf(false) }
+    var editingModule by remember { mutableStateOf<SubjectModulePreview?>(null) }
+    var deletingModule by remember { mutableStateOf<SubjectModulePreview?>(null) }
 
     Scaffold(
         topBar = {
@@ -64,6 +78,12 @@ fun SubjectDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showCreateModuleDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add module"
+                        )
+                    }
                     IconButton(onClick = viewModel::loadOverview) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -95,23 +115,79 @@ fun SubjectDetailScreen(
             else -> {
                 SubjectOverviewContent(
                     overview = overview,
+                    modules = uiState.modules,
                     errorMessage = uiState.errorMessage,
                     isRefreshing = uiState.isRefreshing,
                     onRetry = viewModel::loadOverview,
                     onNavigateToModuleReader = onNavigateToModuleReader,
+                    onEditModule = { editingModule = it },
+                    onDeleteModule = { deletingModule = it },
                     modifier = Modifier.padding(padding)
                 )
             }
         }
     }
+
+    if (showCreateModuleDialog && overview != null) {
+        ModuleFormDialog(
+            module = null,
+            isSaving = uiState.isMutating,
+            onDismiss = { showCreateModuleDialog = false },
+            onSave = { title, description, contentType, markdownContent ->
+                viewModel.createModule(
+                    title = title,
+                    description = description,
+                    contentType = contentType,
+                    markdownContent = markdownContent,
+                    onSaved = { showCreateModuleDialog = false }
+                )
+            }
+        )
+    }
+
+    editingModule?.let { module ->
+        ModuleFormDialog(
+            module = module,
+            isSaving = uiState.isMutating,
+            onDismiss = { editingModule = null },
+            onSave = { title, description, contentType, markdownContent ->
+                viewModel.updateModule(
+                    moduleId = module.id,
+                    title = title,
+                    description = description,
+                    contentType = contentType,
+                    markdownContent = markdownContent,
+                    onSaved = { editingModule = null }
+                )
+            }
+        )
+    }
+
+    deletingModule?.let { module ->
+        DeleteConfirmationDialog(
+            title = "Delete module?",
+            message = "This will delete ${module.title} and its chapters, notes, progress, and study tools.",
+            isDeleting = uiState.isMutating,
+            onConfirm = {
+                viewModel.deleteModule(
+                    moduleId = module.id,
+                    onDeleted = { deletingModule = null }
+                )
+            },
+            onDismiss = { deletingModule = null }
+        )
+    }
 }
 @Composable
 private fun SubjectOverviewContent(
     overview: SubjectOverview,
+    modules: List<SubjectModulePreview>,
     errorMessage: String?,
     isRefreshing: Boolean,
     onRetry: () -> Unit,
     onNavigateToModuleReader: (String) -> Unit,
+    onEditModule: (SubjectModulePreview) -> Unit,
+    onDeleteModule: (SubjectModulePreview) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -132,15 +208,17 @@ private fun SubjectOverviewContent(
         item {
             SectionHeader(title = "Modules")
         }
-        if (overview.latestModules.isEmpty()) {
+        if (modules.isEmpty()) {
             item {
                 StudyLensEmptyState(text = "No modules added yet.")
             }
         } else {
-            items(overview.latestModules, key = { "module-${it.id}" }) { module ->
+            items(modules, key = { "module-${it.id}" }) { module ->
                 ModulePreviewCard(
                     module = module,
-                    onClick = { onNavigateToModuleReader(module.id) }
+                    onClick = { onNavigateToModuleReader(module.id) },
+                    onEdit = { onEditModule(module) },
+                    onDelete = { onDeleteModule(module) }
                 )
             }
         }
@@ -250,7 +328,9 @@ private fun HeaderCard(
 @Composable
 private fun ModulePreviewCard(
     module: SubjectModulePreview,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     StudyLensCard(onClick = onClick) {
         Row(
@@ -276,9 +356,105 @@ private fun ModulePreviewCard(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            StatusChip(status = module.contentType)
+            Column(horizontalAlignment = Alignment.End) {
+                StatusChip(status = module.contentType)
+                Row {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit module"
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete module"
+                        )
+                    }
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun ModuleFormDialog(
+    module: SubjectModulePreview?,
+    isSaving: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (
+        title: String,
+        description: String,
+        contentType: String,
+        markdownContent: String
+    ) -> Unit
+) {
+    var title by remember(module?.id) { mutableStateOf(module?.title.orEmpty()) }
+    var description by remember(module?.id) { mutableStateOf(module?.description.orEmpty()) }
+    var contentType by remember(module?.id) { mutableStateOf(module?.contentType?.lowercase() ?: "markdown") }
+    var markdownContent by remember(module?.id) { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isSaving) {
+                onDismiss()
+            }
+        },
+        title = { Text(if (module == null) "Add module" else "Edit module") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    enabled = !isSaving,
+                    label = { Text("Title") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    enabled = !isSaving,
+                    label = { Text("Description") },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = contentType,
+                    onValueChange = { contentType = it },
+                    enabled = !isSaving,
+                    label = { Text("Content type") },
+                    placeholder = { Text("markdown, text, pdf, docx, pptx") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = markdownContent,
+                    onValueChange = { markdownContent = it },
+                    enabled = !isSaving,
+                    label = { Text(if (module == null) "Module content" else "New content optional") },
+                    minLines = 4,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(title, description, contentType, markdownContent) },
+                enabled = !isSaving && title.isNotBlank()
+            ) {
+                Text(if (isSaving) "Saving..." else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSaving
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable

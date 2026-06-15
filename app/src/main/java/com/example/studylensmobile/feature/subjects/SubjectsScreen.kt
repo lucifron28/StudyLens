@@ -14,17 +14,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +41,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.Subject
+import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -48,12 +58,21 @@ fun SubjectsScreen(
     onNavigateToSubjectDetail: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var editingSubject by remember { mutableStateOf<Subject?>(null) }
+    var deletingSubject by remember { mutableStateOf<Subject?>(null) }
 
     Scaffold(
         topBar = {
             StudyLensTopBar(
                 title = "Subjects",
                 actions = {
+                    IconButton(onClick = { showCreateDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add subject"
+                        )
+                    }
                     IconButton(onClick = viewModel::loadSubjects) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -89,10 +108,58 @@ fun SubjectsScreen(
                     onSearch = viewModel::loadSubjects,
                     onRetry = viewModel::loadSubjects,
                     onNavigateToSubjectDetail = onNavigateToSubjectDetail,
+                    onEditSubject = { editingSubject = it },
+                    onDeleteSubject = { deletingSubject = it },
                     modifier = Modifier.padding(padding)
                 )
             }
         }
+    }
+
+    if (showCreateDialog) {
+        SubjectFormDialog(
+            subject = null,
+            isSaving = uiState.isMutating,
+            onDismiss = { showCreateDialog = false },
+            onSave = { title, description ->
+                viewModel.createSubject(
+                    title = title,
+                    description = description,
+                    onSaved = { showCreateDialog = false }
+                )
+            }
+        )
+    }
+
+    editingSubject?.let { subject ->
+        SubjectFormDialog(
+            subject = subject,
+            isSaving = uiState.isMutating,
+            onDismiss = { editingSubject = null },
+            onSave = { title, description ->
+                viewModel.updateSubject(
+                    subjectId = subject.id,
+                    title = title,
+                    description = description,
+                    onSaved = { editingSubject = null }
+                )
+            }
+        )
+    }
+
+    deletingSubject?.let { subject ->
+        DeleteConfirmationDialog(
+            title = "Delete subject?",
+            message = "This will delete ${subject.title} and its modules, notes, tasks, and progress.",
+            isDeleting = uiState.isMutating,
+            onConfirm = {
+                viewModel.deleteSubject(
+                    subjectId = subject.id,
+                    onDeleted = { deletingSubject = null }
+                )
+            },
+            onDismiss = { deletingSubject = null }
+        )
     }
 }
 @Composable
@@ -102,6 +169,8 @@ private fun SubjectsContent(
     onSearch: () -> Unit,
     onRetry: () -> Unit,
     onNavigateToSubjectDetail: (String) -> Unit,
+    onEditSubject: (Subject) -> Unit,
+    onDeleteSubject: (Subject) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -147,7 +216,9 @@ private fun SubjectsContent(
             items(uiState.subjects, key = { "subject-${it.id}" }) { subject ->
                 SubjectCard(
                     subject = subject,
-                    onClick = { onNavigateToSubjectDetail(subject.id) }
+                    onClick = { onNavigateToSubjectDetail(subject.id) },
+                    onEdit = { onEditSubject(subject) },
+                    onDelete = { onDeleteSubject(subject) }
                 )
             }
         }
@@ -156,7 +227,9 @@ private fun SubjectsContent(
 @Composable
 private fun SubjectCard(
     subject: Subject,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     StudyLensCard(onClick = onClick) {
         Column(
@@ -169,12 +242,31 @@ private fun SubjectCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatusChip(status = subject.code)
-                Text(
-                    text = "${subject.progressPercentage}%",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelLarge
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatusChip(status = subject.code)
+                    Text(
+                        text = "${subject.progressPercentage}%",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+                Row {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit subject"
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete subject"
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
@@ -207,4 +299,60 @@ private fun SubjectCard(
             )
         }
     }
+}
+
+@Composable
+private fun SubjectFormDialog(
+    subject: Subject?,
+    isSaving: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (title: String, description: String) -> Unit
+) {
+    var title by remember(subject?.id) { mutableStateOf(subject?.title.orEmpty()) }
+    var description by remember(subject?.id) { mutableStateOf(subject?.description.orEmpty()) }
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isSaving) {
+                onDismiss()
+            }
+        },
+        title = { Text(if (subject == null) "Add subject" else "Edit subject") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    enabled = !isSaving,
+                    label = { Text("Title") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    enabled = !isSaving,
+                    label = { Text("Description") },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(title, description) },
+                enabled = !isSaving && title.isNotBlank()
+            ) {
+                Text(if (isSaving) "Saving..." else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSaving
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }

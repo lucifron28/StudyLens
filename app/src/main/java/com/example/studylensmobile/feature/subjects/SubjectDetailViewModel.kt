@@ -22,25 +22,125 @@ class SubjectDetailViewModel(
 
     fun loadOverview() {
         viewModelScope.launch {
-            val hasContent = _uiState.value.overview != null
+            refreshOverview()
+        }
+    }
+
+    fun createModule(
+        title: String,
+        description: String,
+        contentType: String,
+        markdownContent: String,
+        onSaved: () -> Unit = {}
+    ) {
+        mutateModule(
+            validateTitle = title,
+            action = {
+                subjectsRepository.createModule(
+                    subjectId = subjectId,
+                    title = title,
+                    description = description,
+                    contentType = contentType,
+                    markdownContent = markdownContent
+                )
+            },
+            onSaved = onSaved
+        )
+    }
+
+    fun updateModule(
+        moduleId: String,
+        title: String,
+        description: String,
+        contentType: String,
+        markdownContent: String,
+        onSaved: () -> Unit = {}
+    ) {
+        mutateModule(
+            validateTitle = title,
+            action = {
+                subjectsRepository.updateModule(
+                    moduleId = moduleId,
+                    title = title,
+                    description = description,
+                    contentType = contentType,
+                    markdownContent = markdownContent
+                )
+            },
+            onSaved = onSaved
+        )
+    }
+
+    fun deleteModule(
+        moduleId: String,
+        onDeleted: () -> Unit = {}
+    ) {
+        mutateModule(
+            validateTitle = "delete",
+            action = { subjectsRepository.deleteModule(moduleId) },
+            onSaved = onDeleted
+        )
+    }
+
+    private fun mutateModule(
+        validateTitle: String,
+        action: suspend () -> Result<Unit>,
+        onSaved: () -> Unit
+    ) {
+        viewModelScope.launch {
+            if (validateTitle.trim().isBlank()) {
+                _uiState.update { it.copy(errorMessage = "Module title is required.") }
+                return@launch
+            }
+
             _uiState.update {
                 it.copy(
-                    isLoading = !hasContent,
-                    isRefreshing = hasContent,
+                    isMutating = true,
                     errorMessage = null
                 )
             }
 
-            val result = subjectsRepository.getSubjectOverview(subjectId)
-
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isRefreshing = false,
-                    overview = result.getOrNull() ?: it.overview,
-                    errorMessage = result.exceptionOrNull()?.message
-                )
+            val result = action()
+            if (result.isSuccess) {
+                onSaved()
+                refreshOverview(showRefreshing = true)
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isMutating = false,
+                        errorMessage = result.exceptionOrNull()?.message
+                    )
+                }
             }
+        }
+    }
+
+    private suspend fun refreshOverview(showRefreshing: Boolean = true) {
+        val hasContent = _uiState.value.overview != null
+        _uiState.update {
+            it.copy(
+                isLoading = !hasContent,
+                isRefreshing = showRefreshing && hasContent,
+                errorMessage = null
+            )
+        }
+
+        val overviewResult = subjectsRepository.getSubjectOverview(subjectId)
+        val modulesResult = subjectsRepository.getSubjectModules(subjectId)
+        val overview = overviewResult.getOrNull()
+
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                isRefreshing = false,
+                isMutating = false,
+                overview = overview ?: it.overview,
+                modules = modulesResult.getOrNull()
+                    ?: overview?.latestModules
+                    ?: it.modules,
+                errorMessage = overviewResult.exceptionOrNull()?.message
+                    ?: modulesResult.exceptionOrNull()?.message
+            )
         }
     }
 }

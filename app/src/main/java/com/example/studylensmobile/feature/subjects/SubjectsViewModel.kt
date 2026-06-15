@@ -25,25 +25,99 @@ class SubjectsViewModel(
 
     fun loadSubjects() {
         viewModelScope.launch {
-            val hasContent = _uiState.value.subjects.isNotEmpty()
+            refreshSubjects()
+        }
+    }
+
+    fun createSubject(
+        title: String,
+        description: String,
+        onSaved: () -> Unit = {}
+    ) {
+        mutateSubject(
+            validateTitle = title,
+            action = { subjectsRepository.createSubject(title, description) },
+            onSaved = onSaved
+        )
+    }
+
+    fun updateSubject(
+        subjectId: String,
+        title: String,
+        description: String,
+        onSaved: () -> Unit = {}
+    ) {
+        mutateSubject(
+            validateTitle = title,
+            action = { subjectsRepository.updateSubject(subjectId, title, description) },
+            onSaved = onSaved
+        )
+    }
+
+    fun deleteSubject(
+        subjectId: String,
+        onDeleted: () -> Unit = {}
+    ) {
+        mutateSubject(
+            validateTitle = "delete",
+            action = { subjectsRepository.deleteSubject(subjectId) },
+            onSaved = onDeleted
+        )
+    }
+
+    private fun mutateSubject(
+        validateTitle: String,
+        action: suspend () -> Result<Unit>,
+        onSaved: () -> Unit
+    ) {
+        viewModelScope.launch {
+            if (validateTitle.trim().isBlank()) {
+                _uiState.update { it.copy(errorMessage = "Subject title is required.") }
+                return@launch
+            }
+
             _uiState.update {
                 it.copy(
-                    isLoading = !hasContent,
-                    isRefreshing = hasContent,
+                    isMutating = true,
                     errorMessage = null
                 )
             }
 
-            val result = subjectsRepository.getSubjects(_uiState.value.searchQuery)
-
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isRefreshing = false,
-                    subjects = result.getOrNull() ?: it.subjects,
-                    errorMessage = result.exceptionOrNull()?.message
-                )
+            val result = action()
+            if (result.isSuccess) {
+                onSaved()
+                refreshSubjects(showRefreshing = true)
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isMutating = false,
+                        errorMessage = result.exceptionOrNull()?.message
+                    )
+                }
             }
+        }
+    }
+
+    private suspend fun refreshSubjects(showRefreshing: Boolean = true) {
+        val hasContent = _uiState.value.subjects.isNotEmpty()
+        _uiState.update {
+            it.copy(
+                isLoading = !hasContent,
+                isRefreshing = showRefreshing && hasContent,
+                errorMessage = null
+            )
+        }
+
+        val result = subjectsRepository.getSubjects(_uiState.value.searchQuery)
+
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                isRefreshing = false,
+                isMutating = false,
+                subjects = result.getOrNull() ?: it.subjects,
+                errorMessage = result.exceptionOrNull()?.message
+            )
         }
     }
 }
