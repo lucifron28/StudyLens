@@ -149,6 +149,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     onBack = { navController.popBackStack() },
                     onNavigateToSummary = {
                         navController.navigate(AppRoutes.createAiSummaryRoute("module", moduleId))
+                    },
+                    onNavigateToFlashcards = {
+                        navController.navigate(AppRoutes.createFlashcardsRoute("module", moduleId))
                     }
                 )
             }
