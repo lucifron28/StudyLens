@@ -25,27 +25,132 @@ class BoardNotesViewModel(
 
     fun loadBoardScans() {
         viewModelScope.launch {
-            val hasContent = _uiState.value.boardScans.isNotEmpty()
+            refreshBoardScans()
+        }
+    }
+
+    fun createBoardScan(
+        rawOcrText: String,
+        cleanedText: String,
+        summary: String,
+        reviewStatus: String,
+        subjectId: String?,
+        moduleId: String?,
+        chapterId: String?,
+        onSaved: () -> Unit = {}
+    ) {
+        mutateBoardScan(
+            validateText = cleanedText.ifBlank { rawOcrText },
+            action = {
+                boardScansRepository.createBoardScan(
+                    rawOcrText = rawOcrText,
+                    cleanedText = cleanedText,
+                    summary = summary,
+                    reviewStatus = reviewStatus,
+                    subjectId = subjectId,
+                    moduleId = moduleId,
+                    chapterId = chapterId
+                )
+            },
+            onSaved = onSaved
+        )
+    }
+
+    fun updateBoardScan(
+        scanId: String,
+        rawOcrText: String,
+        cleanedText: String,
+        summary: String,
+        reviewStatus: String,
+        subjectId: String?,
+        moduleId: String?,
+        chapterId: String?,
+        onSaved: () -> Unit = {}
+    ) {
+        mutateBoardScan(
+            validateText = cleanedText.ifBlank { rawOcrText },
+            action = {
+                boardScansRepository.updateBoardScanDetails(
+                    scanId = scanId,
+                    rawOcrText = rawOcrText,
+                    cleanedText = cleanedText,
+                    summary = summary,
+                    reviewStatus = reviewStatus,
+                    subjectId = subjectId,
+                    moduleId = moduleId,
+                    chapterId = chapterId
+                )
+            },
+            onSaved = onSaved
+        )
+    }
+
+    fun deleteBoardScan(
+        scanId: String,
+        onDeleted: () -> Unit = {}
+    ) {
+        mutateBoardScan(
+            validateText = "delete",
+            action = { boardScansRepository.deleteBoardScan(scanId) },
+            onSaved = onDeleted
+        )
+    }
+
+    private fun mutateBoardScan(
+        validateText: String,
+        action: suspend () -> Result<Unit>,
+        onSaved: () -> Unit
+    ) {
+        viewModelScope.launch {
+            if (validateText.trim().isBlank()) {
+                _uiState.update { it.copy(errorMessage = "Board note text is required.") }
+                return@launch
+            }
+
             _uiState.update {
                 it.copy(
-                    isLoading = !hasContent,
-                    isRefreshing = hasContent,
+                    isMutating = true,
                     errorMessage = null
                 )
             }
 
-            val result = boardScansRepository.getBoardScans(
-                search = _uiState.value.searchQuery
-            )
-
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isRefreshing = false,
-                    boardScans = result.getOrNull() ?: it.boardScans,
-                    errorMessage = result.exceptionOrNull()?.message
-                )
+            val result = action()
+            if (result.isSuccess) {
+                onSaved()
+                refreshBoardScans(showRefreshing = true)
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isMutating = false,
+                        errorMessage = result.exceptionOrNull()?.message
+                    )
+                }
             }
+        }
+    }
+
+    private suspend fun refreshBoardScans(showRefreshing: Boolean = true) {
+        val hasContent = _uiState.value.boardScans.isNotEmpty()
+        _uiState.update {
+            it.copy(
+                isLoading = !hasContent,
+                isRefreshing = showRefreshing && hasContent,
+                errorMessage = null
+            )
+        }
+
+        val result = boardScansRepository.getBoardScans(
+            search = _uiState.value.searchQuery
+        )
+
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                isRefreshing = false,
+                isMutating = false,
+                boardScans = result.getOrNull() ?: it.boardScans,
+                errorMessage = result.exceptionOrNull()?.message
+            )
         }
     }
 }

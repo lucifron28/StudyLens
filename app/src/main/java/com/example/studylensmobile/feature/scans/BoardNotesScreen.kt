@@ -11,20 +11,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.BoardScan
+import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -47,12 +59,21 @@ fun BoardNotesScreen(
     onNavigateToOcrResult: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var editingScan by remember { mutableStateOf<BoardScan?>(null) }
+    var deletingScan by remember { mutableStateOf<BoardScan?>(null) }
 
     Scaffold(
         topBar = {
             StudyLensTopBar(
                 title = "Board Notes",
                 actions = {
+                    IconButton(onClick = { showCreateDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add board note"
+                        )
+                    }
                     IconButton(onClick = viewModel::loadBoardScans) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -88,10 +109,68 @@ fun BoardNotesScreen(
                     onSearch = viewModel::loadBoardScans,
                     onRetry = viewModel::loadBoardScans,
                     onNavigateToOcrResult = onNavigateToOcrResult,
+                    onEditScan = { editingScan = it },
+                    onDeleteScan = { deletingScan = it },
                     modifier = Modifier.padding(padding)
                 )
             }
         }
+    }
+
+    if (showCreateDialog) {
+        BoardNoteFormDialog(
+            scan = null,
+            isSaving = uiState.isMutating,
+            onDismiss = { showCreateDialog = false },
+            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId ->
+                viewModel.createBoardScan(
+                    rawOcrText = rawText,
+                    cleanedText = cleanedText,
+                    summary = summary,
+                    reviewStatus = reviewStatus,
+                    subjectId = subjectId,
+                    moduleId = moduleId,
+                    chapterId = chapterId,
+                    onSaved = { showCreateDialog = false }
+                )
+            }
+        )
+    }
+
+    editingScan?.let { scan ->
+        BoardNoteFormDialog(
+            scan = scan,
+            isSaving = uiState.isMutating,
+            onDismiss = { editingScan = null },
+            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId ->
+                viewModel.updateBoardScan(
+                    scanId = scan.id,
+                    rawOcrText = rawText,
+                    cleanedText = cleanedText,
+                    summary = summary,
+                    reviewStatus = reviewStatus,
+                    subjectId = subjectId,
+                    moduleId = moduleId,
+                    chapterId = chapterId,
+                    onSaved = { editingScan = null }
+                )
+            }
+        )
+    }
+
+    deletingScan?.let { scan ->
+        DeleteConfirmationDialog(
+            title = "Delete board note?",
+            message = "This will permanently delete ${scan.title}.",
+            isDeleting = uiState.isMutating,
+            onConfirm = {
+                viewModel.deleteBoardScan(
+                    scanId = scan.id,
+                    onDeleted = { deletingScan = null }
+                )
+            },
+            onDismiss = { deletingScan = null }
+        )
     }
 }
 @Composable
@@ -101,6 +180,8 @@ private fun BoardNotesContent(
     onSearch: () -> Unit,
     onRetry: () -> Unit,
     onNavigateToOcrResult: (String) -> Unit,
+    onEditScan: (BoardScan) -> Unit,
+    onDeleteScan: (BoardScan) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -146,7 +227,9 @@ private fun BoardNotesContent(
             items(uiState.boardScans, key = { "board-scan-${it.id}" }) { scan ->
                 BoardScanCard(
                     scan = scan,
-                    onClick = { onNavigateToOcrResult(scan.id) }
+                    onClick = { onNavigateToOcrResult(scan.id) },
+                    onEdit = { onEditScan(scan) },
+                    onDelete = { onDeleteScan(scan) }
                 )
             }
         }
@@ -155,7 +238,9 @@ private fun BoardNotesContent(
 @Composable
 private fun BoardScanCard(
     scan: BoardScan,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     StudyLensCard(onClick = onClick) {
         Column(
@@ -177,7 +262,23 @@ private fun BoardScanCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                StatusChip(status = scan.reviewStatus)
+                Column(horizontalAlignment = Alignment.End) {
+                    StatusChip(status = scan.reviewStatus)
+                    Row {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit board note"
+                            )
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete board note"
+                            )
+                        }
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -201,4 +302,131 @@ private fun BoardScanCard(
             }
         }
     }
+}
+
+@Composable
+private fun BoardNoteFormDialog(
+    scan: BoardScan?,
+    isSaving: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (
+        rawText: String,
+        cleanedText: String,
+        summary: String,
+        reviewStatus: String,
+        subjectId: String?,
+        moduleId: String?,
+        chapterId: String?
+    ) -> Unit
+) {
+    var rawText by remember(scan?.id) { mutableStateOf(scan?.rawOcrText.orEmpty()) }
+    var cleanedText by remember(scan?.id) {
+        mutableStateOf(scan?.let { it.cleanedText.ifBlank { it.rawOcrText } }.orEmpty())
+    }
+    var summary by remember(scan?.id) { mutableStateOf(scan?.summary.orEmpty()) }
+    var reviewStatus by remember(scan?.id) {
+        mutableStateOf(scan?.reviewStatus?.lowercase()?.replace(" ", "_") ?: "new")
+    }
+    var subjectId by remember(scan?.id) { mutableStateOf(scan?.subjectId.orEmpty()) }
+    var moduleId by remember(scan?.id) { mutableStateOf(scan?.moduleId.orEmpty()) }
+    var chapterId by remember(scan?.id) { mutableStateOf(scan?.chapterId.orEmpty()) }
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isSaving) {
+                onDismiss()
+            }
+        },
+        title = { Text(if (scan == null) "Add board note" else "Edit board note") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = cleanedText,
+                    onValueChange = { cleanedText = it },
+                    enabled = !isSaving,
+                    label = { Text("Cleaned text") },
+                    minLines = 4,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = rawText,
+                    onValueChange = { rawText = it },
+                    enabled = !isSaving,
+                    label = { Text("Raw OCR text") },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = summary,
+                    onValueChange = { summary = it },
+                    enabled = !isSaving,
+                    label = { Text("Summary") },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = reviewStatus,
+                    onValueChange = { reviewStatus = it },
+                    enabled = !isSaving,
+                    label = { Text("Review status") },
+                    placeholder = { Text("new, needs_review, reviewed, mastered") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = subjectId,
+                    onValueChange = { subjectId = it },
+                    enabled = !isSaving,
+                    label = { Text("Subject ID optional") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = moduleId,
+                    onValueChange = { moduleId = it },
+                    enabled = !isSaving,
+                    label = { Text("Module ID optional") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = chapterId,
+                    onValueChange = { chapterId = it },
+                    enabled = !isSaving,
+                    label = { Text("Chapter ID optional") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(
+                        rawText,
+                        cleanedText,
+                        summary,
+                        reviewStatus,
+                        subjectId.takeIf { it.isNotBlank() },
+                        moduleId.takeIf { it.isNotBlank() },
+                        chapterId.takeIf { it.isNotBlank() }
+                    )
+                },
+                enabled = !isSaving && cleanedText.ifBlank { rawText }.isNotBlank()
+            ) {
+                Text(if (isSaving) "Saving..." else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSaving
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }
