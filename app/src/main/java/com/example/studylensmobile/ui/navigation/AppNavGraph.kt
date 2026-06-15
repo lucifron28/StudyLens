@@ -183,6 +183,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     onBack = { navController.popBackStack() },
                     onNavigateToSummary = { boardScanId ->
                         navController.navigate(AppRoutes.createAiSummaryRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToFlashcards = { boardScanId ->
+                        navController.navigate(AppRoutes.createFlashcardsRoute("board_scan", boardScanId))
                     }
                 )
             }
