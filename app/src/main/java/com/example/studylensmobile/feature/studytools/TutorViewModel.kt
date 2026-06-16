@@ -66,9 +66,20 @@ class TutorViewModel(
 
     fun sendMessage() {
         val state = _uiState.value
-        val sessionId = state.session?.id ?: return
         val content = state.draftMessage.trim()
-        if (content.isBlank() || state.isSending) return
+        if (content.isBlank()) return
+
+        sendTutorMessage(content)
+    }
+
+    fun askForHint() {
+        sendTutorMessage(HINT_REQUEST)
+    }
+
+    private fun sendTutorMessage(content: String) {
+        val state = _uiState.value
+        val sessionId = state.session?.id ?: return
+        if (content.isBlank() || state.isSending || state.session.isMastered) return
 
         val userMessage = TutorMessage(
             id = "local-${System.currentTimeMillis()}",
@@ -111,5 +122,10 @@ class TutorViewModel(
                 )
             }
         }
+    }
+
+    private companion object {
+        const val HINT_REQUEST =
+            "I don't know yet. Please teach me with a hint and a simpler follow-up question, but do not tell me the exact answer."
     }
 }

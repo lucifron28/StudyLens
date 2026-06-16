@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.TutorMessage
 import com.example.studylensmobile.domain.model.TutorSession
+import com.example.studylensmobile.ui.components.LumiCard
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
@@ -73,7 +75,8 @@ fun TutorScreen(
                 enabled = !uiState.isStarting && !uiState.isSending && uiState.session?.isMastered != true,
                 canSend = uiState.canSend,
                 onValueChange = viewModel::updateDraft,
-                onSend = viewModel::sendMessage
+                onSend = viewModel::sendMessage,
+                onNeedHint = viewModel::askForHint
             )
         }
     ) { padding ->
@@ -98,6 +101,8 @@ fun TutorScreen(
             else -> {
                 TutorContent(
                     uiState = uiState,
+                    onDone = onBack,
+                    onRestart = viewModel::startTutor,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -108,6 +113,8 @@ fun TutorScreen(
 @Composable
 private fun TutorContent(
     uiState: TutorUiState,
+    onDone: () -> Unit,
+    onRestart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -143,6 +150,19 @@ private fun TutorContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+
+        if (uiState.session?.isMastered == true) {
+            item {
+                LumiCard(
+                    title = "Congrats, topic mastered",
+                    message = "You answered ${uiState.session.clearAnswersCount} clear responses. This tutor round is complete.",
+                    primaryActionLabel = "Done",
+                    onPrimaryAction = onDone,
+                    secondaryActionLabel = "Try Again",
+                    onSecondaryAction = onRestart
                 )
             }
         }
@@ -231,33 +251,46 @@ private fun TutorInputBar(
     enabled: Boolean,
     canSend: Boolean,
     onValueChange: (String) -> Unit,
-    onSend: () -> Unit
+    onSend: () -> Unit,
+    onNeedHint: () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
             .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            enabled = enabled,
-            modifier = Modifier.weight(1f),
-            minLines = 1,
-            maxLines = 4,
-            placeholder = { Text("Type your answer") }
-        )
-        Button(
-            onClick = onSend,
-            enabled = canSend
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Send answer"
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                enabled = enabled,
+                modifier = Modifier.weight(1f),
+                minLines = 1,
+                maxLines = 4,
+                placeholder = { Text("Type your answer") }
             )
+            Button(
+                onClick = onSend,
+                enabled = canSend
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send answer"
+                )
+            }
+        }
+        OutlinedButton(
+            onClick = onNeedHint,
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("I don't know yet")
         }
     }
 }
