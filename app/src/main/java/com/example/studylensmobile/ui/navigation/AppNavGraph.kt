@@ -1,11 +1,20 @@
 package com.example.studylensmobile.ui.navigation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,6 +32,7 @@ import com.example.studylensmobile.feature.modules.ModuleReaderViewModel
 import com.example.studylensmobile.feature.profile.ProfileScreen
 import com.example.studylensmobile.feature.scans.BoardNotesScreen
 import com.example.studylensmobile.feature.scans.BoardNotesViewModel
+import com.example.studylensmobile.feature.scans.CameraCaptureScreen
 import com.example.studylensmobile.feature.scans.OcrResultScreen
 import com.example.studylensmobile.feature.scans.OcrResultViewModel
 import com.example.studylensmobile.feature.studytools.AiSummaryScreen
@@ -173,7 +183,41 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     viewModel = boardNotesViewModel,
                     onNavigateToOcrResult = { scanId ->
                         navController.navigate(AppRoutes.createOcrResultRoute(scanId))
+                    },
+                    onNavigateToCamera = {
+                        navController.navigate(AppRoutes.CAMERA_CAPTURE)
                     }
+                )
+            }
+            composable(AppRoutes.CAMERA_CAPTURE) {
+                val context = LocalContext.current
+                val boardNotesViewModel: BoardNotesViewModel = viewModel(
+                    factory = viewModelFactory {
+                        BoardNotesViewModel(app.container.boardScansRepository)
+                    }
+                )
+
+                var hasCameraPermission by remember {
+                    mutableStateOf(
+                        ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                    )
+                }
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { granted -> hasCameraPermission = granted }
+
+                CameraCaptureScreen(
+                    hasPermission = hasCameraPermission,
+                    onRequestPermission = {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    },
+                    onImageCaptured = { uri ->
+                        boardNotesViewModel.recognizeBoardImage(context, uri)
+                        navController.popBackStack()
+                    },
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(AppRoutes.OCR_RESULT) { backStackEntry ->
