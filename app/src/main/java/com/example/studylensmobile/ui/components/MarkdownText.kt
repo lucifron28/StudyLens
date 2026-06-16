@@ -158,7 +158,10 @@ private sealed interface MarkdownBlock {
 private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
     val blocks = mutableListOf<MarkdownBlock>()
     val paragraphLines = mutableListOf<String>()
-    val lines = markdown.replace("\r\n", "\n").lines()
+    val lines = markdown
+        .replace("\r\n", "\n")
+        .lines()
+        .expandInlineCheckListLines()
     var index = 0
 
     fun flushParagraph() {
@@ -226,6 +229,33 @@ private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
 private fun String.toMarkdownAnnotatedString(): AnnotatedString {
     return buildAnnotatedString {
         appendMarkdownInline(this@toMarkdownAnnotatedString)
+    }
+}
+
+private fun List<String>.expandInlineCheckListLines(): List<String> {
+    return flatMap { line ->
+        val matches = INLINE_CHECK_LIST_REGEX.findAll(line).toList()
+
+        if (matches.isEmpty()) {
+            listOf(line)
+        } else {
+            buildList {
+                val firstMarkerStart = matches.first().range.first
+                val prefix = line.substring(0, firstMarkerStart).trim()
+                if (prefix.isNotBlank()) {
+                    add(prefix)
+                }
+
+                matches.forEachIndexed { index, match ->
+                    val itemStart = match.range.last + 1
+                    val itemEnd = matches.getOrNull(index + 1)?.range?.first ?: line.length
+                    val item = line.substring(itemStart, itemEnd).trim().trimEnd(';', ',')
+                    if (item.isNotBlank()) {
+                        add("- $item")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -300,3 +330,4 @@ private fun AnnotatedString.Builder.appendMarkdownInline(source: String) {
 private val HEADING_REGEX = Regex("^(#{1,6})\\s+(.+)$")
 private val BULLET_REGEX = Regex("^[-*+]\\s+(.+)$")
 private val NUMBERED_REGEX = Regex("^(\\d+)[.)]\\s+(.+)$")
+private val INLINE_CHECK_LIST_REGEX = Regex("[\\u2705\\u2713\\u2714]\\s+")
