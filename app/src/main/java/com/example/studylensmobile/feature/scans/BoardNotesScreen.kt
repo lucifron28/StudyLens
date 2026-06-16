@@ -68,13 +68,19 @@ fun BoardNotesScreen(
             StudyLensTopBar(
                 title = "Board Notes",
                 actions = {
-                    IconButton(onClick = { showCreateDialog = true }) {
+                    IconButton(
+                        onClick = { showCreateDialog = true },
+                        enabled = !uiState.isMutating
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add board note"
                         )
                     }
-                    IconButton(onClick = viewModel::loadBoardScans) {
+                    IconButton(
+                        onClick = viewModel::loadBoardScans,
+                        enabled = !uiState.isMutating
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh board notes"
@@ -111,6 +117,7 @@ fun BoardNotesScreen(
                     onNavigateToOcrResult = onNavigateToOcrResult,
                     onEditScan = { editingScan = it },
                     onDeleteScan = { deletingScan = it },
+                    actionsEnabled = !uiState.isMutating,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -182,6 +189,7 @@ private fun BoardNotesContent(
     onNavigateToOcrResult: (String) -> Unit,
     onEditScan: (BoardScan) -> Unit,
     onDeleteScan: (BoardScan) -> Unit,
+    actionsEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -229,7 +237,8 @@ private fun BoardNotesContent(
                     scan = scan,
                     onClick = { onNavigateToOcrResult(scan.id) },
                     onEdit = { onEditScan(scan) },
-                    onDelete = { onDeleteScan(scan) }
+                    onDelete = { onDeleteScan(scan) },
+                    actionsEnabled = actionsEnabled
                 )
             }
         }
@@ -240,7 +249,8 @@ private fun BoardScanCard(
     scan: BoardScan,
     onClick: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    actionsEnabled: Boolean
 ) {
     StudyLensCard(onClick = onClick) {
         Column(
@@ -265,13 +275,19 @@ private fun BoardScanCard(
                 Column(horizontalAlignment = Alignment.End) {
                     StatusChip(status = scan.reviewStatus)
                     Row {
-                        IconButton(onClick = onEdit) {
+                        IconButton(
+                            onClick = onEdit,
+                            enabled = actionsEnabled
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Edit board note"
                             )
                         }
-                        IconButton(onClick = onDelete) {
+                        IconButton(
+                            onClick = onDelete,
+                            enabled = actionsEnabled
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Delete board note"
@@ -330,6 +346,7 @@ private fun BoardNoteFormDialog(
     var subjectId by remember(scan?.id) { mutableStateOf(scan?.subjectId.orEmpty()) }
     var moduleId by remember(scan?.id) { mutableStateOf(scan?.moduleId.orEmpty()) }
     var chapterId by remember(scan?.id) { mutableStateOf(scan?.chapterId.orEmpty()) }
+    var validationMessage by remember(scan?.id) { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = {
@@ -345,7 +362,10 @@ private fun BoardNoteFormDialog(
             ) {
                 OutlinedTextField(
                     value = cleanedText,
-                    onValueChange = { cleanedText = it },
+                    onValueChange = {
+                        cleanedText = it
+                        validationMessage = null
+                    },
                     enabled = !isSaving,
                     label = { Text("Cleaned text") },
                     minLines = 4,
@@ -353,7 +373,10 @@ private fun BoardNoteFormDialog(
                 )
                 OutlinedTextField(
                     value = rawText,
-                    onValueChange = { rawText = it },
+                    onValueChange = {
+                        rawText = it
+                        validationMessage = null
+                    },
                     enabled = !isSaving,
                     label = { Text("Raw OCR text") },
                     minLines = 3,
@@ -369,7 +392,10 @@ private fun BoardNoteFormDialog(
                 )
                 OutlinedTextField(
                     value = reviewStatus,
-                    onValueChange = { reviewStatus = it },
+                    onValueChange = {
+                        reviewStatus = it
+                        validationMessage = null
+                    },
                     enabled = !isSaving,
                     label = { Text("Review status") },
                     placeholder = { Text("new, needs_review, reviewed, mastered") },
@@ -400,22 +426,42 @@ private fun BoardNoteFormDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                validationMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    onSave(
-                        rawText,
-                        cleanedText,
-                        summary,
-                        reviewStatus,
-                        subjectId.takeIf { it.isNotBlank() },
-                        moduleId.takeIf { it.isNotBlank() },
-                        chapterId.takeIf { it.isNotBlank() }
-                    )
+                    val cleanedRawText = rawText.trim()
+                    val cleanedNoteText = cleanedText.trim()
+                    val cleanedReviewStatus = reviewStatus.trim().lowercase()
+                    when {
+                        cleanedNoteText.ifBlank { cleanedRawText }.isBlank() -> {
+                            validationMessage = "Board note text is required."
+                        }
+                        cleanedReviewStatus !in validReviewStatuses -> {
+                            validationMessage = "Use new, needs_review, reviewed, or mastered."
+                        }
+                        else -> {
+                            onSave(
+                                cleanedRawText,
+                                cleanedNoteText,
+                                summary.trim(),
+                                cleanedReviewStatus,
+                                subjectId.trim().takeIf { it.isNotBlank() },
+                                moduleId.trim().takeIf { it.isNotBlank() },
+                                chapterId.trim().takeIf { it.isNotBlank() }
+                            )
+                        }
+                    }
                 },
-                enabled = !isSaving && cleanedText.ifBlank { rawText }.isNotBlank()
+                enabled = !isSaving && cleanedText.ifBlank { rawText }.trim().isNotBlank()
             ) {
                 Text(if (isSaving) "Saving..." else "Save")
             }
@@ -430,3 +476,5 @@ private fun BoardNoteFormDialog(
         }
     )
 }
+
+private val validReviewStatuses = setOf("new", "needs_review", "reviewed", "mastered")
