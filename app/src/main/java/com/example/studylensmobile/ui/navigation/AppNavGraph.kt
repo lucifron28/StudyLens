@@ -2,6 +2,7 @@ package com.example.studylensmobile.ui.navigation
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,7 @@ import com.example.studylensmobile.feature.profile.ProfileScreen
 import com.example.studylensmobile.feature.scans.BoardNotesScreen
 import com.example.studylensmobile.feature.scans.BoardNotesViewModel
 import com.example.studylensmobile.feature.scans.CameraCaptureScreen
+import com.example.studylensmobile.feature.scans.ImageCropScreen
 import com.example.studylensmobile.feature.scans.OcrResultScreen
 import com.example.studylensmobile.feature.scans.OcrResultViewModel
 import com.example.studylensmobile.feature.studytools.AiSummaryScreen
@@ -186,7 +188,7 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                 val context = LocalContext.current
                 LaunchedEffect(capturedImageUri) {
                     if (capturedImageUri != null) {
-                        boardNotesViewModel.recognizeBoardImage(context, android.net.Uri.parse(capturedImageUri))
+                        boardNotesViewModel.recognizeBoardImage(context, Uri.parse(capturedImageUri))
                         // Clear it so we don't trigger it again
                         backStackEntry.savedStateHandle.remove<String>("captured_image_uri")
                     }
@@ -222,12 +224,24 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                         permissionLauncher.launch(Manifest.permission.CAMERA)
                     },
                     onImageCaptured = { uri ->
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set("captured_image_uri", uri.toString())
-                        navController.popBackStack()
+                        navController.navigate(AppRoutes.createImageCropRoute(uri.toString()))
                     },
                     onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppRoutes.IMAGE_CROP) { backStackEntry ->
+                val imageUri = Uri.decode(backStackEntry.arguments?.getString("imageUri").orEmpty())
+
+                ImageCropScreen(
+                    imageUri = imageUri,
+                    onBack = { navController.popBackStack() },
+                    onCropConfirmed = { croppedUri ->
+                        navController
+                            .getBackStackEntry(AppRoutes.SCANS)
+                            .savedStateHandle
+                            .set("captured_image_uri", croppedUri.toString())
+                        navController.popBackStack(AppRoutes.SCANS, inclusive = false)
+                    }
                 )
             }
             composable(AppRoutes.OCR_RESULT) { backStackEntry ->
