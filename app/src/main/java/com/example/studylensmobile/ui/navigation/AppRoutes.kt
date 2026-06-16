@@ -14,6 +14,7 @@ object AppRoutes {
     const val QUIZ = "quiz/{sourceType}/{sourceId}"
     const val TUTOR = "tutor/{sourceType}/{sourceId}"
     const val PROFILE = "profile"
+    const val CAMERA_CAPTURE = "camera_capture"
 
     fun createSubjectDetailRoute(subjectId: String) = "subjectDetail/$subjectId"
     fun createModuleReaderRoute(moduleId: String) = "moduleReader/$moduleId"
