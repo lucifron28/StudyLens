@@ -173,12 +173,24 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     }
                 )
             }
-            composable(AppRoutes.SCANS) {
+            composable(AppRoutes.SCANS) { backStackEntry ->
                 val boardNotesViewModel: BoardNotesViewModel = viewModel(
                     factory = viewModelFactory {
                         BoardNotesViewModel(app.container.boardScansRepository)
                     }
                 )
+                
+                // Observe camera capture results
+                val capturedImageUri = backStackEntry.savedStateHandle.get<String>("captured_image_uri")
+                val context = LocalContext.current
+                LaunchedEffect(capturedImageUri) {
+                    if (capturedImageUri != null) {
+                        boardNotesViewModel.recognizeBoardImage(context, android.net.Uri.parse(capturedImageUri))
+                        // Clear it so we don't trigger it again
+                        backStackEntry.savedStateHandle.remove<String>("captured_image_uri")
+                    }
+                }
+
                 BoardNotesScreen(
                     viewModel = boardNotesViewModel,
                     onNavigateToOcrResult = { scanId ->
@@ -191,11 +203,6 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
             }
             composable(AppRoutes.CAMERA_CAPTURE) {
                 val context = LocalContext.current
-                val boardNotesViewModel: BoardNotesViewModel = viewModel(
-                    factory = viewModelFactory {
-                        BoardNotesViewModel(app.container.boardScansRepository)
-                    }
-                )
 
                 var hasCameraPermission by remember {
                     mutableStateOf(
@@ -214,7 +221,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                         permissionLauncher.launch(Manifest.permission.CAMERA)
                     },
                     onImageCaptured = { uri ->
-                        boardNotesViewModel.recognizeBoardImage(context, uri)
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("captured_image_uri", uri.toString())
                         navController.popBackStack()
                     },
                     onBack = { navController.popBackStack() }
