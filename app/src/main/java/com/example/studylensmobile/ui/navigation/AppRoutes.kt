@@ -1,5 +1,7 @@
 package com.example.studylensmobile.ui.navigation
 
+import android.net.Uri
+
 object AppRoutes {
     const val LOGIN = "login"
     const val REGISTER = "register"
@@ -15,6 +17,7 @@ object AppRoutes {
     const val TUTOR = "tutor/{sourceType}/{sourceId}"
     const val PROFILE = "profile"
     const val CAMERA_CAPTURE = "camera_capture"
+    const val IMAGE_CROP = "image_crop/{imageUri}"
 
     fun createSubjectDetailRoute(subjectId: String) = "subjectDetail/$subjectId"
     fun createModuleReaderRoute(moduleId: String) = "moduleReader/$moduleId"
@@ -23,4 +26,5 @@ object AppRoutes {
     fun createFlashcardsRoute(sourceType: String, sourceId: String) = "flashcards/$sourceType/$sourceId"
     fun createQuizRoute(sourceType: String, sourceId: String) = "quiz/$sourceType/$sourceId"
     fun createTutorRoute(sourceType: String, sourceId: String) = "tutor/$sourceType/$sourceId"
+    fun createImageCropRoute(imageUri: String) = "image_crop/${Uri.encode(imageUri)}"
 }
