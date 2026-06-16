@@ -46,6 +46,7 @@ fun ModuleReaderScreen(
     onBack: () -> Unit,
     onNavigateToSummary: () -> Unit,
     onNavigateToFlashcards: () -> Unit,
+    onNavigateToQuiz: () -> Unit,
     onNavigateToTutor: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -98,6 +99,7 @@ fun ModuleReaderScreen(
                     isRefreshing = uiState.isRefreshing,
                     onNavigateToSummary = onNavigateToSummary,
                     onNavigateToFlashcards = onNavigateToFlashcards,
+                    onNavigateToQuiz = onNavigateToQuiz,
                     onNavigateToTutor = onNavigateToTutor,
                     modifier = Modifier.padding(padding)
                 )
@@ -112,6 +114,7 @@ private fun ModuleReaderContent(
     isRefreshing: Boolean,
     onNavigateToSummary: () -> Unit,
     onNavigateToFlashcards: () -> Unit,
+    onNavigateToQuiz: () -> Unit,
     onNavigateToTutor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -154,27 +157,40 @@ private fun ModuleReaderContent(
         }
 
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = onNavigateToSummary,
-                    modifier = Modifier.weight(1f)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Summary")
+                    Button(
+                        onClick = onNavigateToSummary,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Summary")
+                    }
+                    Button(
+                        onClick = onNavigateToFlashcards,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cards")
+                    }
                 }
-                Button(
-                    onClick = onNavigateToFlashcards,
-                    modifier = Modifier.weight(1f)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Cards")
-                }
-                Button(
-                    onClick = onNavigateToTutor,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Tutor")
+                    Button(
+                        onClick = onNavigateToQuiz,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Quiz")
+                    }
+                    Button(
+                        onClick = onNavigateToTutor,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Tutor")
+                    }
                 }
             }
         }

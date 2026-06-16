@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -89,6 +90,7 @@ fun AiSummaryScreen(
             else -> {
                 SummaryContent(
                     summary = summary,
+                    isRefreshing = uiState.isRefreshing,
                     errorMessage = uiState.errorMessage,
                     onRetry = viewModel::generateSummary,
                     onCreateFlashcards = onCreateFlashcards,
@@ -104,6 +106,7 @@ fun AiSummaryScreen(
 @Composable
 private fun SummaryContent(
     summary: Summary,
+    isRefreshing: Boolean,
     errorMessage: String?,
     onRetry: () -> Unit,
     onCreateFlashcards: (String, String) -> Unit,
@@ -124,41 +127,9 @@ private fun SummaryContent(
             StudyLensInlineError(message = errorMessage, onRetry = onRetry)
         }
 
-        StudyLensCard {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Key Summary",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    StatusChip(status = summary.sourceType.toDisplayLabel())
-                }
-                if (summary.title.isNotBlank()) {
-                    Text(
-                        text = summary.title,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 6.dp)
-                    )
-                }
-                Text(
-                    text = summary.content,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
-        }
+        SummarySourceCard(summary = summary, isRefreshing = isRefreshing)
+
+        SummaryBodyCard(summary = summary)
 
         if (summary.keyTakeaways.isNotEmpty()) {
             SectionHeader(title = "Key Takeaways")
@@ -176,24 +147,101 @@ private fun SummaryContent(
 
         if (sourceId != null) {
             SectionHeader(title = "Next Actions")
-            Button(
-                onClick = { onCreateFlashcards(summary.sourceType, sourceId) },
-                modifier = Modifier.fillMaxWidth()
+            SummaryActions(
+                onCreateFlashcards = { onCreateFlashcards(summary.sourceType, sourceId) },
+                onPracticeQuiz = { onPracticeQuiz(summary.sourceType, sourceId) },
+                onAskTutor = { onAskTutor(summary.sourceType, sourceId) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummarySourceCard(
+    summary: Summary,
+    isRefreshing: Boolean
+) {
+    StudyLensCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Create Flashcards")
+                Text(
+                    text = summary.sourceTitle(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                StatusChip(status = summary.sourceType.toDisplayLabel())
             }
-            Button(
-                onClick = { onPracticeQuiz(summary.sourceType, sourceId) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Practice Quiz")
-            }
-            Button(
-                onClick = { onAskTutor(summary.sourceType, sourceId) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ask AI Tutor")
-            }
+            Text(
+                text = if (isRefreshing) "Refreshing summary..." else "Generated ${summary.createdAt}",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryBodyCard(summary: Summary) {
+    StudyLensCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
+            Text(
+                text = "Key Summary",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = summary.content,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryActions(
+    onCreateFlashcards: () -> Unit,
+    onPracticeQuiz: () -> Unit,
+    onAskTutor: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Button(
+            onClick = onCreateFlashcards,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Cards")
+        }
+        OutlinedButton(
+            onClick = onPracticeQuiz,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Quiz")
+        }
+        OutlinedButton(
+            onClick = onAskTutor,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Tutor")
         }
     }
 }
@@ -204,5 +252,14 @@ private fun Summary.sourceIdForActions(): String? {
         "chapter" -> chapterId
         "board_scan" -> boardScanId
         else -> null
+    }
+}
+
+private fun Summary.sourceTitle(): String {
+    return title.ifBlank {
+        listOf(moduleTitle, chapterTitle)
+            .filter { it.isNotBlank() }
+            .joinToString(" - ")
+            .ifBlank { sourceType.toDisplayLabel() }
     }
 }
