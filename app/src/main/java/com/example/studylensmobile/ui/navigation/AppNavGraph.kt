@@ -31,6 +31,8 @@ import com.example.studylensmobile.feature.studytools.FlashcardsScreen
 import com.example.studylensmobile.feature.studytools.FlashcardsViewModel
 import com.example.studylensmobile.feature.studytools.QuizScreen
 import com.example.studylensmobile.feature.studytools.QuizViewModel
+import com.example.studylensmobile.feature.studytools.TutorScreen
+import com.example.studylensmobile.feature.studytools.TutorViewModel
 import com.example.studylensmobile.feature.subjects.SubjectDetailScreen
 import com.example.studylensmobile.feature.subjects.SubjectDetailViewModel
 import com.example.studylensmobile.feature.subjects.SubjectsScreen
@@ -155,6 +157,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToQuiz = {
                         navController.navigate(AppRoutes.createQuizRoute("module", moduleId))
+                    },
+                    onNavigateToTutor = {
+                        navController.navigate(AppRoutes.createTutorRoute("module", moduleId))
                     }
                 )
             }
@@ -192,6 +197,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToQuiz = { boardScanId ->
                         navController.navigate(AppRoutes.createQuizRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToTutor = { boardScanId ->
+                        navController.navigate(AppRoutes.createTutorRoute("board_scan", boardScanId))
                     }
                 )
             }
@@ -215,6 +223,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onPracticeQuiz = { type, id ->
                         navController.navigate(AppRoutes.createQuizRoute(type, id))
+                    },
+                    onAskTutor = { type, id ->
+                        navController.navigate(AppRoutes.createTutorRoute(type, id))
                     }
                 )
             }
@@ -249,6 +260,23 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                 )
                 QuizScreen(
                     viewModel = quizViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppRoutes.TUTOR) { backStackEntry ->
+                val sourceType = backStackEntry.arguments?.getString("sourceType") ?: ""
+                val sourceId = backStackEntry.arguments?.getString("sourceId") ?: ""
+                val tutorViewModel: TutorViewModel = viewModel(
+                    factory = viewModelFactory {
+                        TutorViewModel(
+                            sourceType = sourceType,
+                            sourceId = sourceId,
+                            aiRepository = app.container.aiRepository
+                        )
+                    }
+                )
+                TutorScreen(
+                    viewModel = tutorViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }

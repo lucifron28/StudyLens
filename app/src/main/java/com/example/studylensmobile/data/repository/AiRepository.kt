@@ -9,12 +9,19 @@ import com.example.studylensmobile.data.remote.dto.GenerateFlashcardsRequest
 import com.example.studylensmobile.data.remote.dto.GenerateQuizRequest
 import com.example.studylensmobile.data.remote.dto.QuizDto
 import com.example.studylensmobile.data.remote.dto.QuizQuestionDto
+import com.example.studylensmobile.data.remote.dto.StartTutorRequest
 import com.example.studylensmobile.data.remote.dto.SummaryDto
 import com.example.studylensmobile.data.remote.dto.SummaryRequest
+import com.example.studylensmobile.data.remote.dto.TutorMessageDto
+import com.example.studylensmobile.data.remote.dto.TutorMessageRequest
+import com.example.studylensmobile.data.remote.dto.TutorResponseDto
+import com.example.studylensmobile.data.remote.dto.TutorSessionDto
 import com.example.studylensmobile.domain.model.Flashcard
 import com.example.studylensmobile.domain.model.Quiz
 import com.example.studylensmobile.domain.model.QuizQuestion
 import com.example.studylensmobile.domain.model.Summary
+import com.example.studylensmobile.domain.model.TutorMessage
+import com.example.studylensmobile.domain.model.TutorSession
 
 class AiRepository(
     private val aiApi: AiApi
@@ -70,7 +77,47 @@ class AiRepository(
             quiz.toDomain()
         }.withAiFailureMessage("Quiz generation")
     }
+
+    suspend fun startTutor(
+        sourceType: String,
+        sourceId: String,
+        title: String? = null
+    ): Result<TutorTurn> {
+        val source = sourceFor(sourceType, sourceId)
+            ?: return Result.failure(Exception("Unsupported or invalid tutor source."))
+        val request = StartTutorRequest(
+            moduleId = source.moduleId,
+            chapterId = source.chapterId,
+            boardScanId = source.boardScanId,
+            title = title
+        )
+
+        return apiResult("Tutor session", { aiApi.startTutor(request) }) {
+            it.toDomain()
+        }.withAiFailureMessage("Tutor session")
+    }
+
+    suspend fun sendTutorMessage(
+        sessionId: String,
+        message: String
+    ): Result<TutorTurn> {
+        val id = sessionId.toIntOrNull()
+            ?: return Result.failure(Exception("Unsupported or invalid tutor session."))
+        val request = TutorMessageRequest(
+            sessionId = id,
+            message = message
+        )
+
+        return apiResult("Tutor message", { aiApi.sendTutorMessage(request) }) {
+            it.toDomain()
+        }.withAiFailureMessage("Tutor message")
+    }
 }
+
+data class TutorTurn(
+    val session: TutorSession,
+    val message: TutorMessage
+)
 
 private fun <T> Result<T>.withAiFailureMessage(action: String): Result<T> {
     if (isSuccess) return this
@@ -161,6 +208,37 @@ private fun QuizQuestionDto.toDomain(): QuizQuestion {
         correctAnswer = correctAnswer,
         explanation = explanation,
         order = order
+    )
+}
+
+private fun TutorResponseDto.toDomain(): TutorTurn {
+    return TutorTurn(
+        session = session.toDomain(),
+        message = message.toDomain()
+    )
+}
+
+private fun TutorSessionDto.toDomain(): TutorSession {
+    return TutorSession(
+        id = id.toString(),
+        title = title,
+        status = status.toDisplayLabel(),
+        clearAnswersCount = clearAnswersCount,
+        targetClearAnswers = targetClearAnswers,
+        moduleTitle = moduleTitle.orEmpty(),
+        chapterTitle = chapterTitle.orEmpty(),
+        createdAt = createdAt.toReadableDate()
+    )
+}
+
+private fun TutorMessageDto.toDomain(): TutorMessage {
+    return TutorMessage(
+        id = id.toString(),
+        sessionId = session.toString(),
+        role = role.toDisplayLabel(),
+        content = content,
+        clarityResult = clarityResult.orEmpty().toDisplayLabel(),
+        createdAt = createdAt.toReadableDate()
     )
 }
 

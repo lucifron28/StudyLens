@@ -40,7 +40,8 @@ fun AiSummaryScreen(
     viewModel: AiSummaryViewModel,
     onBack: () -> Unit,
     onCreateFlashcards: (String, String) -> Unit,
-    onPracticeQuiz: (String, String) -> Unit
+    onPracticeQuiz: (String, String) -> Unit,
+    onAskTutor: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val summary = uiState.summary
@@ -94,6 +95,7 @@ fun AiSummaryScreen(
                     onRetry = viewModel::generateSummary,
                     onCreateFlashcards = onCreateFlashcards,
                     onPracticeQuiz = onPracticeQuiz,
+                    onAskTutor = onAskTutor,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -109,6 +111,7 @@ private fun SummaryContent(
     onRetry: () -> Unit,
     onCreateFlashcards: (String, String) -> Unit,
     onPracticeQuiz: (String, String) -> Unit,
+    onAskTutor: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val sourceId = summary.sourceIdForActions()
@@ -146,7 +149,8 @@ private fun SummaryContent(
             SectionHeader(title = "Next Actions")
             SummaryActions(
                 onCreateFlashcards = { onCreateFlashcards(summary.sourceType, sourceId) },
-                onPracticeQuiz = { onPracticeQuiz(summary.sourceType, sourceId) }
+                onPracticeQuiz = { onPracticeQuiz(summary.sourceType, sourceId) },
+                onAskTutor = { onAskTutor(summary.sourceType, sourceId) }
             )
         }
     }
@@ -214,7 +218,8 @@ private fun SummaryBodyCard(summary: Summary) {
 @Composable
 private fun SummaryActions(
     onCreateFlashcards: () -> Unit,
-    onPracticeQuiz: () -> Unit
+    onPracticeQuiz: () -> Unit,
+    onAskTutor: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -231,6 +236,12 @@ private fun SummaryActions(
             modifier = Modifier.weight(1f)
         ) {
             Text("Quiz")
+        }
+        OutlinedButton(
+            onClick = onAskTutor,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Tutor")
         }
     }
 }

@@ -40,7 +40,8 @@ fun OcrResultScreen(
     onBack: () -> Unit,
     onNavigateToSummary: (String) -> Unit,
     onNavigateToFlashcards: (String) -> Unit,
-    onNavigateToQuiz: (String) -> Unit
+    onNavigateToQuiz: (String) -> Unit,
+    onNavigateToTutor: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scan = uiState.boardScan
@@ -98,6 +99,7 @@ fun OcrResultScreen(
                     onNavigateToSummary = onNavigateToSummary,
                     onNavigateToFlashcards = onNavigateToFlashcards,
                     onNavigateToQuiz = onNavigateToQuiz,
+                    onNavigateToTutor = onNavigateToTutor,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -116,6 +118,7 @@ private fun OcrResultContent(
     onNavigateToSummary: (String) -> Unit,
     onNavigateToFlashcards: (String) -> Unit,
     onNavigateToQuiz: (String) -> Unit,
+    onNavigateToTutor: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -162,27 +165,40 @@ private fun OcrResultContent(
             Text(if (isSaving) "Saving..." else "Save Note")
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { onNavigateToSummary(scan.id) },
-                modifier = Modifier.weight(1f)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Summary")
+                Button(
+                    onClick = { onNavigateToSummary(scan.id) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Summary")
+                }
+                Button(
+                    onClick = { onNavigateToFlashcards(scan.id) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Cards")
+                }
             }
-            Button(
-                onClick = { onNavigateToFlashcards(scan.id) },
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Cards")
-            }
-            Button(
-                onClick = { onNavigateToQuiz(scan.id) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Quiz")
+                Button(
+                    onClick = { onNavigateToQuiz(scan.id) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Quiz")
+                }
+                Button(
+                    onClick = { onNavigateToTutor(scan.id) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Tutor")
+                }
             }
         }
     }
