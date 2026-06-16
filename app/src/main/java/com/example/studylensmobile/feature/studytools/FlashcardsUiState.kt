@@ -19,6 +19,9 @@ data class FlashcardsUiState(
     val canGoNext: Boolean
         get() = currentIndex < flashcards.lastIndex
 
+    val isComplete: Boolean
+        get() = flashcards.isNotEmpty() && currentIndex == flashcards.lastIndex && isAnswerVisible
+
     val progressLabel: String
         get() = if (flashcards.isEmpty()) "0 / 0" else "${currentIndex + 1} / ${flashcards.size}"
 }

@@ -79,6 +79,15 @@ class FlashcardsViewModel(
         }
     }
 
+    fun restartDeck() {
+        _uiState.update {
+            it.copy(
+                currentIndex = 0,
+                isAnswerVisible = false
+            )
+        }
+    }
+
     private companion object {
         const val MIN_FLASHCARDS = 3
         const val MAX_FLASHCARDS = 10

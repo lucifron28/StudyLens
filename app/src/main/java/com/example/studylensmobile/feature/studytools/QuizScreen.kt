@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.Quiz
 import com.example.studylensmobile.domain.model.QuizQuestion
+import com.example.studylensmobile.ui.components.LumiCard
 import com.example.studylensmobile.ui.components.MarkdownInlineText
 import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
@@ -101,6 +102,7 @@ fun QuizScreen(
                     onPrevious = viewModel::previousQuestion,
                     onNext = viewModel::nextQuestion,
                     onRestart = viewModel::restartQuiz,
+                    onDone = onBack,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -120,6 +122,7 @@ private fun QuizContent(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onRestart: () -> Unit,
+    onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -176,6 +179,19 @@ private fun QuizContent(
                     onNext = onNext,
                     onRestart = onRestart
                 )
+            }
+
+            if (uiState.isComplete) {
+                item {
+                    LumiCard(
+                        title = quiz.completionTitle(uiState.score),
+                        message = "You scored ${uiState.score} out of ${quiz.questions.size}. Review the explanations, or try the same quiz again.",
+                        primaryActionLabel = "Done",
+                        onPrimaryAction = onDone,
+                        secondaryActionLabel = "Try Again",
+                        onSecondaryAction = onRestart
+                    )
+                }
             }
         }
     }
@@ -457,4 +473,8 @@ private fun QuizQuestion.answerChoices(): List<String> {
 
 private fun QuizQuestion.isShortAnswer(): Boolean {
     return questionType.equals("Short Answer", ignoreCase = true) || answerChoices().isEmpty()
+}
+
+private fun Quiz.completionTitle(score: Int): String {
+    return if (score == questions.size) "Congrats, quiz mastered" else "Quiz complete"
 }
