@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.Quiz
 import com.example.studylensmobile.domain.model.QuizQuestion
 import com.example.studylensmobile.ui.components.LumiCard
@@ -188,6 +189,8 @@ private fun QuizContent(
                         message = "You scored ${uiState.score} out of ${quiz.questions.size}. Review the explanations, or try the same quiz again.",
                         primaryActionLabel = "Done",
                         onPrimaryAction = onDone,
+                        imageResId = R.drawable.lumi_celebrating,
+                        imageContentDescription = "Lumi celebrating",
                         secondaryActionLabel = "Try Again",
                         onSecondaryAction = onRestart
                     )

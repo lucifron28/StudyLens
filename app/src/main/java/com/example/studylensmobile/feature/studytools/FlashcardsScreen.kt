@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.Flashcard
 import com.example.studylensmobile.ui.components.LumiCard
 import com.example.studylensmobile.ui.components.MarkdownText
@@ -169,6 +170,8 @@ private fun FlashcardsContent(
                         message = "Nice work. You reviewed all ${uiState.flashcards.size} cards in this deck.",
                         primaryActionLabel = "Done",
                         onPrimaryAction = onDone,
+                        imageResId = R.drawable.lumi_celebrating,
+                        imageContentDescription = "Lumi celebrating",
                         secondaryActionLabel = "Try Again",
                         onSecondaryAction = onRestart
                     )
