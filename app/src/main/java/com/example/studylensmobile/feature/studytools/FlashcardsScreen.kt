@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.Flashcard
+import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -230,10 +231,10 @@ private fun FlashcardReviewCard(
                     StatusChip(status = progressLabel)
                 }
             }
-            Text(
-                text = flashcard.question,
+            MarkdownText(
+                markdown = flashcard.question,
                 color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyLarge,
+                bodyStyle = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 14.dp)
             )
 
@@ -254,10 +255,10 @@ private fun FlashcardReviewCard(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 18.dp)
                 )
-                Text(
-                    text = flashcard.answer,
+                MarkdownText(
+                    markdown = flashcard.answer,
                     color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyLarge,
+                    bodyStyle = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }

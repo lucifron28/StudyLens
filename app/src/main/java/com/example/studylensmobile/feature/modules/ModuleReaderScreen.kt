@@ -31,6 +31,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.LearningChapter
 import com.example.studylensmobile.domain.model.LearningModule
+import com.example.studylensmobile.ui.components.MarkdownInlineText
+import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -272,10 +274,10 @@ private fun ReaderTextCard(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = text,
+            MarkdownText(
+                markdown = text,
                 color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyLarge,
+                bodyStyle = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 14.dp)
             )
         }
@@ -317,8 +319,8 @@ private fun ChapterCard(chapter: LearningChapter) {
                     modifier = Modifier.padding(top = 10.dp)
                 )
             } else {
-                Text(
-                    text = text,
+                MarkdownInlineText(
+                    markdown = text,
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 6,
