@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -82,6 +83,18 @@ fun BoardNotesScreen(
             StudyLensTopBar(
                 title = "Board Notes",
                 actions = {
+                    IconButton(
+                        onClick = {
+                            showCreateDialog = true
+                            openImagePicker()
+                        },
+                        enabled = !uiState.isMutating && !uiState.isRecognizingText
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = "Scan board image"
+                        )
+                    }
                     IconButton(
                         onClick = { showCreateDialog = true },
                         enabled = !uiState.isMutating
