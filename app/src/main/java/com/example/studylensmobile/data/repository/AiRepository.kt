@@ -30,7 +30,7 @@ class AiRepository(
 
         return apiResult("Summary", { aiApi.summarize(request) }) {
             it.toDomain()
-        }
+        }.withAiFailureMessage("Summary generation")
     }
 
     suspend fun generateFlashcards(
@@ -49,7 +49,7 @@ class AiRepository(
 
         return apiResult("Flashcards", { aiApi.generateFlashcards(request) }) { flashcards ->
             flashcards.map { it.toDomain() }
-        }
+        }.withAiFailureMessage("Flashcard generation")
     }
 
     suspend fun generateQuiz(
@@ -68,8 +68,24 @@ class AiRepository(
 
         return apiResult("Quiz", { aiApi.generateQuiz(request) }) { quiz ->
             quiz.toDomain()
-        }
+        }.withAiFailureMessage("Quiz generation")
     }
+}
+
+private fun <T> Result<T>.withAiFailureMessage(action: String): Result<T> {
+    if (isSuccess) return this
+
+    val message = exceptionOrNull()?.message.orEmpty()
+    val friendlyMessage = when {
+        message.contains("timeout", ignoreCase = true) ->
+            "$action took too long. Make sure Ollama is running, then try again."
+        message.contains("failed to connect", ignoreCase = true) ||
+            message.contains("unexpected end of stream", ignoreCase = true) ->
+            "$action could not reach the local AI service. Check the backend and Ollama."
+        else -> message.ifBlank { "$action failed. Please try again." }
+    }
+
+    return Result.failure(Exception(friendlyMessage))
 }
 
 private data class SourceIds(
