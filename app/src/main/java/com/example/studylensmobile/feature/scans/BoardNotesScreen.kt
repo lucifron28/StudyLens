@@ -79,6 +79,13 @@ fun BoardNotesScreen(
         imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
+    LaunchedEffect(uiState.isRecognizingText, uiState.ocrDraftText) {
+        if (uiState.isRecognizingText || uiState.ocrDraftText.isNotBlank()) {
+            showCreateDialog = true
+        }
+    }
+
+
     Scaffold(
         topBar = {
             StudyLensTopBar(
