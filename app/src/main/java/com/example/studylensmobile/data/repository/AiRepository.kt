@@ -26,9 +26,22 @@ import com.example.studylensmobile.domain.model.TutorSession
 class AiRepository(
     private val aiApi: AiApi
 ) {
-    suspend fun generateSummary(sourceType: String, sourceId: String): Result<Summary> {
+    private val summaryCache = mutableMapOf<AiCacheKey, Summary>()
+    private val flashcardsCache = mutableMapOf<AiCacheKey, List<Flashcard>>()
+    private val quizCache = mutableMapOf<AiCacheKey, Quiz>()
+
+    suspend fun generateSummary(
+        sourceType: String,
+        sourceId: String,
+        forceRefresh: Boolean = false
+    ): Result<Summary> {
         val source = sourceFor(sourceType, sourceId)
             ?: return Result.failure(Exception("Unsupported or invalid summary source."))
+        val cacheKey = AiCacheKey(sourceType = sourceType, sourceId = sourceId)
+        if (!forceRefresh) {
+            summaryCache[cacheKey]?.let { return Result.success(it) }
+        }
+
         val request = SummaryRequest(
             moduleId = source.moduleId,
             chapterId = source.chapterId,
@@ -37,16 +50,23 @@ class AiRepository(
 
         return apiResult("Summary", { aiApi.summarize(request) }) {
             it.toDomain()
+                .also { summary -> summaryCache[cacheKey] = summary }
         }.withAiFailureMessage("Summary generation")
     }
 
     suspend fun generateFlashcards(
         sourceType: String,
         sourceId: String,
-        count: Int = 5
+        count: Int = 5,
+        forceRefresh: Boolean = false
     ): Result<List<Flashcard>> {
         val source = sourceFor(sourceType, sourceId)
             ?: return Result.failure(Exception("Unsupported or invalid flashcard source."))
+        val cacheKey = AiCacheKey(sourceType = sourceType, sourceId = sourceId, count = count)
+        if (!forceRefresh) {
+            flashcardsCache[cacheKey]?.let { return Result.success(it) }
+        }
+
         val request = GenerateFlashcardsRequest(
             moduleId = source.moduleId,
             chapterId = source.chapterId,
@@ -56,16 +76,23 @@ class AiRepository(
 
         return apiResult("Flashcards", { aiApi.generateFlashcards(request) }) { flashcards ->
             flashcards.map { it.toDomain() }
+                .also { cards -> flashcardsCache[cacheKey] = cards }
         }.withAiFailureMessage("Flashcard generation")
     }
 
     suspend fun generateQuiz(
         sourceType: String,
         sourceId: String,
-        count: Int = 5
+        count: Int = 5,
+        forceRefresh: Boolean = false
     ): Result<Quiz> {
         val source = sourceFor(sourceType, sourceId)
             ?: return Result.failure(Exception("Unsupported or invalid quiz source."))
+        val cacheKey = AiCacheKey(sourceType = sourceType, sourceId = sourceId, count = count)
+        if (!forceRefresh) {
+            quizCache[cacheKey]?.let { return Result.success(it) }
+        }
+
         val request = GenerateQuizRequest(
             moduleId = source.moduleId,
             chapterId = source.chapterId,
@@ -75,6 +102,7 @@ class AiRepository(
 
         return apiResult("Quiz", { aiApi.generateQuiz(request) }) { quiz ->
             quiz.toDomain()
+                .also { generatedQuiz -> quizCache[cacheKey] = generatedQuiz }
         }.withAiFailureMessage("Quiz generation")
     }
 
@@ -117,6 +145,12 @@ class AiRepository(
 data class TutorTurn(
     val session: TutorSession,
     val message: TutorMessage
+)
+
+private data class AiCacheKey(
+    val sourceType: String,
+    val sourceId: String,
+    val count: Int? = null
 )
 
 private fun <T> Result<T>.withAiFailureMessage(action: String): Result<T> {
