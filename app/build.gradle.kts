@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.mlkit.text.recognition)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

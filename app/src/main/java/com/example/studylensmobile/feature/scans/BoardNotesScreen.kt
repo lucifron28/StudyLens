@@ -1,5 +1,8 @@
 package com.example.studylensmobile.feature.scans
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -30,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,15 +65,36 @@ fun BoardNotesScreen(
     onNavigateToOcrResult: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { viewModel.recognizeBoardImage(context, it) }
+    }
     var showCreateDialog by remember { mutableStateOf(false) }
     var editingScan by remember { mutableStateOf<BoardScan?>(null) }
     var deletingScan by remember { mutableStateOf<BoardScan?>(null) }
+    val openImagePicker = {
+        imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
 
     Scaffold(
         topBar = {
             StudyLensTopBar(
                 title = "Board Notes",
                 actions = {
+                    IconButton(
+                        onClick = {
+                            showCreateDialog = true
+                            openImagePicker()
+                        },
+                        enabled = !uiState.isMutating && !uiState.isRecognizingText
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = "Scan board image"
+                        )
+                    }
                     IconButton(
                         onClick = { showCreateDialog = true },
                         enabled = !uiState.isMutating
@@ -128,7 +155,14 @@ fun BoardNotesScreen(
         BoardNoteFormDialog(
             scan = null,
             isSaving = uiState.isMutating,
-            onDismiss = { showCreateDialog = false },
+            isRecognizingText = uiState.isRecognizingText,
+            ocrDraftText = uiState.ocrDraftText,
+            onPickImage = openImagePicker,
+            onOcrDraftApplied = viewModel::clearOcrDraft,
+            onDismiss = {
+                viewModel.clearOcrDraft()
+                showCreateDialog = false
+            },
             onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId ->
                 viewModel.createBoardScan(
                     rawOcrText = rawText,
@@ -148,7 +182,14 @@ fun BoardNotesScreen(
         BoardNoteFormDialog(
             scan = scan,
             isSaving = uiState.isMutating,
-            onDismiss = { editingScan = null },
+            isRecognizingText = uiState.isRecognizingText,
+            ocrDraftText = uiState.ocrDraftText,
+            onPickImage = openImagePicker,
+            onOcrDraftApplied = viewModel::clearOcrDraft,
+            onDismiss = {
+                viewModel.clearOcrDraft()
+                editingScan = null
+            },
             onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId ->
                 viewModel.updateBoardScan(
                     scanId = scan.id,
@@ -324,6 +365,10 @@ private fun BoardScanCard(
 private fun BoardNoteFormDialog(
     scan: BoardScan?,
     isSaving: Boolean,
+    isRecognizingText: Boolean,
+    ocrDraftText: String,
+    onPickImage: () -> Unit,
+    onOcrDraftApplied: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (
         rawText: String,
@@ -348,6 +393,15 @@ private fun BoardNoteFormDialog(
     var chapterId by remember(scan?.id) { mutableStateOf(scan?.chapterId.orEmpty()) }
     var validationMessage by remember(scan?.id) { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(ocrDraftText) {
+        if (ocrDraftText.isNotBlank()) {
+            rawText = ocrDraftText
+            cleanedText = ocrDraftText
+            validationMessage = null
+            onOcrDraftApplied()
+        }
+    }
+
     AlertDialog(
         onDismissRequest = {
             if (!isSaving) {
@@ -360,6 +414,13 @@ private fun BoardNoteFormDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Button(
+                    onClick = onPickImage,
+                    enabled = !isSaving && !isRecognizingText,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (isRecognizingText) "Reading image..." else "Scan Image")
+                }
                 OutlinedTextField(
                     value = cleanedText,
                     onValueChange = {
