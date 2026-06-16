@@ -78,13 +78,19 @@ fun SubjectDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showCreateModuleDialog = true }) {
+                    IconButton(
+                        onClick = { showCreateModuleDialog = true },
+                        enabled = !uiState.isMutating
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add module"
                         )
                     }
-                    IconButton(onClick = viewModel::loadOverview) {
+                    IconButton(
+                        onClick = viewModel::loadOverview,
+                        enabled = !uiState.isMutating
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh subject"
@@ -122,6 +128,7 @@ fun SubjectDetailScreen(
                     onNavigateToModuleReader = onNavigateToModuleReader,
                     onEditModule = { editingModule = it },
                     onDeleteModule = { deletingModule = it },
+                    actionsEnabled = !uiState.isMutating,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -188,6 +195,7 @@ private fun SubjectOverviewContent(
     onNavigateToModuleReader: (String) -> Unit,
     onEditModule: (SubjectModulePreview) -> Unit,
     onDeleteModule: (SubjectModulePreview) -> Unit,
+    actionsEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -218,7 +226,8 @@ private fun SubjectOverviewContent(
                     module = module,
                     onClick = { onNavigateToModuleReader(module.id) },
                     onEdit = { onEditModule(module) },
-                    onDelete = { onDeleteModule(module) }
+                    onDelete = { onDeleteModule(module) },
+                    actionsEnabled = actionsEnabled
                 )
             }
         }
@@ -330,7 +339,8 @@ private fun ModulePreviewCard(
     module: SubjectModulePreview,
     onClick: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    actionsEnabled: Boolean
 ) {
     StudyLensCard(onClick = onClick) {
         Row(
@@ -359,13 +369,19 @@ private fun ModulePreviewCard(
             Column(horizontalAlignment = Alignment.End) {
                 StatusChip(status = module.contentType)
                 Row {
-                    IconButton(onClick = onEdit) {
+                    IconButton(
+                        onClick = onEdit,
+                        enabled = actionsEnabled
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit module"
                         )
                     }
-                    IconButton(onClick = onDelete) {
+                    IconButton(
+                        onClick = onDelete,
+                        enabled = actionsEnabled
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete module"
@@ -393,6 +409,7 @@ private fun ModuleFormDialog(
     var description by remember(module?.id) { mutableStateOf(module?.description.orEmpty()) }
     var contentType by remember(module?.id) { mutableStateOf(module?.contentType?.lowercase() ?: "markdown") }
     var markdownContent by remember(module?.id) { mutableStateOf("") }
+    var validationMessage by remember(module?.id) { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = {
@@ -405,7 +422,10 @@ private fun ModuleFormDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = {
+                        title = it
+                        validationMessage = null
+                    },
                     enabled = !isSaving,
                     label = { Text("Title") },
                     singleLine = true,
@@ -421,7 +441,10 @@ private fun ModuleFormDialog(
                 )
                 OutlinedTextField(
                     value = contentType,
-                    onValueChange = { contentType = it },
+                    onValueChange = {
+                        contentType = it
+                        validationMessage = null
+                    },
                     enabled = !isSaving,
                     label = { Text("Content type") },
                     placeholder = { Text("markdown, text, pdf, docx, pptx") },
@@ -436,12 +459,36 @@ private fun ModuleFormDialog(
                     minLines = 4,
                     modifier = Modifier.fillMaxWidth()
                 )
+                validationMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSave(title, description, contentType, markdownContent) },
-                enabled = !isSaving && title.isNotBlank()
+                onClick = {
+                    val cleanedTitle = title.trim()
+                    val cleanedContentType = contentType.trim().lowercase()
+                    when {
+                        cleanedTitle.isBlank() -> validationMessage = "Module title is required."
+                        cleanedContentType !in validModuleContentTypes -> {
+                            validationMessage = "Use markdown, text, pdf, docx, or pptx."
+                        }
+                        else -> {
+                            onSave(
+                                cleanedTitle,
+                                description.trim(),
+                                cleanedContentType,
+                                markdownContent.trim()
+                            )
+                        }
+                    }
+                },
+                enabled = !isSaving && title.trim().isNotBlank()
             ) {
                 Text(if (isSaving) "Saving..." else "Save")
             }
@@ -456,6 +503,8 @@ private fun ModuleFormDialog(
         }
     )
 }
+
+private val validModuleContentTypes = setOf("markdown", "text", "pdf", "docx", "pptx")
 
 @Composable
 private fun TaskPreviewCard(task: SubjectTaskPreview) {
