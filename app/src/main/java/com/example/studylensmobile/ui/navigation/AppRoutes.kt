@@ -12,6 +12,7 @@ object AppRoutes {
     const val AI_SUMMARY = "aiSummary/{sourceType}/{sourceId}"
     const val FLASHCARDS = "flashcards/{sourceType}/{sourceId}"
     const val QUIZ = "quiz/{sourceType}/{sourceId}"
+    const val TUTOR = "tutor/{sourceType}/{sourceId}"
     const val PROFILE = "profile"
 
     fun createSubjectDetailRoute(subjectId: String) = "subjectDetail/$subjectId"
@@ -20,4 +21,5 @@ object AppRoutes {
     fun createAiSummaryRoute(sourceType: String, sourceId: String) = "aiSummary/$sourceType/$sourceId"
     fun createFlashcardsRoute(sourceType: String, sourceId: String) = "flashcards/$sourceType/$sourceId"
     fun createQuizRoute(sourceType: String, sourceId: String) = "quiz/$sourceType/$sourceId"
+    fun createTutorRoute(sourceType: String, sourceId: String) = "tutor/$sourceType/$sourceId"
 }

@@ -39,7 +39,8 @@ fun AiSummaryScreen(
     viewModel: AiSummaryViewModel,
     onBack: () -> Unit,
     onCreateFlashcards: (String, String) -> Unit,
-    onPracticeQuiz: (String, String) -> Unit
+    onPracticeQuiz: (String, String) -> Unit,
+    onAskTutor: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val summary = uiState.summary
@@ -92,6 +93,7 @@ fun AiSummaryScreen(
                     onRetry = viewModel::generateSummary,
                     onCreateFlashcards = onCreateFlashcards,
                     onPracticeQuiz = onPracticeQuiz,
+                    onAskTutor = onAskTutor,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -106,6 +108,7 @@ private fun SummaryContent(
     onRetry: () -> Unit,
     onCreateFlashcards: (String, String) -> Unit,
     onPracticeQuiz: (String, String) -> Unit,
+    onAskTutor: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val sourceId = summary.sourceIdForActions()
@@ -184,6 +187,12 @@ private fun SummaryContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Practice Quiz")
+            }
+            Button(
+                onClick = { onAskTutor(summary.sourceType, sourceId) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ask AI Tutor")
             }
         }
     }
