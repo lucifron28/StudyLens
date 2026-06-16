@@ -18,10 +18,10 @@ class AiSummaryViewModel(
     val uiState: StateFlow<AiSummaryUiState> = _uiState.asStateFlow()
 
     init {
-        generateSummary()
+        generateSummary(forceRefresh = false)
     }
 
-    fun generateSummary() {
+    fun generateSummary(forceRefresh: Boolean = true) {
         viewModelScope.launch {
             _uiState.update {
                 val hasSummary = it.summary != null
@@ -34,7 +34,8 @@ class AiSummaryViewModel(
 
             val result = aiRepository.generateSummary(
                 sourceType = sourceType,
-                sourceId = sourceId
+                sourceId = sourceId,
+                forceRefresh = forceRefresh
             )
 
             _uiState.update {

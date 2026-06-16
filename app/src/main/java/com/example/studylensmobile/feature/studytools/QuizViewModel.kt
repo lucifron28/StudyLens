@@ -18,10 +18,10 @@ class QuizViewModel(
     val uiState: StateFlow<QuizUiState> = _uiState.asStateFlow()
 
     init {
-        generateQuiz()
+        generateQuiz(forceRefresh = false)
     }
 
-    fun generateQuiz() {
+    fun generateQuiz(forceRefresh: Boolean = true) {
         viewModelScope.launch {
             val count = _uiState.value.requestedCount
 
@@ -35,7 +35,8 @@ class QuizViewModel(
             val result = aiRepository.generateQuiz(
                 sourceType = sourceType,
                 sourceId = sourceId,
-                count = count
+                count = count,
+                forceRefresh = forceRefresh
             )
 
             _uiState.update {
