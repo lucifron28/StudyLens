@@ -152,6 +152,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToFlashcards = {
                         navController.navigate(AppRoutes.createFlashcardsRoute("module", moduleId))
+                    },
+                    onNavigateToQuiz = {
+                        navController.navigate(AppRoutes.createQuizRoute("module", moduleId))
                     }
                 )
             }
@@ -186,6 +189,9 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToFlashcards = { boardScanId ->
                         navController.navigate(AppRoutes.createFlashcardsRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToQuiz = { boardScanId ->
+                        navController.navigate(AppRoutes.createQuizRoute("board_scan", boardScanId))
                     }
                 )
             }

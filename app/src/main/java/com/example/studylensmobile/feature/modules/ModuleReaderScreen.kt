@@ -45,7 +45,8 @@ fun ModuleReaderScreen(
     viewModel: ModuleReaderViewModel,
     onBack: () -> Unit,
     onNavigateToSummary: () -> Unit,
-    onNavigateToFlashcards: () -> Unit
+    onNavigateToFlashcards: () -> Unit,
+    onNavigateToQuiz: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val module = uiState.module
@@ -97,6 +98,7 @@ fun ModuleReaderScreen(
                     isRefreshing = uiState.isRefreshing,
                     onNavigateToSummary = onNavigateToSummary,
                     onNavigateToFlashcards = onNavigateToFlashcards,
+                    onNavigateToQuiz = onNavigateToQuiz,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -110,6 +112,7 @@ private fun ModuleReaderContent(
     isRefreshing: Boolean,
     onNavigateToSummary: () -> Unit,
     onNavigateToFlashcards: () -> Unit,
+    onNavigateToQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -165,7 +168,13 @@ private fun ModuleReaderContent(
                     onClick = onNavigateToFlashcards,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Flashcards")
+                    Text("Cards")
+                }
+                Button(
+                    onClick = onNavigateToQuiz,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Quiz")
                 }
             }
         }
