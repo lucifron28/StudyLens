@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.domain.model.Summary
+import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensInlineError
@@ -135,10 +136,10 @@ private fun SummaryContent(
             SectionHeader(title = "Key Takeaways")
             summary.keyTakeaways.forEach { takeaway ->
                 StudyLensCard {
-                    Text(
-                        text = takeaway,
+                    MarkdownText(
+                        markdown = takeaway,
                         color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyLarge,
+                        bodyStyle = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(16.dp)
                     )
                 }
@@ -205,10 +206,10 @@ private fun SummaryBodyCard(summary: Summary) {
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = summary.content,
+            MarkdownText(
+                markdown = summary.content,
                 color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyLarge,
+                bodyStyle = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 16.dp)
             )
         }

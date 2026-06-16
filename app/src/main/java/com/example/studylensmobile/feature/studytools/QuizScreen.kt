@@ -26,9 +26,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.Quiz
 import com.example.studylensmobile.domain.model.QuizQuestion
+import com.example.studylensmobile.ui.components.MarkdownInlineText
+import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -298,10 +301,10 @@ private fun QuizQuestionPracticeCard(
                 }
             }
 
-            Text(
-                text = question.question,
+            MarkdownText(
+                markdown = question.question,
                 color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyLarge
+                bodyStyle = MaterialTheme.typography.bodyLarge
             )
 
             AnswerInput(
@@ -356,7 +359,11 @@ private fun AnswerInput(
                         enabled = !isSubmitted,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(choice)
+                        MarkdownInlineText(
+                            markdown = choice,
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 } else {
                     OutlinedButton(
@@ -364,7 +371,11 @@ private fun AnswerInput(
                         enabled = !isSubmitted,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(choice)
+                        MarkdownInlineText(
+                            markdown = choice,
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
@@ -385,17 +396,17 @@ private fun AnswerFeedback(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(
-            text = "Answer: $correctAnswer",
+        MarkdownInlineText(
+            markdown = "**Answer:** $correctAnswer",
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp)
         )
         if (explanation.isNotBlank()) {
-            Text(
-                text = explanation,
+            MarkdownText(
+                markdown = explanation,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
+                bodyStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 6.dp)
             )
         }
