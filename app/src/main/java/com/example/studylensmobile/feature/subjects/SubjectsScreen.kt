@@ -67,13 +67,19 @@ fun SubjectsScreen(
             StudyLensTopBar(
                 title = "Subjects",
                 actions = {
-                    IconButton(onClick = { showCreateDialog = true }) {
+                    IconButton(
+                        onClick = { showCreateDialog = true },
+                        enabled = !uiState.isMutating
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add subject"
                         )
                     }
-                    IconButton(onClick = viewModel::loadSubjects) {
+                    IconButton(
+                        onClick = viewModel::loadSubjects,
+                        enabled = !uiState.isMutating
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh subjects"
@@ -110,6 +116,7 @@ fun SubjectsScreen(
                     onNavigateToSubjectDetail = onNavigateToSubjectDetail,
                     onEditSubject = { editingSubject = it },
                     onDeleteSubject = { deletingSubject = it },
+                    actionsEnabled = !uiState.isMutating,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -171,6 +178,7 @@ private fun SubjectsContent(
     onNavigateToSubjectDetail: (String) -> Unit,
     onEditSubject: (Subject) -> Unit,
     onDeleteSubject: (Subject) -> Unit,
+    actionsEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -218,7 +226,8 @@ private fun SubjectsContent(
                     subject = subject,
                     onClick = { onNavigateToSubjectDetail(subject.id) },
                     onEdit = { onEditSubject(subject) },
-                    onDelete = { onDeleteSubject(subject) }
+                    onDelete = { onDeleteSubject(subject) },
+                    actionsEnabled = actionsEnabled
                 )
             }
         }
@@ -229,7 +238,8 @@ private fun SubjectCard(
     subject: Subject,
     onClick: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    actionsEnabled: Boolean
 ) {
     StudyLensCard(onClick = onClick) {
         Column(
@@ -254,13 +264,19 @@ private fun SubjectCard(
                     )
                 }
                 Row {
-                    IconButton(onClick = onEdit) {
+                    IconButton(
+                        onClick = onEdit,
+                        enabled = actionsEnabled
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit subject"
                         )
                     }
-                    IconButton(onClick = onDelete) {
+                    IconButton(
+                        onClick = onDelete,
+                        enabled = actionsEnabled
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete subject"
@@ -310,6 +326,7 @@ private fun SubjectFormDialog(
 ) {
     var title by remember(subject?.id) { mutableStateOf(subject?.title.orEmpty()) }
     var description by remember(subject?.id) { mutableStateOf(subject?.description.orEmpty()) }
+    var validationMessage by remember(subject?.id) { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = {
@@ -322,7 +339,10 @@ private fun SubjectFormDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = {
+                        title = it
+                        validationMessage = null
+                    },
                     enabled = !isSaving,
                     label = { Text("Title") },
                     singleLine = true,
@@ -336,12 +356,26 @@ private fun SubjectFormDialog(
                     minLines = 3,
                     modifier = Modifier.fillMaxWidth()
                 )
+                validationMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSave(title, description) },
-                enabled = !isSaving && title.isNotBlank()
+                onClick = {
+                    val cleanedTitle = title.trim()
+                    if (cleanedTitle.isBlank()) {
+                        validationMessage = "Subject title is required."
+                    } else {
+                        onSave(cleanedTitle, description.trim())
+                    }
+                },
+                enabled = !isSaving && title.trim().isNotBlank()
             ) {
                 Text(if (isSaving) "Saving..." else "Save")
             }
