@@ -24,8 +24,10 @@ class AiSummaryViewModel(
     fun generateSummary() {
         viewModelScope.launch {
             _uiState.update {
+                val hasSummary = it.summary != null
                 it.copy(
-                    isLoading = true,
+                    isLoading = !hasSummary,
+                    isRefreshing = hasSummary,
                     errorMessage = null
                 )
             }
@@ -38,6 +40,7 @@ class AiSummaryViewModel(
             _uiState.update {
                 it.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     summary = result.getOrNull() ?: it.summary,
                     errorMessage = result.exceptionOrNull()?.message
                 )
