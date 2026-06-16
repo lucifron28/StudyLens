@@ -18,10 +18,10 @@ class FlashcardsViewModel(
     val uiState: StateFlow<FlashcardsUiState> = _uiState.asStateFlow()
 
     init {
-        generateFlashcards()
+        generateFlashcards(forceRefresh = false)
     }
 
-    fun generateFlashcards() {
+    fun generateFlashcards(forceRefresh: Boolean = true) {
         viewModelScope.launch {
             val count = _uiState.value.requestedCount
 
@@ -35,7 +35,8 @@ class FlashcardsViewModel(
             val result = aiRepository.generateFlashcards(
                 sourceType = sourceType,
                 sourceId = sourceId,
-                count = count
+                count = count,
+                forceRefresh = forceRefresh
             )
 
             _uiState.update {

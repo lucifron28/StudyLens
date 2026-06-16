@@ -19,10 +19,10 @@ class TutorViewModel(
     val uiState: StateFlow<TutorUiState> = _uiState.asStateFlow()
 
     init {
-        startTutor()
+        startTutor(forceRefresh = false)
     }
 
-    fun startTutor() {
+    fun startTutor(forceRefresh: Boolean = true) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
@@ -34,16 +34,17 @@ class TutorViewModel(
 
             val result = aiRepository.startTutor(
                 sourceType = sourceType,
-                sourceId = sourceId
+                sourceId = sourceId,
+                forceRefresh = forceRefresh
             )
 
             _uiState.update { state ->
                 result.fold(
-                    onSuccess = { turn ->
+                    onSuccess = { conversation ->
                         state.copy(
                             isStarting = false,
-                            session = turn.session,
-                            messages = listOf(turn.message),
+                            session = conversation.session,
+                            messages = conversation.messages,
                             draftMessage = "",
                             errorMessage = null
                         )
