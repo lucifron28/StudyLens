@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.TutorMessage
 import com.example.studylensmobile.domain.model.TutorSession
-import com.example.studylensmobile.ui.components.LumiCard
+import com.example.studylensmobile.ui.components.LumiDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
@@ -105,20 +105,30 @@ fun TutorScreen(
             else -> {
                 TutorContent(
                     uiState = uiState,
-                    onDone = onBack,
-                    onRestart = viewModel::startTutor,
                     modifier = Modifier.padding(padding)
                 )
             }
         }
+    }
+
+    val masteredSession = uiState.session?.takeIf { it.isMastered }
+    if (masteredSession != null) {
+        LumiDialog(
+            title = "Congrats, topic mastered",
+            message = "You answered ${masteredSession.clearAnswersCount} clear responses. This tutor round is complete.",
+            primaryActionLabel = "Done",
+            onPrimaryAction = onBack,
+            imageResId = R.drawable.lumi_celebrating,
+            imageContentDescription = "Lumi celebrating",
+            secondaryActionLabel = "Try Again",
+            onSecondaryAction = viewModel::startTutor
+        )
     }
 }
 
 @Composable
 private fun TutorContent(
     uiState: TutorUiState,
-    onDone: () -> Unit,
-    onRestart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -154,21 +164,6 @@ private fun TutorContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-
-        if (uiState.session?.isMastered == true) {
-            item {
-                LumiCard(
-                    title = "Congrats, topic mastered",
-                    message = "You answered ${uiState.session.clearAnswersCount} clear responses. This tutor round is complete.",
-                    primaryActionLabel = "Done",
-                    onPrimaryAction = onDone,
-                    imageResId = R.drawable.lumi_celebrating,
-                    imageContentDescription = "Lumi celebrating",
-                    secondaryActionLabel = "Try Again",
-                    onSecondaryAction = onRestart
                 )
             }
         }

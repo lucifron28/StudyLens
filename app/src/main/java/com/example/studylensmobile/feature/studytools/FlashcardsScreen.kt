@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.Flashcard
-import com.example.studylensmobile.ui.components.LumiCard
+import com.example.studylensmobile.ui.components.LumiDialog
 import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
@@ -98,12 +98,23 @@ fun FlashcardsScreen(
                     onToggleAnswer = viewModel::toggleAnswer,
                     onPrevious = viewModel::previousCard,
                     onNext = viewModel::nextCard,
-                    onRestart = viewModel::restartDeck,
-                    onDone = onBack,
                     modifier = Modifier.padding(padding)
                 )
             }
         }
+    }
+
+    if (uiState.isComplete) {
+        LumiDialog(
+            title = "Deck complete",
+            message = "Nice work. You reviewed all ${uiState.flashcards.size} cards in this deck.",
+            primaryActionLabel = "Done",
+            onPrimaryAction = onBack,
+            imageResId = R.drawable.lumi_celebrating,
+            imageContentDescription = "Lumi celebrating",
+            secondaryActionLabel = "Try Again",
+            onSecondaryAction = viewModel::restartDeck
+        )
     }
 }
 
@@ -116,8 +127,6 @@ private fun FlashcardsContent(
     onToggleAnswer: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
-    onRestart: () -> Unit,
-    onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -161,21 +170,6 @@ private fun FlashcardsContent(
                     onPrevious = onPrevious,
                     onNext = onNext
                 )
-            }
-
-            if (uiState.isComplete) {
-                item {
-                    LumiCard(
-                        title = "Deck complete",
-                        message = "Nice work. You reviewed all ${uiState.flashcards.size} cards in this deck.",
-                        primaryActionLabel = "Done",
-                        onPrimaryAction = onDone,
-                        imageResId = R.drawable.lumi_celebrating,
-                        imageContentDescription = "Lumi celebrating",
-                        secondaryActionLabel = "Try Again",
-                        onSecondaryAction = onRestart
-                    )
-                }
             }
         }
     }

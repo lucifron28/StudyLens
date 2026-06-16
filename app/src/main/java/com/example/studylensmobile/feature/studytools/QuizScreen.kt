@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.Quiz
 import com.example.studylensmobile.domain.model.QuizQuestion
-import com.example.studylensmobile.ui.components.LumiCard
+import com.example.studylensmobile.ui.components.LumiDialog
 import com.example.studylensmobile.ui.components.MarkdownInlineText
 import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
@@ -103,11 +103,23 @@ fun QuizScreen(
                     onPrevious = viewModel::previousQuestion,
                     onNext = viewModel::nextQuestion,
                     onRestart = viewModel::restartQuiz,
-                    onDone = onBack,
                     modifier = Modifier.padding(padding)
                 )
             }
         }
+    }
+
+    if (quiz != null && uiState.isComplete) {
+        LumiDialog(
+            title = quiz.completionTitle(uiState.score),
+            message = "You scored ${uiState.score} out of ${quiz.questions.size}. Review the explanations, or try the same quiz again.",
+            primaryActionLabel = "Done",
+            onPrimaryAction = onBack,
+            imageResId = R.drawable.lumi_celebrating,
+            imageContentDescription = "Lumi celebrating",
+            secondaryActionLabel = "Try Again",
+            onSecondaryAction = viewModel::restartQuiz
+        )
     }
 }
 
@@ -123,7 +135,6 @@ private fun QuizContent(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onRestart: () -> Unit,
-    onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -180,21 +191,6 @@ private fun QuizContent(
                     onNext = onNext,
                     onRestart = onRestart
                 )
-            }
-
-            if (uiState.isComplete) {
-                item {
-                    LumiCard(
-                        title = quiz.completionTitle(uiState.score),
-                        message = "You scored ${uiState.score} out of ${quiz.questions.size}. Review the explanations, or try the same quiz again.",
-                        primaryActionLabel = "Done",
-                        onPrimaryAction = onDone,
-                        imageResId = R.drawable.lumi_celebrating,
-                        imageContentDescription = "Lumi celebrating",
-                        secondaryActionLabel = "Try Again",
-                        onSecondaryAction = onRestart
-                    )
-                }
             }
         }
     }
