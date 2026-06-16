@@ -17,11 +17,11 @@ data class CropArea(
     val right: Float,
     val bottom: Float
 ) {
-    fun normalized(): CropArea {
-        val safeLeft = left.coerceIn(0f, 1f - MIN_CROP_FRACTION)
-        val safeTop = top.coerceIn(0f, 1f - MIN_CROP_FRACTION)
-        val safeRight = right.coerceIn(safeLeft + MIN_CROP_FRACTION, 1f)
-        val safeBottom = bottom.coerceIn(safeTop + MIN_CROP_FRACTION, 1f)
+    fun normalized(minCropFraction: Float = MIN_CROP_FRACTION): CropArea {
+        val safeLeft = left.coerceIn(0f, 1f - minCropFraction)
+        val safeTop = top.coerceIn(0f, 1f - minCropFraction)
+        val safeRight = right.coerceIn(safeLeft + minCropFraction, 1f)
+        val safeBottom = bottom.coerceIn(safeTop + minCropFraction, 1f)
         return CropArea(safeLeft, safeTop, safeRight, safeBottom)
     }
 
@@ -31,14 +31,40 @@ data class CropArea(
     }
 }
 
+data class ImageCropTransform(
+    val scale: Float = 1f,
+    val offsetX: Float = 0f,
+    val offsetY: Float = 0f
+) {
+    fun normalized(): ImageCropTransform {
+        val safeScale = scale.coerceIn(MIN_SCALE, MAX_SCALE)
+        val maxOffset = (safeScale - 1f) / 2f
+        return ImageCropTransform(
+            scale = safeScale,
+            offsetX = offsetX.coerceIn(-maxOffset, maxOffset),
+            offsetY = offsetY.coerceIn(-maxOffset, maxOffset)
+        )
+    }
+
+    companion object {
+        const val MIN_SCALE = 1f
+        const val MAX_SCALE = 4f
+    }
+}
+
 object ImageCropper {
     suspend fun cropToCache(
         context: Context,
         sourceUri: Uri,
-        cropArea: CropArea
+        cropArea: CropArea,
+        imageTransform: ImageCropTransform = ImageCropTransform()
     ): Uri = withContext(Dispatchers.IO) {
         val bitmap = loadBitmap(context, sourceUri)
-        val crop = cropArea.normalized()
+        val crop = cropArea.toBitmapCrop(
+            bitmapWidth = bitmap.width,
+            bitmapHeight = bitmap.height,
+            imageTransform = imageTransform.normalized()
+        )
 
         val leftPx = (bitmap.width * crop.left).toInt().coerceIn(0, bitmap.width - 1)
         val topPx = (bitmap.height * crop.top).toInt().coerceIn(0, bitmap.height - 1)
@@ -76,5 +102,35 @@ object ImageCropper {
         }
     }
 
+    private fun CropArea.toBitmapCrop(
+        bitmapWidth: Int,
+        bitmapHeight: Int,
+        imageTransform: ImageCropTransform
+    ): CropArea {
+        val aspectRatio = bitmapWidth.toFloat() / bitmapHeight.toFloat()
+        val baseWidth = if (aspectRatio >= 1f) aspectRatio else 1f
+        val baseHeight = if (aspectRatio >= 1f) 1f else 1f / aspectRatio
+        val displayedWidth = baseWidth * imageTransform.scale
+        val displayedHeight = baseHeight * imageTransform.scale
+        val imageLeft = 0.5f - displayedWidth / 2f + imageTransform.offsetX
+        val imageTop = 0.5f - displayedHeight / 2f + imageTransform.offsetY
+
+        fun mapX(value: Float): Float {
+            return ((value - imageLeft) / displayedWidth).coerceIn(0f, 1f)
+        }
+
+        fun mapY(value: Float): Float {
+            return ((value - imageTop) / displayedHeight).coerceIn(0f, 1f)
+        }
+
+        return CropArea(
+            left = mapX(left),
+            top = mapY(top),
+            right = mapX(right),
+            bottom = mapY(bottom)
+        ).normalized(minCropFraction = MIN_BITMAP_CROP_FRACTION)
+    }
+
     private const val JPEG_QUALITY = 92
+    private const val MIN_BITMAP_CROP_FRACTION = 0.01f
 }
