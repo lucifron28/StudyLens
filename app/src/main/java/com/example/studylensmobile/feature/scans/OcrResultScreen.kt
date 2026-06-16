@@ -38,7 +38,8 @@ import com.example.studylensmobile.ui.components.StatusChip
 fun OcrResultScreen(
     viewModel: OcrResultViewModel,
     onBack: () -> Unit,
-    onNavigateToSummary: (String) -> Unit
+    onNavigateToSummary: (String) -> Unit,
+    onNavigateToFlashcards: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scan = uiState.boardScan
@@ -94,6 +95,7 @@ fun OcrResultScreen(
                     onCleanedTextChange = viewModel::updateCleanedText,
                     onSaveNote = { viewModel.saveNote() },
                     onNavigateToSummary = onNavigateToSummary,
+                    onNavigateToFlashcards = onNavigateToFlashcards,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -110,6 +112,7 @@ private fun OcrResultContent(
     onCleanedTextChange: (String) -> Unit,
     onSaveNote: () -> Unit,
     onNavigateToSummary: (String) -> Unit,
+    onNavigateToFlashcards: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -156,11 +159,22 @@ private fun OcrResultContent(
             Text(if (isSaving) "Saving..." else "Save Note")
         }
 
-        Button(
-            onClick = { onNavigateToSummary(scan.id) },
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Generate Summary")
+            Button(
+                onClick = { onNavigateToSummary(scan.id) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Summary")
+            }
+            Button(
+                onClick = { onNavigateToFlashcards(scan.id) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Flashcards")
+            }
         }
     }
 }

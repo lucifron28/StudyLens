@@ -44,7 +44,8 @@ import com.example.studylensmobile.ui.components.StatusChip
 fun ModuleReaderScreen(
     viewModel: ModuleReaderViewModel,
     onBack: () -> Unit,
-    onNavigateToSummary: () -> Unit
+    onNavigateToSummary: () -> Unit,
+    onNavigateToFlashcards: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val module = uiState.module
@@ -95,6 +96,7 @@ fun ModuleReaderScreen(
                     module = module,
                     isRefreshing = uiState.isRefreshing,
                     onNavigateToSummary = onNavigateToSummary,
+                    onNavigateToFlashcards = onNavigateToFlashcards,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -107,6 +109,7 @@ private fun ModuleReaderContent(
     module: LearningModule,
     isRefreshing: Boolean,
     onNavigateToSummary: () -> Unit,
+    onNavigateToFlashcards: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -148,11 +151,22 @@ private fun ModuleReaderContent(
         }
 
         item {
-            Button(
-                onClick = onNavigateToSummary,
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Generate Summary")
+                Button(
+                    onClick = onNavigateToSummary,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Summary")
+                }
+                Button(
+                    onClick = onNavigateToFlashcards,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Flashcards")
+                }
             }
         }
     }
