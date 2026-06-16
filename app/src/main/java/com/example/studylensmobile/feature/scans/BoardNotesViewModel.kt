@@ -1,7 +1,10 @@
 package com.example.studylensmobile.feature.scans
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.studylensmobile.core.ocr.OcrTextRecognizer
 import com.example.studylensmobile.data.repository.BoardScansRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +30,47 @@ class BoardNotesViewModel(
         viewModelScope.launch {
             refreshBoardScans()
         }
+    }
+
+    fun recognizeBoardImage(context: Context, imageUri: Uri) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isRecognizingText = true,
+                    errorMessage = null
+                )
+            }
+
+            runCatching {
+                OcrTextRecognizer.recognizeText(context.applicationContext, imageUri)
+            }.fold(
+                onSuccess = { text ->
+                    _uiState.update {
+                        it.copy(
+                            isRecognizingText = false,
+                            ocrDraftText = text,
+                            errorMessage = if (text.isBlank()) {
+                                "No text was detected in the selected image."
+                            } else {
+                                null
+                            }
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    _uiState.update {
+                        it.copy(
+                            isRecognizingText = false,
+                            errorMessage = error.message ?: "OCR failed. Try another image."
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun clearOcrDraft() {
+        _uiState.update { it.copy(ocrDraftText = "", isRecognizingText = false) }
     }
 
     fun createBoardScan(
