@@ -29,6 +29,8 @@ class AiRepository(
     private val summaryCache = mutableMapOf<AiCacheKey, Summary>()
     private val flashcardsCache = mutableMapOf<AiCacheKey, List<Flashcard>>()
     private val quizCache = mutableMapOf<AiCacheKey, Quiz>()
+    private val tutorConversationCache = mutableMapOf<AiCacheKey, TutorConversation>()
+    private val tutorSessionCacheKeys = mutableMapOf<String, AiCacheKey>()
 
     suspend fun generateSummary(
         sourceType: String,
@@ -109,10 +111,16 @@ class AiRepository(
     suspend fun startTutor(
         sourceType: String,
         sourceId: String,
-        title: String? = null
-    ): Result<TutorTurn> {
+        title: String? = null,
+        forceRefresh: Boolean = false
+    ): Result<TutorConversation> {
         val source = sourceFor(sourceType, sourceId)
             ?: return Result.failure(Exception("Unsupported or invalid tutor source."))
+        val cacheKey = AiCacheKey(sourceType = sourceType, sourceId = sourceId)
+        if (!forceRefresh) {
+            tutorConversationCache[cacheKey]?.let { return Result.success(it) }
+        }
+
         val request = StartTutorRequest(
             moduleId = source.moduleId,
             chapterId = source.chapterId,
@@ -121,7 +129,11 @@ class AiRepository(
         )
 
         return apiResult("Tutor session", { aiApi.startTutor(request) }) {
-            it.toDomain()
+            it.toDomain().toConversation()
+                .also { conversation ->
+                    tutorConversationCache[cacheKey] = conversation
+                    tutorSessionCacheKeys[conversation.session.id] = cacheKey
+                }
         }.withAiFailureMessage("Tutor session")
     }
 
@@ -138,6 +150,18 @@ class AiRepository(
 
         return apiResult("Tutor message", { aiApi.sendTutorMessage(request) }) {
             it.toDomain()
+                .also { turn ->
+                    val cacheKey = tutorSessionCacheKeys[turn.session.id]
+                        ?: tutorSessionCacheKeys[sessionId]
+                    if (cacheKey != null) {
+                        val existingMessages = tutorConversationCache[cacheKey]?.messages.orEmpty()
+                        tutorConversationCache[cacheKey] = TutorConversation(
+                            session = turn.session,
+                            messages = existingMessages + message.toCachedUserMessage(sessionId) + turn.message
+                        )
+                        tutorSessionCacheKeys[turn.session.id] = cacheKey
+                    }
+                }
         }.withAiFailureMessage("Tutor message")
     }
 }
@@ -147,11 +171,32 @@ data class TutorTurn(
     val message: TutorMessage
 )
 
+data class TutorConversation(
+    val session: TutorSession,
+    val messages: List<TutorMessage>
+)
+
 private data class AiCacheKey(
     val sourceType: String,
     val sourceId: String,
     val count: Int? = null
 )
+
+private fun TutorTurn.toConversation(): TutorConversation {
+    return TutorConversation(
+        session = session,
+        messages = listOf(message)
+    )
+}
+
+private fun String.toCachedUserMessage(sessionId: String): TutorMessage {
+    return TutorMessage(
+        id = "cached-user-${System.currentTimeMillis()}",
+        sessionId = sessionId,
+        role = "User",
+        content = this
+    )
+}
 
 private fun <T> Result<T>.withAiFailureMessage(action: String): Result<T> {
     if (isSuccess) return this
