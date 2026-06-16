@@ -62,7 +62,8 @@ import com.example.studylensmobile.ui.components.StatusChip
 @Composable
 fun BoardNotesScreen(
     viewModel: BoardNotesViewModel,
-    onNavigateToOcrResult: (String) -> Unit
+    onNavigateToOcrResult: (String) -> Unit,
+    onNavigateToCamera: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -84,15 +85,12 @@ fun BoardNotesScreen(
                 title = "Board Notes",
                 actions = {
                     IconButton(
-                        onClick = {
-                            showCreateDialog = true
-                            openImagePicker()
-                        },
+                        onClick = onNavigateToCamera,
                         enabled = !uiState.isMutating && !uiState.isRecognizingText
                     ) {
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Scan board image"
+                            contentDescription = "Capture board image"
                         )
                     }
                     IconButton(
