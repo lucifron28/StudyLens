@@ -45,17 +45,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.studylensmobile.core.ocr.CropArea
 import com.example.studylensmobile.core.ocr.ImageCropper
+import com.example.studylensmobile.core.ocr.ImageCropTransform
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensInlineError
 import com.example.studylensmobile.ui.components.StudyLensTopBar
@@ -72,6 +76,7 @@ fun ImageCropScreen(
     val scope = rememberCoroutineScope()
 
     var cropArea by remember { mutableStateOf(CropArea.DefaultGuide) }
+    var imageTransform by remember { mutableStateOf(ImageCropTransform()) }
     var isCropping by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -108,7 +113,9 @@ fun ImageCropScreen(
                 CropPreview(
                     imageUri = imageUri,
                     cropArea = cropArea,
+                    imageTransform = imageTransform,
                     onCropAreaChange = { cropArea = it },
+                    onImageTransformChange = { imageTransform = it },
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -130,7 +137,8 @@ fun ImageCropScreen(
                             ImageCropper.cropToCache(
                                 context = context,
                                 sourceUri = Uri.parse(imageUri),
-                                cropArea = cropArea
+                                cropArea = cropArea,
+                                imageTransform = imageTransform
                             )
                         }.onSuccess { croppedUri ->
                             onCropConfirmed(croppedUri)
@@ -171,24 +179,32 @@ fun ImageCropScreen(
 private fun CropPreview(
     imageUri: String,
     cropArea: CropArea,
+    imageTransform: ImageCropTransform,
     onCropAreaChange: (CropArea) -> Unit,
+    onImageTransformChange: (ImageCropTransform) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentCropArea by rememberUpdatedState(cropArea)
+    val currentImageTransform by rememberUpdatedState(imageTransform)
     val currentOnCropAreaChange by rememberUpdatedState(onCropAreaChange)
-    val cornerHitRadiusPx = with(LocalDensity.current) { 44.dp.toPx() }
+    val currentOnImageTransformChange by rememberUpdatedState(onImageTransformChange)
+    val cornerHitRadiusPx = with(LocalDensity.current) { 36.dp.toPx() }
+    var previewSize by remember { mutableStateOf(IntSize.Zero) }
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+            .onSizeChanged { previewSize = it }
             .clip(RoundedCornerShape(16.dp))
             .background(Color.Black)
             .pointerInput(Unit) {
                 awaitEachGesture {
                     var activeCropArea = currentCropArea
+                    var activeImageTransform = currentImageTransform
                     var dragMode = CropDragMode.None
                     var lastPinchDistance: Float? = null
+                    var lastPinchCenter: Offset? = null
                     var keepGoing: Boolean
 
                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -204,30 +220,57 @@ private fun CropPreview(
 
                         if (pressedChanges.size >= 2) {
                             val distance = pressedChanges.averageDistance()
+                            val pinchCenter = pressedChanges.center()
                             val previousDistance = lastPinchDistance
+                            val previousPinchCenter = lastPinchCenter
 
-                            if (previousDistance != null && previousDistance > 0f) {
-                                activeCropArea = activeCropArea.zoomedBy(
-                                    zoomChange = distance / previousDistance
+                            if (
+                                previousDistance != null &&
+                                previousDistance > 0f &&
+                                previousPinchCenter != null
+                            ) {
+                                val centerDelta = Offset(
+                                    x = pinchCenter.x - previousPinchCenter.x,
+                                    y = pinchCenter.y - previousPinchCenter.y
                                 )
-                                currentOnCropAreaChange(activeCropArea)
+                                activeImageTransform = activeImageTransform
+                                    .zoomedAround(
+                                        zoomChange = distance / previousDistance,
+                                        focus = pinchCenter,
+                                        canvasSize = size
+                                    )
+                                    .movedBy(
+                                        dx = centerDelta.x / size.width.coerceAtLeast(1),
+                                        dy = centerDelta.y / size.height.coerceAtLeast(1)
+                                    )
+                                currentOnImageTransformChange(activeImageTransform)
                             }
 
                             lastPinchDistance = distance
+                            lastPinchCenter = pinchCenter
                             pressedChanges.forEach { it.consume() }
                         } else {
                             lastPinchDistance = null
+                            lastPinchCenter = null
 
                             pressedChanges.firstOrNull()?.let { change ->
                                 val dragDelta = change.positionChange()
 
-                                if (dragDelta != Offset.Zero && dragMode != CropDragMode.None) {
-                                    activeCropArea = activeCropArea.draggedBy(
-                                        mode = dragMode,
-                                        delta = dragDelta,
-                                        canvasSize = size
-                                    )
-                                    currentOnCropAreaChange(activeCropArea)
+                                if (dragDelta != Offset.Zero) {
+                                    if (dragMode != CropDragMode.None) {
+                                        activeCropArea = activeCropArea.draggedBy(
+                                            mode = dragMode,
+                                            delta = dragDelta,
+                                            canvasSize = size
+                                        )
+                                        currentOnCropAreaChange(activeCropArea)
+                                    } else if (activeImageTransform.scale > ImageCropTransform.MIN_SCALE) {
+                                        activeImageTransform = activeImageTransform.movedBy(
+                                            dx = dragDelta.x / size.width.coerceAtLeast(1),
+                                            dy = dragDelta.y / size.height.coerceAtLeast(1)
+                                        )
+                                        currentOnImageTransformChange(activeImageTransform)
+                                    }
                                     change.consume()
                                 }
                             }
@@ -242,7 +285,14 @@ private fun CropPreview(
             model = Uri.parse(imageUri),
             contentDescription = "Captured board image",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = imageTransform.scale
+                    scaleY = imageTransform.scale
+                    translationX = imageTransform.offsetX * previewSize.width
+                    translationY = imageTransform.offsetY * previewSize.height
+                }
         )
 
         CropOverlay(cropArea = cropArea)
@@ -262,32 +312,53 @@ private fun BoxWithConstraintsScope.CropOverlay(cropArea: CropArea) {
                 height = maxHeight * cropArea.heightFraction
             )
             .border(
-                width = 3.dp,
+                width = 2.dp,
                 color = MaterialTheme.colorScheme.secondary,
                 shape = RoundedCornerShape(12.dp)
             )
     ) {
-        CornerHandle(alignment = Alignment.TopStart)
-        CornerHandle(alignment = Alignment.TopEnd)
-        CornerHandle(alignment = Alignment.BottomStart)
-        CornerHandle(alignment = Alignment.BottomEnd)
+        CornerHandle(
+            alignment = Alignment.TopStart,
+            xOffset = (-8).dp,
+            yOffset = (-8).dp
+        )
+        CornerHandle(
+            alignment = Alignment.TopEnd,
+            xOffset = 8.dp,
+            yOffset = (-8).dp
+        )
+        CornerHandle(
+            alignment = Alignment.BottomStart,
+            xOffset = (-8).dp,
+            yOffset = 8.dp
+        )
+        CornerHandle(
+            alignment = Alignment.BottomEnd,
+            xOffset = 8.dp,
+            yOffset = 8.dp
+        )
     }
 }
 
 @Composable
-private fun BoxScope.CornerHandle(alignment: Alignment) {
+private fun BoxScope.CornerHandle(
+    alignment: Alignment,
+    xOffset: Dp,
+    yOffset: Dp
+) {
     Box(
         modifier = Modifier
             .align(alignment)
-            .size(26.dp)
+            .offset(x = xOffset, y = yOffset)
+            .size(16.dp)
             .background(
                 color = MaterialTheme.colorScheme.secondary,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(5.dp)
             )
             .border(
-                width = 2.dp,
+                width = 1.dp,
                 color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(5.dp)
             )
     )
 }
@@ -368,21 +439,33 @@ private fun CropArea.movedBy(dx: Float, dy: Float): CropArea {
     ).normalized()
 }
 
-private fun CropArea.zoomedBy(zoomChange: Float): CropArea {
+private fun ImageCropTransform.movedBy(dx: Float, dy: Float): ImageCropTransform {
+    return copy(
+        offsetX = offsetX + dx,
+        offsetY = offsetY + dy
+    ).normalized()
+}
+
+private fun ImageCropTransform.zoomedAround(
+    zoomChange: Float,
+    focus: Offset,
+    canvasSize: IntSize
+): ImageCropTransform {
     if (zoomChange <= 0f) return this
 
-    val newWidth = (widthFraction / zoomChange).coerceIn(CropArea.MIN_CROP_FRACTION, 1f)
-    val newHeight = (heightFraction / zoomChange).coerceIn(CropArea.MIN_CROP_FRACTION, 1f)
-    val centerX = (left + right) / 2f
-    val centerY = (top + bottom) / 2f
-    val newLeft = (centerX - newWidth / 2f).coerceIn(0f, 1f - newWidth)
-    val newTop = (centerY - newHeight / 2f).coerceIn(0f, 1f - newHeight)
+    val oldScale = scale
+    val newScale = (scale * zoomChange).coerceIn(
+        ImageCropTransform.MIN_SCALE,
+        ImageCropTransform.MAX_SCALE
+    )
+    val scaleRatio = newScale / oldScale
+    val focusX = focus.x / canvasSize.width.coerceAtLeast(1) - 0.5f
+    val focusY = focus.y / canvasSize.height.coerceAtLeast(1) - 0.5f
 
-    return CropArea(
-        left = newLeft,
-        top = newTop,
-        right = newLeft + newWidth,
-        bottom = newTop + newHeight
+    return copy(
+        scale = newScale,
+        offsetX = focusX + scaleRatio * (offsetX - focusX),
+        offsetY = focusY + scaleRatio * (offsetY - focusY)
     ).normalized()
 }
 
@@ -392,6 +475,13 @@ private fun List<androidx.compose.ui.input.pointer.PointerInputChange>.averageDi
         y = sumOf { it.position.y.toDouble() }.toFloat() / size
     )
     return sumOf { it.position.distanceTo(center).toDouble() }.toFloat() / size
+}
+
+private fun List<androidx.compose.ui.input.pointer.PointerInputChange>.center(): Offset {
+    return Offset(
+        x = sumOf { it.position.x.toDouble() }.toFloat() / size,
+        y = sumOf { it.position.y.toDouble() }.toFloat() / size
+    )
 }
 
 private fun Offset.distanceTo(x: Float, y: Float): Float {
