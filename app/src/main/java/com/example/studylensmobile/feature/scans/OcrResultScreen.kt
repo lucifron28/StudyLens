@@ -39,7 +39,8 @@ fun OcrResultScreen(
     viewModel: OcrResultViewModel,
     onBack: () -> Unit,
     onNavigateToSummary: (String) -> Unit,
-    onNavigateToFlashcards: (String) -> Unit
+    onNavigateToFlashcards: (String) -> Unit,
+    onNavigateToQuiz: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scan = uiState.boardScan
@@ -96,6 +97,7 @@ fun OcrResultScreen(
                     onSaveNote = { viewModel.saveNote() },
                     onNavigateToSummary = onNavigateToSummary,
                     onNavigateToFlashcards = onNavigateToFlashcards,
+                    onNavigateToQuiz = onNavigateToQuiz,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -113,6 +115,7 @@ private fun OcrResultContent(
     onSaveNote: () -> Unit,
     onNavigateToSummary: (String) -> Unit,
     onNavigateToFlashcards: (String) -> Unit,
+    onNavigateToQuiz: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -173,7 +176,13 @@ private fun OcrResultContent(
                 onClick = { onNavigateToFlashcards(scan.id) },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Flashcards")
+                Text("Cards")
+            }
+            Button(
+                onClick = { onNavigateToQuiz(scan.id) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Quiz")
             }
         }
     }
