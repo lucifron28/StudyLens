@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,6 +79,7 @@ fun BoardNotesScreen(
     val openImagePicker = {
         imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
+    val cameraEnabled = !uiState.isMutating && !uiState.isRecognizingText
 
     LaunchedEffect(uiState.isRecognizingText, uiState.ocrDraftText) {
         if (uiState.isRecognizingText || uiState.ocrDraftText.isNotBlank()) {
@@ -91,15 +93,6 @@ fun BoardNotesScreen(
             StudyLensTopBar(
                 title = "Board Notes",
                 actions = {
-                    IconButton(
-                        onClick = onNavigateToCamera,
-                        enabled = !uiState.isMutating && !uiState.isRecognizingText
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Capture board image"
-                        )
-                    }
                     IconButton(
                         onClick = { showCreateDialog = true },
                         enabled = !uiState.isMutating
@@ -120,6 +113,30 @@ fun BoardNotesScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    if (cameraEnabled) {
+                        onNavigateToCamera()
+                    }
+                },
+                containerColor = if (cameraEnabled) {
+                    MaterialTheme.colorScheme.secondary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                contentColor = if (cameraEnabled) {
+                    MaterialTheme.colorScheme.onSecondary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PhotoCamera,
+                    contentDescription = "Capture board image"
+                )
+            }
         }
     ) { padding ->
         when {
