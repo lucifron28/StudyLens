@@ -12,7 +12,6 @@ data class Subject(
 data class SubjectOverview(
     val subject: Subject,
     val latestModules: List<SubjectModulePreview>,
-    val upcomingTasks: List<SubjectTaskPreview>,
     val recentBoardScans: List<SubjectBoardScanPreview>,
     val latestPosts: List<SubjectPostPreview>
 )
@@ -24,15 +23,6 @@ data class SubjectModulePreview(
     val contentType: String,
     val isFavorite: Boolean,
     val updatedAt: String
-)
-
-data class SubjectTaskPreview(
-    val id: String,
-    val title: String,
-    val taskType: String,
-    val status: String,
-    val priority: String,
-    val dueAt: String?
 )
 
 data class SubjectBoardScanPreview(

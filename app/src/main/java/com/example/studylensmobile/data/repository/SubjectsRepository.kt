@@ -12,14 +12,12 @@ import com.example.studylensmobile.data.remote.dto.SubjectDto
 import com.example.studylensmobile.data.remote.dto.SubjectModulePreviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectOverviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectPostPreviewDto
-import com.example.studylensmobile.data.remote.dto.SubjectTaskPreviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectWriteRequest
 import com.example.studylensmobile.domain.model.Subject
 import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
-import com.example.studylensmobile.domain.model.SubjectTaskPreview
 
 class SubjectsRepository(
     private val learningApi: LearningApi
@@ -174,14 +172,13 @@ private fun SubjectOverviewDto.toDomain(): SubjectOverview {
         code = title.toSubjectCode(id),
         title = title,
         description = description,
-        itemSummary = "$moduleCount Modules - $taskCount Tasks - $boardScanCount Notes",
+        itemSummary = "$moduleCount Modules - $boardScanCount Notes - $postCount Posts",
         progressPercentage = progressPercentage.coerceIn(0, 100)
     )
 
     return SubjectOverview(
         subject = subject,
         latestModules = latestModules.map { it.toDomain() },
-        upcomingTasks = upcomingTasks.map { it.toDomain() },
         recentBoardScans = recentBoardScans.map { it.toDomain() },
         latestPosts = latestPosts.map { it.toDomain() }
     )
@@ -206,17 +203,6 @@ private fun ModuleDto.toSubjectModulePreview(): SubjectModulePreview {
         contentType = contentType.toDisplayLabel(),
         isFavorite = isFavorite,
         updatedAt = updatedAt.toReadableDate()
-    )
-}
-
-private fun SubjectTaskPreviewDto.toDomain(): SubjectTaskPreview {
-    return SubjectTaskPreview(
-        id = id.toString(),
-        title = title,
-        taskType = taskType.toDisplayLabel(),
-        status = status.toDisplayLabel(),
-        priority = priority.toDisplayLabel(),
-        dueAt = dueAt?.toReadableDate()
     )
 }
 

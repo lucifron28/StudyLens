@@ -13,8 +13,7 @@ data class DashboardDto(
 data class DashboardStatsDto(
     @SerializedName("modules_in_progress") val modulesInProgress: Int,
     @SerializedName("notes_saved") val notesSaved: Int,
-    @SerializedName("quizzes_completed") val quizzesCompleted: Int,
-    @SerializedName("pending_tasks") val pendingTasks: Int
+    @SerializedName("quizzes_completed") val quizzesCompleted: Int
 )
 
 data class DashboardUpcomingItemDto(
@@ -24,11 +23,6 @@ data class DashboardUpcomingItemDto(
     val description: String,
     val subject: Int?,
     @SerializedName("subject_title") val subjectTitle: String,
-    val module: Int? = null,
-    @SerializedName("module_title") val moduleTitle: String? = null,
-    val status: String? = null,
-    val priority: String? = null,
-    @SerializedName("due_at") val dueAt: String? = null,
     @SerializedName("posted_at") val postedAt: String? = null
 )
 

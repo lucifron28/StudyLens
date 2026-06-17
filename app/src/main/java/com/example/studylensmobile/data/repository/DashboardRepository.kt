@@ -27,8 +27,7 @@ private fun DashboardDto.toDomain(): Dashboard {
         stats = DashboardStats(
             modulesInProgress = stats.modulesInProgress,
             notesSaved = stats.notesSaved,
-            quizzesCompleted = stats.quizzesCompleted,
-            pendingTasks = stats.pendingTasks
+            quizzesCompleted = stats.quizzesCompleted
         ),
         upcoming = upcoming.map { it.toDomain() },
         continueLearning = continueLearning.map { it.toDomain() },
@@ -44,11 +43,6 @@ private fun DashboardUpcomingItemDto.toDomain(): DashboardUpcomingItem {
         description = description,
         subjectId = subject,
         subjectTitle = subjectTitle,
-        moduleId = module,
-        moduleTitle = moduleTitle.orEmpty(),
-        status = status.orEmpty(),
-        priority = priority.orEmpty(),
-        dueAt = dueAt?.toReadableDate(),
         postedAt = postedAt?.toReadableDate()
     )
 }

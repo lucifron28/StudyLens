@@ -157,7 +157,7 @@ fun SubjectsScreen(
     deletingSubject?.let { subject ->
         DeleteConfirmationDialog(
             title = "Delete subject?",
-            message = "This will delete ${subject.title} and its modules, notes, tasks, and progress.",
+            message = "This will delete ${subject.title} and its modules, notes, posts, and progress.",
             isDeleting = uiState.isMutating,
             onConfirm = {
                 viewModel.deleteSubject(
