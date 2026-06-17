@@ -15,7 +15,6 @@ data class SubjectDto(
     val description: String,
     val color: String?,
     @SerializedName("module_count") val moduleCount: Int,
-    @SerializedName("task_count") val taskCount: Int,
     @SerializedName("board_scan_count") val boardScanCount: Int,
     @SerializedName("post_count") val postCount: Int,
     @SerializedName("progress_percentage") val progressPercentage: Int,
@@ -35,12 +34,10 @@ data class SubjectOverviewDto(
     val title: String,
     val description: String,
     @SerializedName("module_count") val moduleCount: Int,
-    @SerializedName("task_count") val taskCount: Int,
     @SerializedName("board_scan_count") val boardScanCount: Int,
     @SerializedName("post_count") val postCount: Int,
     @SerializedName("progress_percentage") val progressPercentage: Int,
     @SerializedName("latest_modules") val latestModules: List<SubjectModulePreviewDto>,
-    @SerializedName("upcoming_tasks") val upcomingTasks: List<SubjectTaskPreviewDto>,
     @SerializedName("recent_board_scans") val recentBoardScans: List<SubjectBoardScanPreviewDto>,
     @SerializedName("latest_posts") val latestPosts: List<SubjectPostPreviewDto>
 )
@@ -52,15 +49,6 @@ data class SubjectModulePreviewDto(
     @SerializedName("content_type") val contentType: String,
     @SerializedName("is_favorite") val isFavorite: Boolean,
     @SerializedName("updated_at") val updatedAt: String
-)
-
-data class SubjectTaskPreviewDto(
-    val id: Int,
-    val title: String,
-    @SerializedName("task_type") val taskType: String,
-    val status: String,
-    val priority: String,
-    @SerializedName("due_at") val dueAt: String?
 )
 
 data class SubjectBoardScanPreviewDto(

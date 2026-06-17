@@ -11,8 +11,7 @@ data class Dashboard(
 data class DashboardStats(
     val modulesInProgress: Int,
     val notesSaved: Int,
-    val quizzesCompleted: Int,
-    val pendingTasks: Int
+    val quizzesCompleted: Int
 )
 
 data class DashboardUpcomingItem(
@@ -22,11 +21,6 @@ data class DashboardUpcomingItem(
     val description: String,
     val subjectId: Int?,
     val subjectTitle: String,
-    val moduleId: Int?,
-    val moduleTitle: String,
-    val status: String,
-    val priority: String,
-    val dueAt: String?,
     val postedAt: String?
 )
 

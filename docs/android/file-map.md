@@ -90,7 +90,6 @@ Why repositories are used:
 | `domain/model/Summary.kt` | AI-generated summary data. |
 | `domain/model/Flashcard.kt` | AI-generated flashcard data. |
 | `domain/model/Quiz.kt` | AI-generated quiz and question data. |
-| `domain/model/AcademicTask.kt` | Upcoming task/deadline item shown in dashboard and subject detail flows. |
 | `domain/model/SubjectPost.kt` | Announcement/post item used in subject detail flows. |
 
 Why domain models are used:
@@ -116,7 +115,7 @@ Why it is separate:
 
 | File | Purpose |
 | --- | --- |
-| `feature/home/HomeScreen.kt` | Compose UI for dashboard, progress, upcoming tasks, continue-learning, and activity. |
+| `feature/home/HomeScreen.kt` | Compose UI for dashboard, progress, latest posts, continue-learning, and activity. |
 | `feature/home/HomeViewModel.kt` | Loads dashboard data from `DashboardRepository`. |
 | `feature/home/HomeUiState.kt` | Holds dashboard loading, error, and content state. |
 
@@ -131,7 +130,7 @@ Why it is separate:
 | `feature/subjects/SubjectsScreen.kt` | Compose UI for subject list and search. |
 | `feature/subjects/SubjectsViewModel.kt` | Loads and filters subjects. |
 | `feature/subjects/SubjectsUiState.kt` | Holds subject list state. |
-| `feature/subjects/SubjectDetailScreen.kt` | Compose UI for modules, tasks, posts, and scans inside one subject. |
+| `feature/subjects/SubjectDetailScreen.kt` | Compose UI for modules, posts, and scans inside one subject. |
 | `feature/subjects/SubjectDetailViewModel.kt` | Loads subject overview data. |
 | `feature/subjects/SubjectDetailUiState.kt` | Holds subject detail state. |
 

@@ -138,11 +138,11 @@ private fun DashboardContent(
         }
 
         item {
-            SectionHeader(title = "Upcoming")
+            SectionHeader(title = "Latest Posts")
         }
         if (dashboard.upcoming.isEmpty()) {
             item {
-                StudyLensEmptyState(text = "No upcoming tasks or posts yet.")
+                StudyLensEmptyState(text = "No posts yet.")
             }
         } else {
             items(dashboard.upcoming, key = { "${it.type}-${it.id}" }) { item ->
@@ -230,8 +230,8 @@ private fun StatsRow(dashboard: Dashboard) {
             modifier = Modifier.weight(1f)
         )
         StatCard(
-            value = dashboard.stats.pendingTasks.toString(),
-            label = "Tasks",
+            value = dashboard.stats.quizzesCompleted.toString(),
+            label = "Quizzes",
             modifier = Modifier.weight(1f)
         )
     }
@@ -296,9 +296,8 @@ private fun UpcomingCard(item: DashboardUpcomingItem) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            val chipText = item.dueAt ?: item.postedAt ?: item.status.ifBlank { item.priority }
-            if (!chipText.isNullOrBlank()) {
-                StatusChip(status = chipText)
+            item.postedAt?.takeIf { it.isNotBlank() }?.let { postedAt ->
+                StatusChip(status = postedAt)
             }
         }
     }

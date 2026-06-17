@@ -41,7 +41,6 @@ import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
-import com.example.studylensmobile.domain.model.SubjectTaskPreview
 import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
@@ -229,19 +228,6 @@ private fun SubjectOverviewContent(
                     onDelete = { onDeleteModule(module) },
                     actionsEnabled = actionsEnabled
                 )
-            }
-        }
-
-        item {
-            SectionHeader(title = "Upcoming Tasks")
-        }
-        if (overview.upcomingTasks.isEmpty()) {
-            item {
-                StudyLensEmptyState(text = "No upcoming tasks for this subject.")
-            }
-        } else {
-            items(overview.upcomingTasks, key = { "task-${it.id}" }) { task ->
-                TaskPreviewCard(task = task)
             }
         }
 
@@ -505,39 +491,6 @@ private fun ModuleFormDialog(
 }
 
 private val validModuleContentTypes = setOf("markdown", "text", "pdf", "docx", "pptx")
-
-@Composable
-private fun TaskPreviewCard(task: SubjectTaskPreview) {
-    StudyLensCard {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = task.title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = listOf(task.taskType, task.priority, task.dueAt.orEmpty())
-                        .filter { it.isNotBlank() }
-                        .joinToString(" - "),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            StatusChip(status = task.status)
-        }
-    }
-}
 
 @Composable
 private fun BoardScanPreviewCard(boardScan: SubjectBoardScanPreview) {

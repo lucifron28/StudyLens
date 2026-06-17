@@ -22,7 +22,7 @@ Implemented backend areas:
 
 - JWT authentication
 - PostgreSQL in Docker
-- user-owned subjects, modules, chapters, tags, board scans, reading progress, tasks, and posts
+- user-owned subjects, modules, chapters, tags, board scans, reading progress, and posts
 - study tool records for summaries, flashcards, quizzes, questions, and quiz attempts
 - AI service layer for summaries, flashcards, quizzes, and tutor mode
 - Swagger/OpenAPI docs

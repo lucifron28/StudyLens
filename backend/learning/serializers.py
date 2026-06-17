@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 
 
 class OwnedRelationMixin:
@@ -24,7 +24,6 @@ class OwnedRelationMixin:
 
 class SubjectSerializer(serializers.ModelSerializer):
     module_count = serializers.SerializerMethodField()
-    task_count = serializers.SerializerMethodField()
     board_scan_count = serializers.SerializerMethodField()
     post_count = serializers.SerializerMethodField()
     progress_percentage = serializers.SerializerMethodField()
@@ -38,7 +37,6 @@ class SubjectSerializer(serializers.ModelSerializer):
             "description",
             "color",
             "module_count",
-            "task_count",
             "board_scan_count",
             "post_count",
             "progress_percentage",
@@ -49,7 +47,6 @@ class SubjectSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "module_count",
-            "task_count",
             "board_scan_count",
             "post_count",
             "progress_percentage",
@@ -73,9 +70,6 @@ class SubjectSerializer(serializers.ModelSerializer):
     def get_module_count(self, obj) -> int:
         return getattr(obj, "module_count_value", None) or obj.modules.count()
 
-    def get_task_count(self, obj) -> int:
-        return getattr(obj, "task_count_value", None) or obj.tasks.count()
-
     def get_board_scan_count(self, obj) -> int:
         return getattr(obj, "board_scan_count_value", None) or obj.board_scans.count()
 
@@ -86,7 +80,7 @@ class SubjectSerializer(serializers.ModelSerializer):
         return round(getattr(obj, "progress_average", None) or 0)
 
     def get_item_summary(self, obj) -> str:
-        return f"{self.get_module_count(obj)} Modules | {self.get_task_count(obj)} Tasks | {self.get_board_scan_count(obj)} Notes"
+        return f"{self.get_module_count(obj)} Modules | {self.get_board_scan_count(obj)} Notes | {self.get_post_count(obj)} Posts"
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -297,55 +291,6 @@ class ReadingProgressSerializer(OwnedRelationMixin, serializers.ModelSerializer)
         return attrs
 
 
-class AcademicTaskSerializer(OwnedRelationMixin, serializers.ModelSerializer):
-    subject_title = serializers.CharField(source="subject.title", read_only=True)
-    module_title = serializers.CharField(source="module.title", read_only=True)
-    chapter_title = serializers.CharField(source="chapter.title", read_only=True)
-
-    owned_relation_fields = {"subject": Subject, "module": Module, "chapter": Chapter}
-
-    class Meta:
-        model = AcademicTask
-        fields = [
-            "id",
-            "subject",
-            "subject_title",
-            "module",
-            "module_title",
-            "chapter",
-            "chapter_title",
-            "title",
-            "description",
-            "task_type",
-            "status",
-            "priority",
-            "due_at",
-            "completed_at",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "subject_title", "module_title", "chapter_title", "created_at", "updated_at"]
-
-    def validate(self, attrs):
-        instance = self.instance
-        subject = attrs.get("subject", instance.subject if instance else None)
-        module = attrs.get("module", instance.module if instance else None)
-        chapter = attrs.get("chapter", instance.chapter if instance else None)
-
-        if module and subject and module.subject_id != subject.id:
-            raise serializers.ValidationError({"module": "Module must belong to the selected subject."})
-        if chapter:
-            if module and chapter.module_id != module.id:
-                raise serializers.ValidationError({"chapter": "Chapter must belong to the selected module."})
-            if not module:
-                attrs["module"] = chapter.module
-                module = chapter.module
-            if subject and module.subject_id != subject.id:
-                raise serializers.ValidationError({"chapter": "Chapter must belong to the selected subject."})
-
-        return attrs
-
-
 class SubjectPostSerializer(OwnedRelationMixin, serializers.ModelSerializer):
     subject_title = serializers.CharField(source="subject.title", read_only=True)
 
@@ -378,7 +323,6 @@ class DashboardStatsSerializer(serializers.Serializer):
     modules_in_progress = serializers.IntegerField()
     notes_saved = serializers.IntegerField()
     quizzes_completed = serializers.IntegerField()
-    pending_tasks = serializers.IntegerField()
 
 
 class DashboardUpcomingItemSerializer(serializers.Serializer):
@@ -390,9 +334,6 @@ class DashboardUpcomingItemSerializer(serializers.Serializer):
     subject_title = serializers.CharField(allow_blank=True)
     module = serializers.IntegerField(allow_null=True, required=False)
     module_title = serializers.CharField(allow_blank=True, required=False)
-    status = serializers.CharField(allow_blank=True, required=False)
-    priority = serializers.CharField(allow_blank=True, required=False)
-    due_at = serializers.DateTimeField(allow_null=True, required=False)
     posted_at = serializers.DateTimeField(allow_null=True, required=False)
 
 
@@ -429,11 +370,9 @@ class SubjectOverviewSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField(allow_blank=True)
     module_count = serializers.IntegerField()
-    task_count = serializers.IntegerField()
     board_scan_count = serializers.IntegerField()
     post_count = serializers.IntegerField()
     progress_percentage = serializers.IntegerField()
     latest_modules = serializers.ListField(child=serializers.DictField())
-    upcoming_tasks = serializers.ListField(child=serializers.DictField())
     recent_board_scans = serializers.ListField(child=serializers.DictField())
     latest_posts = serializers.ListField(child=serializers.DictField())

@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from ai_services.models import TutorMessage, TutorSession
-from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 from studytools.models import Difficulty, Flashcard, Quiz, QuizAttempt, QuizQuestion, SourceType, Summary
 
 
@@ -30,7 +30,6 @@ class Command(BaseCommand):
         subjects = self._create_subjects(user)
         tags = self._create_tags(user)
         modules, chapters = self._create_modules_and_chapters(user, subjects)
-        self._create_tasks(user, subjects, modules, chapters, now)
         self._create_posts(user, subjects, now)
         scans = self._create_board_scans(user, subjects, modules, chapters, tags, now)
         self._create_reading_progress(user, modules, chapters)
@@ -62,7 +61,6 @@ class Command(BaseCommand):
         TutorSession.objects.filter(owner=user).delete()
         ReadingProgress.objects.filter(owner=user).delete()
         BoardScan.objects.filter(owner=user).delete()
-        AcademicTask.objects.filter(owner=user).delete()
         SubjectPost.objects.filter(owner=user).delete()
         Chapter.objects.filter(owner=user).delete()
         Module.objects.filter(owner=user).delete()
@@ -221,78 +219,6 @@ class Command(BaseCommand):
                     chapters[(title, chapter_title)] = chapter
 
         return modules, chapters
-
-    def _create_tasks(self, user, subjects, modules, chapters, now):
-        task_data = [
-            (
-                "Quiz 3: UI Patterns",
-                "Review Android UI patterns before the short quiz.",
-                "Native Android Development",
-                "Intro to Android UI",
-                "UI Patterns",
-                AcademicTask.TaskType.QUIZ,
-                AcademicTask.Priority.HIGH,
-                now + timedelta(days=1),
-            ),
-            (
-                "Read Ch. 4 in DB204",
-                "Finish the SQL joins reading before lab.",
-                "Database Systems",
-                "SQL Fundamentals",
-                "Joins",
-                AcademicTask.TaskType.READING,
-                AcademicTask.Priority.MEDIUM,
-                now + timedelta(days=2),
-            ),
-            (
-                "Final Prototype",
-                "Prepare the linked StudyLens prototype for midterm presentation.",
-                "Software Engineering",
-                "Final Prototype",
-                "Prototype Checklist",
-                AcademicTask.TaskType.PROJECT,
-                AcademicTask.Priority.HIGH,
-                now + timedelta(days=3),
-            ),
-            (
-                "System Architecture Notes",
-                "Clean and review the architecture whiteboard scan.",
-                "Native Android Development",
-                "ViewModel and State",
-                "Overview",
-                AcademicTask.TaskType.TASK,
-                AcademicTask.Priority.MEDIUM,
-                now + timedelta(days=4),
-            ),
-            (
-                "Normalize Order Tables",
-                "Convert sample order tables to 3NF.",
-                "Database Systems",
-                "Normalization",
-                "Overview",
-                AcademicTask.TaskType.DEADLINE,
-                AcademicTask.Priority.MEDIUM,
-                now + timedelta(days=5),
-            ),
-        ]
-
-        for title, description, subject_title, module_title, chapter_title, task_type, priority, due_at in task_data:
-            module = modules[module_title]
-            chapter = chapters.get((module_title, chapter_title))
-            AcademicTask.objects.update_or_create(
-                owner=user,
-                subject=subjects[subject_title],
-                title=title,
-                defaults={
-                    "module": module,
-                    "chapter": chapter,
-                    "description": description,
-                    "task_type": task_type,
-                    "status": AcademicTask.Status.PENDING,
-                    "priority": priority,
-                    "due_at": due_at,
-                },
-            )
 
     def _create_posts(self, user, subjects, now):
         posts = [

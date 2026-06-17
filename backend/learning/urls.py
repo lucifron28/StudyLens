@@ -2,7 +2,6 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from learning.views import (
-    AcademicTaskViewSet,
     BoardScanViewSet,
     ChapterViewSet,
     DashboardView,
@@ -21,7 +20,6 @@ router.register("chapters", ChapterViewSet, basename="chapter")
 router.register("tags", TagViewSet, basename="tag")
 router.register("board-scans", BoardScanViewSet, basename="board-scan")
 router.register("reading-progress", ReadingProgressViewSet, basename="reading-progress")
-router.register("tasks", AcademicTaskViewSet, basename="task")
 router.register("posts", SubjectPostViewSet, basename="post")
 
 urlpatterns = [

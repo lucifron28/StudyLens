@@ -34,7 +34,7 @@ Files:
 Purpose:
 
 - show dashboard progress
-- show upcoming items
+- show latest posts
 - show continue-learning modules
 - show recent activity
 
@@ -58,7 +58,7 @@ Purpose:
 - show subjects list
 - search subjects
 - open subject detail
-- show modules, tasks, posts, and board scans for a subject
+- show modules, posts, and board scans for a subject
 
 Backend data:
 
