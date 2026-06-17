@@ -40,7 +40,6 @@ GET    /api/learning/subjects/{id}/overview/
 /api/learning/board-scans/
 /api/learning/reading-progress/
 POST /api/learning/reading-progress/set/
-/api/learning/tasks/
 /api/learning/posts/
 ```
 
@@ -80,8 +79,6 @@ POST /api/ai/tutor-message/
 ?source_type=module
 ?difficulty=easy
 ?status=in_progress
-?task_type=deadline
-?priority=high
 ?post_type=announcement
 ?is_pinned=true
 ```

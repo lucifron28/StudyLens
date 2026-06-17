@@ -102,7 +102,6 @@ Learning:
 - `/api/learning/board-scans/`
 - `/api/learning/reading-progress/`
 - `POST /api/learning/reading-progress/set/`
-- `/api/learning/tasks/`
 - `/api/learning/posts/`
 
 Study tools:
@@ -140,8 +139,6 @@ Useful query parameters:
 - `?source_type=module`
 - `?difficulty=easy`
 - `?status=in_progress`
-- `?task_type=deadline`
-- `?priority=high`
 - `?post_type=announcement`
 - `?is_pinned=true`
 
@@ -191,15 +188,6 @@ Open a subject overview:
 ```powershell
 curl.exe http://localhost:8000/api/learning/subjects/1/overview/ `
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-Create an academic task:
-
-```powershell
-curl.exe -X POST http://localhost:8000/api/learning/tasks/ `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" `
-  -d "{\"subject\":1,\"title\":\"Finish module reading\",\"task_type\":\"reading\",\"priority\":\"medium\",\"status\":\"pending\"}"
 ```
 
 Create a subject post:
