@@ -180,58 +180,10 @@ class ReadingProgress(models.Model):
         return f"{self.owner} - {self.module} ({self.progress_percentage}%)"
 
 
-class AcademicTask(models.Model):
-    class TaskType(models.TextChoices):
-        TASK = "task", "Task"
-        DEADLINE = "deadline", "Deadline"
-        QUIZ = "quiz", "Quiz"
-        PROJECT = "project", "Project"
-        READING = "reading", "Reading"
-
-    class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        IN_PROGRESS = "in_progress", "In progress"
-        COMPLETED = "completed", "Completed"
-        OVERDUE = "overdue", "Overdue"
-        CANCELLED = "cancelled", "Cancelled"
-
-    class Priority(models.TextChoices):
-        LOW = "low", "Low"
-        MEDIUM = "medium", "Medium"
-        HIGH = "high", "High"
-
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="academic_tasks")
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="tasks")
-    module = models.ForeignKey(Module, on_delete=models.SET_NULL, related_name="tasks", blank=True, null=True)
-    chapter = models.ForeignKey(Chapter, on_delete=models.SET_NULL, related_name="tasks", blank=True, null=True)
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    task_type = models.CharField(max_length=20, choices=TaskType.choices, default=TaskType.TASK)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-    priority = models.CharField(max_length=20, choices=Priority.choices, default=Priority.MEDIUM)
-    due_at = models.DateTimeField(blank=True, null=True)
-    completed_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["due_at", "-created_at"]
-        indexes = [
-            models.Index(fields=["owner", "subject"]),
-            models.Index(fields=["owner", "status"]),
-            models.Index(fields=["owner", "task_type"]),
-            models.Index(fields=["owner", "due_at"]),
-        ]
-
-    def __str__(self) -> str:
-        return self.title
-
-
 class SubjectPost(models.Model):
     class PostType(models.TextChoices):
         ANNOUNCEMENT = "announcement", "Announcement"
         REMINDER = "reminder", "Reminder"
-        DEADLINE = "deadline", "Deadline"
         UPDATE = "update", "Update"
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="subject_posts")

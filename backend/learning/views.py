@@ -9,9 +9,8 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsOwner
 from learning.filters import apply_exact_query_filters
-from learning.models import AcademicTask, BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 from learning.serializers import (
-    AcademicTaskSerializer,
     BoardScanSerializer,
     ChapterSerializer,
     DashboardSerializer,
@@ -59,32 +58,12 @@ class DashboardView(APIView):
         progress_qs = ReadingProgress.objects.select_related("module", "chapter").filter(owner=user)
         average_progress = progress_qs.aggregate(value=Avg("progress_percentage"))["value"] or 0
 
-        upcoming_tasks = AcademicTask.objects.select_related("subject", "module").filter(
-            owner=user,
-            status__in=[AcademicTask.Status.PENDING, AcademicTask.Status.IN_PROGRESS, AcademicTask.Status.OVERDUE],
-        ).order_by("due_at", "-created_at")[:5]
         recent_posts = SubjectPost.objects.select_related("subject").filter(owner=user).order_by(
             "-is_pinned",
             "-posted_at",
-        )[:3]
+        )[:5]
 
         upcoming = [
-            {
-                "type": "task",
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "subject": task.subject_id,
-                "subject_title": task.subject.title,
-                "module": task.module_id,
-                "module_title": task.module.title if task.module else "",
-                "status": task.status,
-                "priority": task.priority,
-                "due_at": task.due_at,
-            }
-            for task in upcoming_tasks
-        ]
-        upcoming.extend(
             {
                 "type": "post",
                 "id": post.id,
@@ -95,7 +74,7 @@ class DashboardView(APIView):
                 "posted_at": post.posted_at,
             }
             for post in recent_posts
-        )
+        ]
 
         continue_learning = [
             {
@@ -116,10 +95,6 @@ class DashboardView(APIView):
         recent_activity.extend(
             _activity_item("board_scan", scan.id, "Board scan saved", scan.cleaned_text[:120], scan.created_at)
             for scan in BoardScan.objects.filter(owner=user).order_by("-created_at")[:3]
-        )
-        recent_activity.extend(
-            _activity_item("task", task.id, task.title, task.status, task.updated_at)
-            for task in AcademicTask.objects.filter(owner=user).order_by("-updated_at")[:3]
         )
         recent_activity.extend(
             _activity_item("post", post.id, post.title, post.content[:120], post.created_at)
@@ -144,10 +119,6 @@ class DashboardView(APIView):
                 .count(),
                 "notes_saved": BoardScan.objects.filter(owner=user).count(),
                 "quizzes_completed": QuizAttempt.objects.filter(owner=user, completed_at__isnull=False).count(),
-                "pending_tasks": AcademicTask.objects.filter(
-                    owner=user,
-                    status__in=[AcademicTask.Status.PENDING, AcademicTask.Status.IN_PROGRESS],
-                ).count(),
             },
             "upcoming": upcoming,
             "continue_learning": continue_learning,
@@ -167,7 +138,6 @@ class SubjectViewSet(OwnedModelViewSet):
         queryset = super().get_queryset()
         return queryset.annotate(
             module_count_value=Count("modules", distinct=True),
-            task_count_value=Count("tasks", distinct=True),
             board_scan_count_value=Count("board_scans", distinct=True),
             post_count_value=Count("posts", distinct=True),
             progress_average=Avg(
@@ -184,11 +154,6 @@ class SubjectViewSet(OwnedModelViewSet):
         user = request.user
 
         latest_modules = Module.objects.filter(owner=user, subject=subject).order_by("-updated_at")[:5]
-        upcoming_tasks = AcademicTask.objects.filter(
-            owner=user,
-            subject=subject,
-            status__in=[AcademicTask.Status.PENDING, AcademicTask.Status.IN_PROGRESS, AcademicTask.Status.OVERDUE],
-        ).order_by("due_at", "-created_at")[:5]
         recent_board_scans = BoardScan.objects.filter(owner=user, subject=subject).order_by("-created_at")[:5]
         latest_posts = SubjectPost.objects.filter(owner=user, subject=subject).order_by("-is_pinned", "-posted_at")[:5]
 
@@ -198,7 +163,6 @@ class SubjectViewSet(OwnedModelViewSet):
                 "title": subject.title,
                 "description": subject.description,
                 "module_count": subject_data["module_count"],
-                "task_count": subject_data["task_count"],
                 "board_scan_count": subject_data["board_scan_count"],
                 "post_count": subject_data["post_count"],
                 "progress_percentage": subject_data["progress_percentage"],
@@ -212,17 +176,6 @@ class SubjectViewSet(OwnedModelViewSet):
                         "updated_at": module.updated_at,
                     }
                     for module in latest_modules
-                ],
-                "upcoming_tasks": [
-                    {
-                        "id": task.id,
-                        "title": task.title,
-                        "task_type": task.task_type,
-                        "status": task.status,
-                        "priority": task.priority,
-                        "due_at": task.due_at,
-                    }
-                    for task in upcoming_tasks
                 ],
                 "recent_board_scans": [
                     {
@@ -354,29 +307,6 @@ class ReadingProgressViewSet(OwnedModelViewSet):
         )
         response_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(self.get_serializer(progress).data, status=response_status)
-
-
-class AcademicTaskViewSet(OwnedModelViewSet):
-    queryset = AcademicTask.objects.select_related("subject", "module", "chapter").all()
-    serializer_class = AcademicTaskSerializer
-    search_fields = ["title", "description", "subject__title", "module__title"]
-    ordering_fields = ["due_at", "created_at", "updated_at", "priority", "status"]
-    ordering = ["due_at", "-created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        return apply_exact_query_filters(
-            queryset,
-            self.request.query_params,
-            {
-                "subject": "subject_id",
-                "module": "module_id",
-                "status": "status",
-                "task_type": "task_type",
-                "priority": "priority",
-            },
-            integer_params={"subject", "module"},
-        )
 
 
 class SubjectPostViewSet(OwnedModelViewSet):
