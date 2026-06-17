@@ -28,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.Quiz
 import com.example.studylensmobile.domain.model.QuizQuestion
+import com.example.studylensmobile.ui.components.LumiDialog
 import com.example.studylensmobile.ui.components.MarkdownInlineText
 import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
@@ -105,6 +107,19 @@ fun QuizScreen(
                 )
             }
         }
+    }
+
+    if (quiz != null && uiState.isComplete) {
+        LumiDialog(
+            title = quiz.completionTitle(uiState.score),
+            message = "You scored ${uiState.score} out of ${quiz.questions.size}. Review the explanations, or try the same quiz again.",
+            primaryActionLabel = "Done",
+            onPrimaryAction = onBack,
+            imageResId = R.drawable.lumi_celebrating,
+            imageContentDescription = "Lumi celebrating",
+            secondaryActionLabel = "Try Again",
+            onSecondaryAction = viewModel::restartQuiz
+        )
     }
 }
 
@@ -457,4 +472,8 @@ private fun QuizQuestion.answerChoices(): List<String> {
 
 private fun QuizQuestion.isShortAnswer(): Boolean {
     return questionType.equals("Short Answer", ignoreCase = true) || answerChoices().isEmpty()
+}
+
+private fun Quiz.completionTitle(score: Int): String {
+    return if (score == questions.size) "Congrats, quiz mastered" else "Quiz complete"
 }
