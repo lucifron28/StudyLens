@@ -4,7 +4,6 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsOwner
 from ai_services.models import TutorMessage, TutorSession
 from ai_services.providers.base import AIProviderError
 from ai_services.serializers import (
@@ -27,8 +26,8 @@ def ai_error_response(exc: Exception) -> Response:
     return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
 
-class OwnedModelViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsOwner]
+class OwnedReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [SearchFilter, OrderingFilter]
     ordering = ["-updated_at"]
 
@@ -38,11 +37,7 @@ class OwnedModelViewSet(viewsets.ModelViewSet):
             return self.queryset.none()
         return self.queryset.filter(owner=user)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class TutorSessionViewSet(OwnedModelViewSet):
+class TutorSessionViewSet(OwnedReadOnlyModelViewSet):
     queryset = TutorSession.objects.select_related("module", "chapter", "board_scan").all()
     serializer_class = TutorSessionSerializer
     search_fields = ["title", "module__title", "chapter__title", "board_scan__cleaned_text"]
@@ -63,7 +58,7 @@ class TutorSessionViewSet(OwnedModelViewSet):
         )
 
 
-class TutorMessageViewSet(viewsets.ModelViewSet):
+class TutorMessageViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = TutorMessage.objects.select_related("session", "session__owner").all()
     serializer_class = TutorMessageSerializer
@@ -185,4 +180,3 @@ class TutorMessageView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
-

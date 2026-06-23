@@ -76,9 +76,15 @@ class TutorSessionSerializer(SourceValidationMixin, OwnedRelationMixin, serializ
         ]
         read_only_fields = [
             "id",
+            "module",
             "module_title",
+            "chapter",
             "chapter_title",
+            "board_scan",
+            "title",
+            "status",
             "clear_answers_count",
+            "target_clear_answers",
             "created_at",
             "updated_at",
         ]
@@ -100,7 +106,15 @@ class TutorMessageSerializer(OwnedRelationMixin, serializers.ModelSerializer):
             "clarity_result",
             "created_at",
         ]
-        read_only_fields = ["id", "session_title", "created_at"]
+        read_only_fields = [
+            "id",
+            "session",
+            "session_title",
+            "role",
+            "content",
+            "clarity_result",
+            "created_at",
+        ]
 
     def validate_session(self, session: TutorSession) -> TutorSession:
         request = self.context.get("request")
@@ -117,4 +131,3 @@ class TutorStartResponseSerializer(serializers.Serializer):
 class TutorMessageResponseSerializer(serializers.Serializer):
     session = TutorSessionSerializer()
     message = TutorMessageSerializer()
-
