@@ -106,3 +106,6 @@ docs/stitch_*_ai_learning_companion/
 docs/*.docx
 docs/*.pdf
 docs/*_Project_Context_For_AI_Agents.md
+
+graphify-out/
+.agents/
