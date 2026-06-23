@@ -20,7 +20,8 @@ import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
 
 class SubjectsRepository(
-    private val learningApi: LearningApi
+    private val learningApi: LearningApi,
+    private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> }
 ) {
     suspend fun getSubjects(search: String? = null): Result<List<Subject>> {
         return apiResult(
@@ -144,6 +145,8 @@ class SubjectsRepository(
             }
         ) {
             Unit
+        }.onSuccess {
+            aiCacheInvalidator.invalidateSource("module", moduleId)
         }
     }
 
@@ -151,7 +154,9 @@ class SubjectsRepository(
         return emptyApiResult(
             label = "Delete module",
             call = { learningApi.deleteModule(moduleId) }
-        )
+        ).onSuccess {
+            aiCacheInvalidator.invalidateSource("module", moduleId)
+        }
     }
 }
 

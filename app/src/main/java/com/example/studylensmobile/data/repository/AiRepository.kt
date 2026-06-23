@@ -25,7 +25,7 @@ import com.example.studylensmobile.domain.model.TutorSession
 
 class AiRepository(
     private val aiApi: AiApi
-) {
+) : AiCacheInvalidator {
     private val summaryCache = mutableMapOf<AiCacheKey, Summary>()
     private val flashcardsCache = mutableMapOf<AiCacheKey, List<Flashcard>>()
     private val quizCache = mutableMapOf<AiCacheKey, Quiz>()
@@ -164,6 +164,14 @@ class AiRepository(
                 }
         }.withAiFailureMessage("Tutor message")
     }
+
+    override fun invalidateSource(sourceType: String, sourceId: String) {
+        summaryCache.remove(AiCacheKey(sourceType = sourceType, sourceId = sourceId))
+        flashcardsCache.keys.removeAll { it.matches(sourceType, sourceId) }
+        quizCache.keys.removeAll { it.matches(sourceType, sourceId) }
+        tutorConversationCache.keys.removeAll { it.matches(sourceType, sourceId) }
+        tutorSessionCacheKeys.entries.removeAll { it.value.matches(sourceType, sourceId) }
+    }
 }
 
 data class TutorTurn(
@@ -180,7 +188,11 @@ private data class AiCacheKey(
     val sourceType: String,
     val sourceId: String,
     val count: Int? = null
-)
+) {
+    fun matches(sourceType: String, sourceId: String): Boolean {
+        return this.sourceType == sourceType && this.sourceId == sourceId
+    }
+}
 
 private fun TutorTurn.toConversation(): TutorConversation {
     return TutorConversation(

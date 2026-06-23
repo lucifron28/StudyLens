@@ -43,11 +43,11 @@ class AppContainer(private val context: Context) {
     }
 
     val subjectsRepository: SubjectsRepository by lazy {
-        SubjectsRepository(learningApi)
+        SubjectsRepository(learningApi, aiRepository)
     }
 
     val boardScansRepository: BoardScansRepository by lazy {
-        BoardScansRepository(learningApi, context.contentResolver)
+        BoardScansRepository(learningApi, context.contentResolver, aiRepository)
     }
 
     val modulesRepository: ModulesRepository by lazy {
