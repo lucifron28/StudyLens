@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.services.extraction import ExtractionError, extract_pdf_text
 
 
 class OwnedRelationMixin:
@@ -145,12 +146,24 @@ class ModuleSerializer(OwnedRelationMixin, serializers.ModelSerializer):
         module_file = validated_data.get("module_file")
         if module_file:
             validated_data["original_filename"] = module_file.name
+            content_type = validated_data.get("content_type", Module.ContentType.MARKDOWN)
+            if content_type == Module.ContentType.PDF:
+                try:
+                    validated_data["extracted_text"] = extract_pdf_text(module_file)
+                except ExtractionError:
+                    pass
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         module_file = validated_data.get("module_file")
         if module_file:
             validated_data["original_filename"] = module_file.name
+            content_type = validated_data.get("content_type", instance.content_type)
+            if content_type == Module.ContentType.PDF:
+                try:
+                    validated_data["extracted_text"] = extract_pdf_text(module_file)
+                except ExtractionError:
+                    pass
         return super().update(instance, validated_data)
 
 
