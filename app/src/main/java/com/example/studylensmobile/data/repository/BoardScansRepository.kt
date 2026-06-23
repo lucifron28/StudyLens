@@ -1,5 +1,7 @@
 package com.example.studylensmobile.data.repository
 
+import android.content.ContentResolver
+import android.net.Uri
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.core.format.toPreview
 import com.example.studylensmobile.core.format.toReadableDate
@@ -12,9 +14,18 @@ import com.example.studylensmobile.data.remote.dto.BoardScanUpdateRequest
 import com.example.studylensmobile.data.remote.dto.BoardScanWriteRequest
 import com.example.studylensmobile.domain.model.BoardScan
 import com.example.studylensmobile.domain.model.BoardScanTag
+import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class BoardScansRepository(
-    private val learningApi: LearningApi
+    private val learningApi: LearningApi,
+    private val contentResolver: ContentResolver
 ) {
     suspend fun getBoardScans(
         search: String? = null,
@@ -67,23 +78,31 @@ class BoardScansRepository(
         reviewStatus: String,
         subjectId: String? = null,
         moduleId: String? = null,
-        chapterId: String? = null
+        chapterId: String? = null,
+        imageUri: String? = null
     ): Result<Unit> {
+        val request = BoardScanWriteRequest(
+            subject = subjectId.toNullableId(),
+            module = moduleId.toNullableId(),
+            chapter = chapterId.toNullableId(),
+            rawOcrText = rawOcrText.trim(),
+            cleanedText = cleanedText.trim(),
+            summary = summary.trim(),
+            reviewStatus = reviewStatus.toApiReviewStatus(),
+            tags = emptyList()
+        )
+
         return apiResult(
             label = "Create note",
             call = {
-                learningApi.createBoardScan(
-                    BoardScanWriteRequest(
-                        subject = subjectId.toNullableId(),
-                        module = moduleId.toNullableId(),
-                        chapter = chapterId.toNullableId(),
-                        rawOcrText = rawOcrText.trim(),
-                        cleanedText = cleanedText.trim(),
-                        summary = summary.trim(),
-                        reviewStatus = reviewStatus.toApiReviewStatus(),
-                        tags = emptyList()
-                    )
-                )
+                imageUri?.takeIf { it.isNotBlank() }
+                    ?.let {
+                        learningApi.createBoardScanWithImage(
+                            contentResolver.toImagePart(Uri.parse(it)),
+                            request.toMultipartFields()
+                        )
+                    }
+                    ?: learningApi.createBoardScan(request)
             }
         ) {
             Unit
@@ -98,23 +117,31 @@ class BoardScansRepository(
         reviewStatus: String,
         subjectId: String? = null,
         moduleId: String? = null,
-        chapterId: String? = null
+        chapterId: String? = null,
+        imageUri: String? = null
     ): Result<Unit> {
+        val request = BoardScanWriteRequest(
+            subject = subjectId.toNullableId(),
+            module = moduleId.toNullableId(),
+            chapter = chapterId.toNullableId(),
+            rawOcrText = rawOcrText.trim(),
+            cleanedText = cleanedText.trim(),
+            summary = summary.trim(),
+            reviewStatus = reviewStatus.toApiReviewStatus()
+        )
+
         return apiResult(
             label = "Update note",
             call = {
-                learningApi.updateBoardScanDetails(
-                    scanId = scanId,
-                    request = BoardScanWriteRequest(
-                        subject = subjectId.toNullableId(),
-                        module = moduleId.toNullableId(),
-                        chapter = chapterId.toNullableId(),
-                        rawOcrText = rawOcrText.trim(),
-                        cleanedText = cleanedText.trim(),
-                        summary = summary.trim(),
-                        reviewStatus = reviewStatus.toApiReviewStatus()
-                    )
-                )
+                imageUri?.takeIf { it.isNotBlank() }
+                    ?.let {
+                        learningApi.updateBoardScanWithImage(
+                            scanId = scanId,
+                            image = contentResolver.toImagePart(Uri.parse(it)),
+                            fields = request.toMultipartFields()
+                        )
+                    }
+                    ?: learningApi.updateBoardScanDetails(scanId, request)
             }
         ) {
             Unit
@@ -127,6 +154,31 @@ class BoardScansRepository(
             call = { learningApi.deleteBoardScan(scanId) }
         )
     }
+}
+
+private fun BoardScanWriteRequest.toMultipartFields(): Map<String, RequestBody> {
+    return buildMap {
+        subject?.let { put("subject", it.toString().toTextPart()) }
+        module?.let { put("module", it.toString().toTextPart()) }
+        chapter?.let { put("chapter", it.toString().toTextPart()) }
+        rawOcrText?.let { put("raw_ocr_text", it.toTextPart()) }
+        cleanedText?.let { put("cleaned_text", it.toTextPart()) }
+        summary?.let { put("summary", it.toTextPart()) }
+        reviewStatus?.let { put("review_status", it.toTextPart()) }
+    }
+}
+
+private fun String.toTextPart(): RequestBody {
+    return toRequestBody("text/plain".toMediaType())
+}
+
+private suspend fun ContentResolver.toImagePart(uri: Uri): MultipartBody.Part = withContext(Dispatchers.IO) {
+    val bytes = openInputStream(uri)?.use { it.readBytes() }
+        ?: throw IOException("Unable to read the selected image.")
+    val mediaType = getType(uri)?.toMediaTypeOrNull()
+        ?: "image/jpeg".toMediaType()
+    val body = bytes.toRequestBody(mediaType)
+    MultipartBody.Part.createFormData("image", "board-scan.jpg", body)
 }
 
 private fun BoardScanDto.toDomain(): BoardScan {

@@ -47,7 +47,7 @@ class AppContainer(private val context: Context) {
     }
 
     val boardScansRepository: BoardScansRepository by lazy {
-        BoardScansRepository(learningApi)
+        BoardScansRepository(learningApi, context.contentResolver)
     }
 
     val modulesRepository: ModulesRepository by lazy {
