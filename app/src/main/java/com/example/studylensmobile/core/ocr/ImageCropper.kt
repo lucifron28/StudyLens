@@ -2,11 +2,12 @@ package com.example.studylensmobile.core.ocr
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
 import java.io.File
+import java.io.IOException
 import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -89,17 +90,57 @@ object ImageCropper {
         Uri.fromFile(cropFile)
     }
 
-    @Suppress("DEPRECATION")
     private fun loadBitmap(context: Context, uri: Uri): Bitmap {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+            ImageDecoder.decodeBitmap(source) { decoder, imageInfo, _ ->
+                val target = targetDimensions(imageInfo.size.width, imageInfo.size.height)
+                decoder.setTargetSize(target.width, target.height)
                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                 decoder.isMutableRequired = false
             }
         } else {
-            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            loadSampledBitmap(context, uri)
         }
+    }
+
+    private fun loadSampledBitmap(context: Context, uri: Uri): Bitmap {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, bounds)
+        }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+            throw IOException("Unable to read the selected image.")
+        }
+
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight)
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, options)
+        } ?: throw IOException("Unable to decode the selected image.")
+    }
+
+    private fun targetDimensions(width: Int, height: Int): ImageDimensions {
+        val largestDimension = max(width, height)
+        if (largestDimension <= MAX_DECODE_DIMENSION) {
+            return ImageDimensions(width, height)
+        }
+
+        val scale = MAX_DECODE_DIMENSION.toFloat() / largestDimension
+        return ImageDimensions(
+            width = (width * scale).toInt().coerceAtLeast(1),
+            height = (height * scale).toInt().coerceAtLeast(1)
+        )
+    }
+
+    private fun sampleSize(width: Int, height: Int): Int {
+        var sampleSize = 1
+        while (max(width / sampleSize, height / sampleSize) > MAX_DECODE_DIMENSION) {
+            sampleSize *= 2
+        }
+        return sampleSize
     }
 
     private fun CropArea.toBitmapCrop(
@@ -133,4 +174,10 @@ object ImageCropper {
 
     private const val JPEG_QUALITY = 92
     private const val MIN_BITMAP_CROP_FRACTION = 0.01f
+    private const val MAX_DECODE_DIMENSION = 2048
+
+    private data class ImageDimensions(
+        val width: Int,
+        val height: Int
+    )
 }
