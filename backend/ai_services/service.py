@@ -275,7 +275,6 @@ def _validated_quiz(parsed, count: int, requested_question_type: str | None = No
     return {"title": title, "description": description, "questions": validated_questions}
 
 
-@transaction.atomic
 def create_quiz(user, data: dict) -> Quiz:
     count = data.get("count", 5)
     question_type = data.get("question_type") or None
@@ -287,18 +286,18 @@ def create_quiz(user, data: dict) -> Quiz:
     )
     quiz_data = _validated_quiz(parse_json_output(raw_output), count, question_type)
 
-    quiz = Quiz.objects.create(
-        owner=user,
-        title=quiz_data["title"],
-        description=quiz_data["description"],
-        is_ai_generated=True,
-        **source_fields(source),
-    )
-    QuizQuestion.objects.bulk_create([QuizQuestion(quiz=quiz, **item) for item in quiz_data["questions"]])
+    with transaction.atomic():
+        quiz = Quiz.objects.create(
+            owner=user,
+            title=quiz_data["title"],
+            description=quiz_data["description"],
+            is_ai_generated=True,
+            **source_fields(source),
+        )
+        QuizQuestion.objects.bulk_create([QuizQuestion(quiz=quiz, **item) for item in quiz_data["questions"]])
     return quiz
 
 
-@transaction.atomic
 def start_tutor_session(user, data: dict) -> tuple[TutorSession, TutorMessage]:
     source = resolve_source(user, data, allow_text=False)
     provider = get_provider()
@@ -310,18 +309,19 @@ def start_tutor_session(user, data: dict) -> tuple[TutorSession, TutorMessage]:
     if not isinstance(parsed, dict) or not str(parsed.get("message", "")).strip():
         raise AIOutputError("Tutor start output must include a message.")
 
-    session = TutorSession.objects.create(
-        owner=user,
-        title=data.get("title") or f"Tutor: {source.title}",
-        module=source.module,
-        chapter=source.chapter,
-        board_scan=source.board_scan,
-    )
-    message = TutorMessage.objects.create(
-        session=session,
-        role=TutorMessage.Role.ASSISTANT,
-        content=str(parsed["message"]).strip(),
-    )
+    with transaction.atomic():
+        session = TutorSession.objects.create(
+            owner=user,
+            title=data.get("title") or f"Tutor: {source.title}",
+            module=source.module,
+            chapter=source.chapter,
+            board_scan=source.board_scan,
+        )
+        message = TutorMessage.objects.create(
+            session=session,
+            role=TutorMessage.Role.ASSISTANT,
+            content=str(parsed["message"]).strip(),
+        )
     return session, message
 
 
@@ -340,23 +340,13 @@ def _conversation_for_tutor(session: TutorSession, source: SourceBundle) -> str:
     return "\n".join(lines)
 
 
-@transaction.atomic
 def create_tutor_reply(user, data: dict) -> tuple[TutorSession, TutorMessage]:
-    session = (
-        TutorSession.objects.select_for_update()
-        .filter(owner=user, id=data["session_id"])
-        .first()
-    )
+    session = TutorSession.objects.filter(owner=user, id=data["session_id"]).first()
     if not session:
         raise serializers.ValidationError({"session_id": "Tutor session not found."})
     if session.status in {TutorSession.Status.MASTERED, TutorSession.Status.ABANDONED}:
         raise serializers.ValidationError({"session_id": f"Session is already {session.status}."})
-
-    user_message = TutorMessage.objects.create(
-        session=session,
-        role=TutorMessage.Role.USER,
-        content=data["message"].strip(),
-    )
+    session_updated_at = session.updated_at
 
     source = resolve_source(
         user,
@@ -383,22 +373,38 @@ def create_tutor_reply(user, data: dict) -> tuple[TutorSession, TutorMessage]:
     if not assistant_content:
         raise AIOutputError("Tutor response must include a message.")
 
-    user_message.clarity_result = clarity_result
-    user_message.save(update_fields=["clarity_result"])
+    with transaction.atomic():
+        session = (
+            TutorSession.objects.select_for_update()
+            .filter(owner=user, id=data["session_id"])
+            .first()
+        )
+        if not session:
+            raise serializers.ValidationError({"session_id": "Tutor session not found."})
+        if session.updated_at != session_updated_at:
+            raise serializers.ValidationError({"session_id": "Session changed while the reply was generated. Try again."})
 
-    if clarity_result == TutorMessage.ClarityResult.CLEAR:
-        session.clear_answers_count += 1
-    if session.clear_answers_count >= session.target_clear_answers:
-        session.status = TutorSession.Status.MASTERED
-    elif clarity_result == TutorMessage.ClarityResult.UNCLEAR:
-        session.status = TutorSession.Status.NEEDS_REVIEW
-    else:
-        session.status = TutorSession.Status.IN_PROGRESS
-    session.save(update_fields=["clear_answers_count", "status", "updated_at"])
+        user_message = TutorMessage.objects.create(
+            session=session,
+            role=TutorMessage.Role.USER,
+            content=data["message"].strip(),
+        )
+        user_message.clarity_result = clarity_result
+        user_message.save(update_fields=["clarity_result"])
 
-    assistant_message = TutorMessage.objects.create(
-        session=session,
-        role=TutorMessage.Role.ASSISTANT,
-        content=assistant_content,
-    )
+        if clarity_result == TutorMessage.ClarityResult.CLEAR:
+            session.clear_answers_count += 1
+        if session.clear_answers_count >= session.target_clear_answers:
+            session.status = TutorSession.Status.MASTERED
+        elif clarity_result == TutorMessage.ClarityResult.UNCLEAR:
+            session.status = TutorSession.Status.NEEDS_REVIEW
+        else:
+            session.status = TutorSession.Status.IN_PROGRESS
+        session.save(update_fields=["clear_answers_count", "status", "updated_at"])
+
+        assistant_message = TutorMessage.objects.create(
+            session=session,
+            role=TutorMessage.Role.ASSISTANT,
+            content=assistant_content,
+        )
     return session, assistant_message
