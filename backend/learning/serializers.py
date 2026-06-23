@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
-from learning.services.extraction import ExtractionError, extract_pdf_text
+from learning.services.extraction import ExtractionError, extract_pdf_text, extract_docx_text, extract_pptx_text
 
 
 class OwnedRelationMixin:
@@ -152,6 +152,16 @@ class ModuleSerializer(OwnedRelationMixin, serializers.ModelSerializer):
                     validated_data["extracted_text"] = extract_pdf_text(module_file)
                 except ExtractionError:
                     pass
+            elif content_type == Module.ContentType.DOCX:
+                try:
+                    validated_data["extracted_text"] = extract_docx_text(module_file)
+                except ExtractionError:
+                    pass
+            elif content_type == Module.ContentType.PPTX:
+                try:
+                    validated_data["extracted_text"] = extract_pptx_text(module_file)
+                except ExtractionError:
+                    pass
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
@@ -162,6 +172,16 @@ class ModuleSerializer(OwnedRelationMixin, serializers.ModelSerializer):
             if content_type == Module.ContentType.PDF:
                 try:
                     validated_data["extracted_text"] = extract_pdf_text(module_file)
+                except ExtractionError:
+                    pass
+            elif content_type == Module.ContentType.DOCX:
+                try:
+                    validated_data["extracted_text"] = extract_docx_text(module_file)
+                except ExtractionError:
+                    pass
+            elif content_type == Module.ContentType.PPTX:
+                try:
+                    validated_data["extracted_text"] = extract_pptx_text(module_file)
                 except ExtractionError:
                     pass
         return super().update(instance, validated_data)
