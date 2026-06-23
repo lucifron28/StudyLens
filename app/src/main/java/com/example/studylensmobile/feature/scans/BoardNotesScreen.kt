@@ -81,8 +81,8 @@ fun BoardNotesScreen(
     }
     val cameraEnabled = !uiState.isMutating && !uiState.isRecognizingText
 
-    LaunchedEffect(uiState.isRecognizingText, uiState.ocrDraftText) {
-        if (uiState.isRecognizingText || uiState.ocrDraftText.isNotBlank()) {
+    LaunchedEffect(uiState.isRecognizingText, uiState.ocrDraftText, editingScan) {
+        if (editingScan == null && (uiState.isRecognizingText || uiState.ocrDraftText.isNotBlank())) {
             showCreateDialog = true
         }
     }
@@ -179,13 +179,14 @@ fun BoardNotesScreen(
             isSaving = uiState.isMutating,
             isRecognizingText = uiState.isRecognizingText,
             ocrDraftText = uiState.ocrDraftText,
+            pendingImageUri = uiState.pendingImageUri,
             onPickImage = openImagePicker,
             onOcrDraftApplied = viewModel::clearOcrDraft,
             onDismiss = {
-                viewModel.clearOcrDraft()
+                viewModel.discardPendingImage()
                 showCreateDialog = false
             },
-            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId ->
+            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId, imageUri ->
                 viewModel.createBoardScan(
                     rawOcrText = rawText,
                     cleanedText = cleanedText,
@@ -194,6 +195,7 @@ fun BoardNotesScreen(
                     subjectId = subjectId,
                     moduleId = moduleId,
                     chapterId = chapterId,
+                    imageUri = imageUri,
                     onSaved = { showCreateDialog = false }
                 )
             }
@@ -206,13 +208,14 @@ fun BoardNotesScreen(
             isSaving = uiState.isMutating,
             isRecognizingText = uiState.isRecognizingText,
             ocrDraftText = uiState.ocrDraftText,
+            pendingImageUri = uiState.pendingImageUri,
             onPickImage = openImagePicker,
             onOcrDraftApplied = viewModel::clearOcrDraft,
             onDismiss = {
-                viewModel.clearOcrDraft()
+                viewModel.discardPendingImage()
                 editingScan = null
             },
-            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId ->
+            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId, imageUri ->
                 viewModel.updateBoardScan(
                     scanId = scan.id,
                     rawOcrText = rawText,
@@ -222,6 +225,7 @@ fun BoardNotesScreen(
                     subjectId = subjectId,
                     moduleId = moduleId,
                     chapterId = chapterId,
+                    imageUri = imageUri,
                     onSaved = { editingScan = null }
                 )
             }
@@ -389,6 +393,7 @@ private fun BoardNoteFormDialog(
     isSaving: Boolean,
     isRecognizingText: Boolean,
     ocrDraftText: String,
+    pendingImageUri: String?,
     onPickImage: () -> Unit,
     onOcrDraftApplied: () -> Unit,
     onDismiss: () -> Unit,
@@ -399,7 +404,8 @@ private fun BoardNoteFormDialog(
         reviewStatus: String,
         subjectId: String?,
         moduleId: String?,
-        chapterId: String?
+        chapterId: String?,
+        imageUri: String?
     ) -> Unit
 ) {
     var rawText by remember(scan?.id) { mutableStateOf(scan?.rawOcrText.orEmpty()) }
@@ -442,6 +448,13 @@ private fun BoardNoteFormDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(if (isRecognizingText) "Reading image..." else "Scan Image")
+                }
+                if (pendingImageUri != null) {
+                    Text(
+                        text = "Image attached and will be uploaded when you save.",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
                 OutlinedTextField(
                     value = cleanedText,
@@ -539,7 +552,8 @@ private fun BoardNoteFormDialog(
                                 cleanedReviewStatus,
                                 subjectId.trim().takeIf { it.isNotBlank() },
                                 moduleId.trim().takeIf { it.isNotBlank() },
-                                chapterId.trim().takeIf { it.isNotBlank() }
+                                chapterId.trim().takeIf { it.isNotBlank() },
+                                pendingImageUri
                             )
                         }
                     }
