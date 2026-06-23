@@ -8,6 +8,7 @@ data class BoardNotesUiState(
     val isMutating: Boolean = false,
     val isRecognizingText: Boolean = false,
     val ocrDraftText: String = "",
+    val pendingImageUri: String? = null,
     val searchQuery: String = "",
     val boardScans: List<BoardScan> = emptyList(),
     val errorMessage: String? = null

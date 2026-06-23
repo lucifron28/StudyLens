@@ -37,6 +37,7 @@ class BoardNotesViewModel(
             _uiState.update {
                 it.copy(
                     isRecognizingText = true,
+                    pendingImageUri = imageUri.toString(),
                     errorMessage = null
                 )
             }
@@ -73,6 +74,10 @@ class BoardNotesViewModel(
         _uiState.update { it.copy(ocrDraftText = "", isRecognizingText = false) }
     }
 
+    fun discardPendingImage() {
+        _uiState.update { it.copy(ocrDraftText = "", pendingImageUri = null, isRecognizingText = false) }
+    }
+
     fun createBoardScan(
         rawOcrText: String,
         cleanedText: String,
@@ -81,6 +86,7 @@ class BoardNotesViewModel(
         subjectId: String?,
         moduleId: String?,
         chapterId: String?,
+        imageUri: String?,
         onSaved: () -> Unit = {}
     ) {
         mutateBoardScan(
@@ -93,7 +99,8 @@ class BoardNotesViewModel(
                     reviewStatus = reviewStatus,
                     subjectId = subjectId,
                     moduleId = moduleId,
-                    chapterId = chapterId
+                    chapterId = chapterId,
+                    imageUri = imageUri
                 )
             },
             onSaved = onSaved
@@ -109,6 +116,7 @@ class BoardNotesViewModel(
         subjectId: String?,
         moduleId: String?,
         chapterId: String?,
+        imageUri: String?,
         onSaved: () -> Unit = {}
     ) {
         mutateBoardScan(
@@ -122,7 +130,8 @@ class BoardNotesViewModel(
                     reviewStatus = reviewStatus,
                     subjectId = subjectId,
                     moduleId = moduleId,
-                    chapterId = chapterId
+                    chapterId = chapterId,
+                    imageUri = imageUri
                 )
             },
             onSaved = onSaved
@@ -160,6 +169,7 @@ class BoardNotesViewModel(
 
             val result = action()
             if (result.isSuccess) {
+                discardPendingImage()
                 onSaved()
                 refreshBoardScans(showRefreshing = true)
             } else {
