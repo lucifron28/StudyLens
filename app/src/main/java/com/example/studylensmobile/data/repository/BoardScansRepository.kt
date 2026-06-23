@@ -25,7 +25,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 class BoardScansRepository(
     private val learningApi: LearningApi,
-    private val contentResolver: ContentResolver
+    private val contentResolver: ContentResolver,
+    private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> }
 ) {
     suspend fun getBoardScans(
         search: String? = null,
@@ -68,6 +69,8 @@ class BoardScansRepository(
             }
         ) {
             it.toDomain()
+        }.onSuccess {
+            aiCacheInvalidator.invalidateSource("board_scan", scanId)
         }
     }
 
@@ -145,6 +148,8 @@ class BoardScansRepository(
             }
         ) {
             Unit
+        }.onSuccess {
+            aiCacheInvalidator.invalidateSource("board_scan", scanId)
         }
     }
 
@@ -152,7 +157,9 @@ class BoardScansRepository(
         return emptyApiResult(
             label = "Delete note",
             call = { learningApi.deleteBoardScan(scanId) }
-        )
+        ).onSuccess {
+            aiCacheInvalidator.invalidateSource("board_scan", scanId)
+        }
     }
 }
 
