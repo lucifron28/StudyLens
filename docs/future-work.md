@@ -6,7 +6,6 @@
 - Add DOCX text extraction.
 - Add PPTX text extraction.
 - Add optional DOCX/PPTX to PDF conversion.
-- Complete the Gemini provider.
 - Add more tests for AI endpoints with mocked providers.
 - Add more tests for permission and owner-filtering behavior.
 - Add optional teacher/admin role in a later phase.
@@ -14,11 +13,6 @@
 
 ## Android
 
-- Add camera/gallery board scan image upload.
-- Add Android-side OCR with ML Kit.
-- Add flashcard review interactions.
-- Add quiz attempt answering and scoring.
-- Add AI tutor chat UI.
 - Add offline-friendly caching for subjects and modules.
 - Add richer profile and settings screens.
 - Add account editing.
