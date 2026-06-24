@@ -184,7 +184,10 @@ fun BoardNotesScreen(
                     onNavigateToFlashcards = onNavigateToFlashcards,
                     onNavigateToQuiz = onNavigateToQuiz,
                     onNavigateToTutor = onNavigateToTutor,
-                    onEditScan = { editingScan = it },
+                    onEditScan = { scan ->
+                        viewModel.loadRelationOptions(scan.subjectId, scan.moduleId)
+                        editingScan = scan
+                    },
                     onDeleteScan = { deletingScan = it },
                     actionsEnabled = !uiState.isMutating,
                     modifier = Modifier.padding(padding)
