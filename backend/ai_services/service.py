@@ -17,7 +17,7 @@ from ai_services.prompts import (
     source_user_prompt,
 )
 from ai_services.providers.base import AIProviderError, BaseAIProvider
-from ai_services.providers.gemini_provider import GeminiProvider
+from ai_services.providers.deepseek_provider import DeepSeekProvider
 from ai_services.providers.ollama_provider import OllamaProvider
 from learning.models import BoardScan, Chapter, Module
 from studytools.models import Difficulty, Flashcard, Quiz, QuizQuestion, SourceType, Summary
@@ -47,12 +47,12 @@ def get_provider() -> BaseAIProvider:
             base_url=getattr(settings, "OLLAMA_BASE_URL", "http://host.docker.internal:11434"),
             model=getattr(settings, "OLLAMA_MODEL", "qwen3.5:4b"),
         )
-    if provider_name == "gemini":
-        return GeminiProvider(
-            api_key=getattr(settings, "GEMINI_API_KEY", ""),
-            model=getattr(settings, "GEMINI_MODEL", ""),
+    if provider_name == "deepseek":
+        return DeepSeekProvider(
+            api_key=getattr(settings, "DEEPSEEK_API_KEY", ""),
+            model=getattr(settings, "DEEPSEEK_MODEL", ""),
         )
-    raise AIProviderError(f"Unsupported AI_PROVIDER '{provider_name}'. Use 'ollama' or 'gemini'.")
+    raise AIProviderError(f"Unsupported AI_PROVIDER '{provider_name}'. Use 'ollama' or 'deepseek'.")
 
 
 def truncate_text(text: str, limit: int = MAX_SOURCE_CHARS) -> str:

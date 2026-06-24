@@ -13,6 +13,10 @@ The backend is a Django REST Framework API located in `backend/`.
 - drf-spectacular
 - Pillow
 - httpx
+- openai (for DeepSeek integration)
+- PyMuPDF (PDF extraction)
+- python-docx (Word extraction)
+- python-pptx (PowerPoint extraction)
 - psycopg binary package
 
 ## Backend Structure
@@ -116,6 +120,7 @@ Important files:
 - `service.py`: source text resolution, provider selection, AI calls, JSON parsing, and save logic
 - `prompts.py`: prompt templates
 - `providers/base.py`: provider interface
+- `providers/deepseek_provider.py`: DeepSeek implementation via OpenAI SDK (Default)
 - `providers/ollama_provider.py`: local Ollama implementation
 - `providers/gemini_provider.py`: placeholder Gemini provider
 
@@ -149,13 +154,12 @@ The backend should never expose another student's records. When adding new endpo
 
 Models are registered in Django admin for development inspection. Admin is not the same as a teacher role. Teacher/admin product features are intentionally out of scope for the first version.
 
-## Future Extraction TODOs
+## Document Extraction
 
-The backend has fields ready for file text extraction, but conversion is not implemented yet.
+The backend has implemented text extraction for several file types uploaded by students:
 
-Future extraction work:
+- **PDF**: Uses `PyMuPDF` for fast text extraction.
+- **DOCX**: Uses `python-docx` to extract text from Word documents.
+- **PPTX**: Uses `python-pptx` to extract text from PowerPoint slides.
 
-- PDF text extraction
-- DOCX text extraction
-- PPTX text extraction
-- optional DOCX/PPTX to PDF conversion
+When files are attached to a `Module`, the backend parses the text contents and makes them available to the AI tools (Summarize, Flashcards, Quiz, Tutor) to use as study materials.

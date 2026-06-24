@@ -14,18 +14,30 @@ class BaseAIProvider:
 
 Current providers:
 
+- `DeepSeekProvider`
 - `OllamaProvider`
-- `GeminiProvider` placeholder
+- `GeminiProvider` (placeholder)
 
 Provider selection is controlled by:
 
 ```env
-AI_PROVIDER=ollama
+AI_PROVIDER=deepseek
 ```
+
+## DeepSeek
+
+Default cloud model (requires API key):
+
+```env
+DEEPSEEK_API_KEY=your_key_here
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+DeepSeek is accessed via the official `openai` SDK since it offers OpenAI API compatibility.
 
 ## Ollama
 
-Default local model:
+Fallback local model:
 
 ```env
 OLLAMA_BASE_URL=http://host.docker.internal:11434

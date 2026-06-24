@@ -27,6 +27,7 @@ Implemented backend areas:
 - AI service layer for summaries, flashcards, quizzes, and tutor mode
 - Swagger/OpenAPI docs
 - media uploads for module files and board scan images
+- document parsing libraries (PyMuPDF, python-docx, python-pptx)
 
 Implemented Android areas:
 
@@ -37,7 +38,8 @@ Implemented Android areas:
 - subject detail
 - module reader
 - board notes list
-- OCR result editor
+- camera scanning via CameraX
+- OCR result editor via ML Kit OCR
 - AI summary screen
 - flashcards screen
 - quiz screen
@@ -64,9 +66,9 @@ Django REST Framework backend
   PostgreSQL
   media files
       |
-      | optional local model calls
+      | AI inference APIs
       v
-Ollama on host machine
+DeepSeek / Ollama / Gemini
 ```
 
 ## Important Design Rules
