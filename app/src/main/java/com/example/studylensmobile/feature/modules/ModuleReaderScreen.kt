@@ -11,6 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -32,9 +37,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.LearningChapter
 import com.example.studylensmobile.domain.model.LearningModule
 import com.example.studylensmobile.ui.components.MarkdownInlineText
@@ -179,32 +186,12 @@ private fun ModuleReaderContent(
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                StudyToolActionCard(
-                    title = "AI Summary",
-                    description = "Get a high-level overview of this module.",
-                    icon = Icons.Default.Summarize,
-                    onClick = onNavigateToSummary
-                )
-                StudyToolActionCard(
-                    title = "Flashcards",
-                    description = "Memorize key concepts with active recall.",
-                    icon = Icons.Default.Style,
-                    onClick = onNavigateToFlashcards
-                )
-                StudyToolActionCard(
-                    title = "Practice Quiz",
-                    description = "Test your knowledge with AI questions.",
-                    icon = Icons.Default.Quiz,
-                    onClick = onNavigateToQuiz
-                )
-                StudyToolActionCard(
-                    title = "Lumi Tutor",
-                    description = "Chat with Lumi to clarify any confusing topics.",
-                    icon = Icons.Default.SmartToy,
-                    onClick = onNavigateToTutor
-                )
-            }
+            StudyToolsBanner(
+                onNavigateToSummary = onNavigateToSummary,
+                onNavigateToFlashcards = onNavigateToFlashcards,
+                onNavigateToQuiz = onNavigateToQuiz,
+                onNavigateToTutor = onNavigateToTutor
+            )
         }
     }
 }
@@ -351,41 +338,82 @@ private fun LearningChapter.readerText(): String {
 }
 
 @Composable
-private fun StudyToolActionCard(
-    title: String,
-    description: String,
+private fun StudyToolsBanner(
+    onNavigateToSummary: () -> Unit,
+    onNavigateToFlashcards: () -> Unit,
+    onNavigateToQuiz: () -> Unit,
+    onNavigateToTutor: () -> Unit
+) {
+    StudyLensCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.lumi_thinking),
+                contentDescription = "Lumi Mascot",
+                modifier = Modifier.size(64.dp)
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Ready to test yourself?",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ActionChip(
+                        text = "Summary",
+                        icon = Icons.Default.Summarize,
+                        onClick = onNavigateToSummary
+                    )
+                    ActionChip(
+                        text = "Cards",
+                        icon = Icons.Default.Style,
+                        onClick = onNavigateToFlashcards
+                    )
+                    ActionChip(
+                        text = "Quiz",
+                        icon = Icons.Default.Quiz,
+                        onClick = onNavigateToQuiz
+                    )
+                    ActionChip(
+                        text = "Tutor",
+                        icon = Icons.Default.SmartToy,
+                        onClick = onNavigateToTutor
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionChip(
+    text: String,
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    StudyLensCard(
+    androidx.compose.material3.FilledTonalButton(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text, style = MaterialTheme.typography.labelMedium)
     }
 }
