@@ -54,7 +54,6 @@ private fun DashboardContinueLearningDto.toDomain(): DashboardContinueLearningIt
         moduleTitle = moduleTitle,
         chapterId = chapter,
         chapterTitle = chapterTitle,
-        progressPercentage = progressPercentage,
         lastPosition = lastPosition,
         status = status,
         lastReadAt = lastReadAt.toReadableDate()

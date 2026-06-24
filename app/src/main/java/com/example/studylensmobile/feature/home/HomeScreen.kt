@@ -53,7 +53,6 @@ import com.example.studylensmobile.ui.components.StudyLensInlineError
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensTopBar
-import com.example.studylensmobile.ui.components.ProgressBar
 import com.example.studylensmobile.ui.components.SectionHeader
 import com.example.studylensmobile.ui.components.StatusChip
 
@@ -250,16 +249,6 @@ private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: 
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                ProgressBar(progress = item.progressPercentage.coerceIn(0, 100) / 100f, modifier = Modifier.weight(1f))
-                Text(
-                    text = "${item.progressPercentage}%",
-                    color = MaterialTheme.colorScheme.secondary,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
     }
 }

@@ -51,7 +51,6 @@ import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
-import com.example.studylensmobile.ui.components.ProgressBar
 import com.example.studylensmobile.ui.components.SectionHeader
 import com.example.studylensmobile.ui.components.StatusChip
 
@@ -248,8 +247,6 @@ private fun ModuleHeaderCard(
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            ProgressBar(progress = module.progressPercentage.coerceIn(0, 100) / 100f)
             if (isRefreshing) {
                 Text(
                     text = "Refreshing module...",

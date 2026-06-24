@@ -5,7 +5,6 @@ data class LearningModule(
     val subjectId: String,
     val title: String,
     val contentPreview: String,
-    val progressPercentage: Int,
     val subjectTitle: String = "",
     val description: String = "",
     val contentType: String = "",

@@ -30,7 +30,6 @@ data class DashboardContinueLearningItem(
     val moduleTitle: String,
     val chapterId: Int?,
     val chapterTitle: String,
-    val progressPercentage: Int,
     val lastPosition: String,
     val status: String,
     val lastReadAt: String

@@ -49,7 +49,6 @@ import com.example.studylensmobile.ui.components.StudyLensInlineError
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensRefreshingIndicator
 import com.example.studylensmobile.ui.components.StudyLensTopBar
-import com.example.studylensmobile.ui.components.ProgressBar
 import com.example.studylensmobile.ui.components.StatusChip
 
 @Composable
@@ -252,17 +251,7 @@ private fun SubjectCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    StatusChip(status = subject.code)
-                    Text(
-                        text = "${subject.progressPercentage}%",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+                StatusChip(status = subject.code)
                 Row {
                     IconButton(
                         onClick = onEdit,
@@ -307,10 +296,6 @@ private fun SubjectCard(
                 text = subject.itemSummary,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 10.dp)
-            )
-            ProgressBar(
-                progress = subject.progressPercentage.coerceIn(0, 100) / 100f,
                 modifier = Modifier.padding(top = 10.dp)
             )
         }

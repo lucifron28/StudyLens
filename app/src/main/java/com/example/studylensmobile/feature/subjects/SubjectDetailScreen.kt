@@ -50,7 +50,6 @@ import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensInlineError
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
-import com.example.studylensmobile.ui.components.ProgressBar
 import com.example.studylensmobile.ui.components.SectionHeader
 import com.example.studylensmobile.ui.components.StatusChip
 
@@ -274,19 +273,7 @@ private fun HeaderCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusChip(status = subject.code)
-                Text(
-                    text = "${subject.progressPercentage}%",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            StatusChip(status = subject.code)
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = subject.title,
@@ -306,10 +293,6 @@ private fun HeaderCard(
                 text = subject.itemSummary,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 12.dp)
-            )
-            ProgressBar(
-                progress = subject.progressPercentage.coerceIn(0, 100) / 100f,
                 modifier = Modifier.padding(top = 12.dp)
             )
             if (isRefreshing) {
