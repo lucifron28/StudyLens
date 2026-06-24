@@ -193,7 +193,11 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
             composable(AppRoutes.SCANS) { backStackEntry ->
                 val boardNotesViewModel: BoardNotesViewModel = viewModel(
                     factory = viewModelFactory {
-                        BoardNotesViewModel(app.container.boardScansRepository)
+                        BoardNotesViewModel(
+                            boardScansRepository = app.container.boardScansRepository,
+                            subjectsRepository = app.container.subjectsRepository,
+                            modulesRepository = app.container.modulesRepository
+                        )
                     }
                 )
                 
@@ -215,6 +219,18 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToCamera = {
                         navController.navigate(AppRoutes.CAMERA_CAPTURE)
+                    },
+                    onNavigateToSummary = { boardScanId ->
+                        navController.navigate(AppRoutes.createAiSummaryRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToFlashcards = { boardScanId ->
+                        navController.navigate(AppRoutes.createFlashcardsRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToQuiz = { boardScanId ->
+                        navController.navigate(AppRoutes.createQuizRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToTutor = { boardScanId ->
+                        navController.navigate(AppRoutes.createTutorRoute("board_scan", boardScanId))
                     }
                 )
             }

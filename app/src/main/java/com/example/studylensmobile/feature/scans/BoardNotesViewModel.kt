@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.studylensmobile.core.ocr.OcrTextRecognizer
 import com.example.studylensmobile.data.repository.BoardScansRepository
+import com.example.studylensmobile.data.repository.ModulesRepository
+import com.example.studylensmobile.data.repository.SubjectsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,13 +15,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BoardNotesViewModel(
-    private val boardScansRepository: BoardScansRepository
+    private val boardScansRepository: BoardScansRepository,
+    private val subjectsRepository: SubjectsRepository,
+    private val modulesRepository: ModulesRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BoardNotesUiState())
     val uiState: StateFlow<BoardNotesUiState> = _uiState.asStateFlow()
 
     init {
         loadBoardScans()
+        loadSubjects()
     }
 
     fun updateSearchQuery(query: String) {
@@ -29,6 +34,65 @@ class BoardNotesViewModel(
     fun loadBoardScans() {
         viewModelScope.launch {
             refreshBoardScans()
+        }
+    }
+
+    fun loadSubjects() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingSubjects = true) }
+            val result = subjectsRepository.getSubjects()
+            _uiState.update {
+                it.copy(
+                    availableSubjects = result.getOrNull() ?: it.availableSubjects,
+                    isLoadingSubjects = false
+                )
+            }
+        }
+    }
+
+    fun fetchModulesForSubject(subjectId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoadingModules = true,
+                    availableModules = emptyList(),
+                    availableChapters = emptyList()
+                )
+            }
+            val result = subjectsRepository.getSubjectModules(subjectId)
+            _uiState.update {
+                it.copy(
+                    availableModules = result.getOrNull() ?: emptyList(),
+                    isLoadingModules = false
+                )
+            }
+        }
+    }
+
+    fun fetchChaptersForModule(moduleId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoadingChapters = true,
+                    availableChapters = emptyList()
+                )
+            }
+            val result = modulesRepository.getModuleReader(moduleId)
+            _uiState.update {
+                it.copy(
+                    availableChapters = result.getOrNull()?.chapters ?: emptyList(),
+                    isLoadingChapters = false
+                )
+            }
+        }
+    }
+
+    fun clearModulesAndChapters() {
+        _uiState.update {
+            it.copy(
+                availableModules = emptyList(),
+                availableChapters = emptyList()
+            )
         }
     }
 
