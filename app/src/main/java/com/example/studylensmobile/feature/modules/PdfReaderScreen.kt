@@ -31,15 +31,10 @@ fun PdfReaderScreen(
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(url) {
-        // Fix local host issues for emulator mapping to host
-        val accessibleUrl = url.replace("127.0.0.1", "10.0.2.2").replace("localhost", "10.0.2.2")
-        val filename = accessibleUrl.substringAfterLast("/")
-        val file = FileManager.downloadPdf(context, accessibleUrl, filename)
-        if (file != null) {
-            pdfFile = file
-        } else {
-            error = "Failed to download PDF."
-        }
+        val filename = url.substringAfterLast("/")
+        FileManager.downloadPdf(context, url, filename)
+            .onSuccess { pdfFile = it }
+            .onFailure { error = it.message ?: "Failed to download PDF." }
         isLoading = false
     }
 

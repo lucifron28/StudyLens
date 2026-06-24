@@ -5,51 +5,62 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
 object FileManager {
-    suspend fun downloadPdf(context: Context, urlString: String, filename: String): File? {
+    suspend fun downloadPdf(context: Context, urlString: String, filename: String): Result<File> {
         return withContext(Dispatchers.IO) {
+            val cacheDir = File(context.cacheDir, "pdf_cache")
+            val file = File(cacheDir, filename)
+
             try {
-                val cacheDir = File(context.cacheDir, "pdf_cache")
                 if (!cacheDir.exists()) {
                     cacheDir.mkdirs()
                 }
-                
-                val file = File(cacheDir, filename)
-                // Return cached version if it exists
-                if (file.exists() && file.length() > 0) {
-                    return@withContext file
+
+                if (file.isPdfFile()) {
+                    return@withContext Result.success(file)
                 }
-                
-                val url = URL(urlString)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connect()
-                
-                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                    return@withContext null
+                file.delete()
+
+                val connection = (URL(urlString).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 15_000
+                    readTimeout = 30_000
                 }
-                
-                val inputStream = connection.inputStream
-                val outputStream = FileOutputStream(file)
-                
-                val buffer = ByteArray(4096)
-                var bytesRead: Int
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
+                try {
+                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                        throw IOException("Server returned HTTP ${connection.responseCode}.")
+                    }
+
+                    connection.inputStream.use { input ->
+                        FileOutputStream(file).use(input::copyTo)
+                    }
+                } finally {
+                    connection.disconnect()
                 }
-                
-                outputStream.flush()
-                outputStream.close()
-                inputStream.close()
-                
-                file
+
+                if (!file.isPdfFile()) {
+                    throw IOException("The downloaded file is not a valid PDF.")
+                }
+
+                Result.success(file)
             } catch (e: Exception) {
-                e.printStackTrace()
-                null
+                file.delete()
+                Result.failure(IOException("Unable to download the PDF: ${e.message}", e))
             }
+        }
+    }
+
+    private fun File.isPdfFile(): Boolean {
+        if (!exists() || length() == 0L) return false
+
+        inputStream().use { input ->
+            val header = ByteArray(1_024)
+            val byteCount = input.read(header)
+            return byteCount > 0 && String(header, 0, byteCount, Charsets.US_ASCII).contains("%PDF-")
         }
     }
 }

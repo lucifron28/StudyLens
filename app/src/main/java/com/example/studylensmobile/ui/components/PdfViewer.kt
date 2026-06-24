@@ -57,7 +57,10 @@ fun PdfViewer(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(pageCount) { index ->
+            items(
+                count = pageCount,
+                key = { pageIndex -> "pdf-page-$pageIndex" }
+            ) { index ->
                 PdfPage(
                     pdfRenderer = pdfRenderer,
                     pageIndex = index,
