@@ -124,10 +124,25 @@ interface LearningApi {
         @Body request: ModuleWriteRequest
     ): Response<ModuleDto>
 
+    @Multipart
+    @POST("api/learning/modules/")
+    suspend fun createModuleWithFile(
+        @Part file: MultipartBody.Part,
+        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>
+    ): Response<ModuleDto>
+
     @PATCH("api/learning/modules/{moduleId}/")
     suspend fun updateModule(
         @Path("moduleId") moduleId: String,
         @Body request: ModuleWriteRequest
+    ): Response<ModuleDto>
+
+    @Multipart
+    @PATCH("api/learning/modules/{moduleId}/")
+    suspend fun updateModuleWithFile(
+        @Path("moduleId") moduleId: String,
+        @Part file: MultipartBody.Part,
+        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>
     ): Response<ModuleDto>
 
     @DELETE("api/learning/modules/{moduleId}/")

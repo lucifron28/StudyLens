@@ -139,12 +139,13 @@ fun SubjectDetailScreen(
             module = null,
             isSaving = uiState.isMutating,
             onDismiss = { showCreateModuleDialog = false },
-            onSave = { title, description, contentType, markdownContent ->
+            onSave = { title, description, contentType, markdownContent, fileUri ->
                 viewModel.createModule(
                     title = title,
                     description = description,
                     contentType = contentType,
                     markdownContent = markdownContent,
+                    fileUri = fileUri,
                     onSaved = { showCreateModuleDialog = false }
                 )
             }
@@ -156,13 +157,14 @@ fun SubjectDetailScreen(
             module = module,
             isSaving = uiState.isMutating,
             onDismiss = { editingModule = null },
-            onSave = { title, description, contentType, markdownContent ->
+            onSave = { title, description, contentType, markdownContent, fileUri ->
                 viewModel.updateModule(
                     moduleId = module.id,
                     title = title,
                     description = description,
                     contentType = contentType,
                     markdownContent = markdownContent,
+                    fileUri = fileUri,
                     onSaved = { editingModule = null }
                 )
             }
@@ -388,14 +390,28 @@ private fun ModuleFormDialog(
         title: String,
         description: String,
         contentType: String,
-        markdownContent: String
+        markdownContent: String,
+        fileUri: android.net.Uri?
     ) -> Unit
 ) {
     var title by remember(module?.id) { mutableStateOf(module?.title.orEmpty()) }
     var description by remember(module?.id) { mutableStateOf(module?.description.orEmpty()) }
     var contentType by remember(module?.id) { mutableStateOf(module?.contentType?.lowercase() ?: "markdown") }
     var markdownContent by remember(module?.id) { mutableStateOf("") }
+    var fileUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var validationMessage by remember(module?.id) { mutableStateOf<String?>(null) }
+
+    val filePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        fileUri = uri
+        if (uri != null) {
+            val type = uri.lastPathSegment?.lowercase() ?: ""
+            if (type.endsWith("pdf")) contentType = "pdf"
+            else if (type.endsWith("docx")) contentType = "docx"
+            else if (type.endsWith("pptx")) contentType = "pptx"
+        }
+    }
 
     AlertDialog(
         onDismissRequest = {
@@ -405,52 +421,71 @@ private fun ModuleFormDialog(
         },
         title = { Text(if (module == null) "Add module" else "Edit module") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = {
-                        title = it
-                        validationMessage = null
-                    },
-                    enabled = !isSaving,
-                    label = { Text("Title") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    enabled = !isSaving,
-                    label = { Text("Description") },
-                    minLines = 2,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = contentType,
-                    onValueChange = {
-                        contentType = it
-                        validationMessage = null
-                    },
-                    enabled = !isSaving,
-                    label = { Text("Content type") },
-                    placeholder = { Text("markdown, text, pdf, docx, pptx") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = markdownContent,
-                    onValueChange = { markdownContent = it },
-                    enabled = !isSaving,
-                    label = { Text(if (module == null) "Module content" else "New content optional") },
-                    minLines = 4,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                validationMessage?.let { message ->
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = {
+                            title = it
+                            validationMessage = null
+                        },
+                        enabled = !isSaving,
+                        label = { Text("Title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                }
+                item {
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        enabled = !isSaving,
+                        label = { Text("Description") },
+                        minLines = 2,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                item {
+                    Button(
+                        onClick = { filePickerLauncher.launch("*/*") },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        enabled = !isSaving
+                    ) {
+                        Text(if (fileUri != null) "File Selected: ${fileUri?.lastPathSegment}" else "Upload Document (PDF/Docx)")
+                    }
+                }
+                item {
+                    OutlinedTextField(
+                        value = contentType,
+                        onValueChange = {
+                            contentType = it
+                            validationMessage = null
+                        },
+                        enabled = !isSaving,
+                        label = { Text("Content type") },
+                        placeholder = { Text("markdown, text, pdf, docx, pptx") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = markdownContent,
+                        onValueChange = { markdownContent = it },
+                        enabled = !isSaving,
+                        label = { Text(if (module == null) "Markdown Content (Optional)" else "New markdown (Optional)") },
+                        minLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                item {
+                    validationMessage?.let { message ->
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         },
@@ -469,7 +504,8 @@ private fun ModuleFormDialog(
                                 cleanedTitle,
                                 description.trim(),
                                 cleanedContentType,
-                                markdownContent.trim()
+                                markdownContent.trim(),
+                                fileUri
                             )
                         }
                     }
