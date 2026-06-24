@@ -5,6 +5,10 @@ import android.net.Uri
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.core.format.toReadableDate
 import com.example.studylensmobile.core.utils.displayName
+import com.example.studylensmobile.data.local.dao.ModuleDao
+import com.example.studylensmobile.data.local.dao.SubjectDao
+import com.example.studylensmobile.data.local.entity.toDomain
+import com.example.studylensmobile.data.local.entity.toEntity
 import com.example.studylensmobile.data.remote.apiResult
 import com.example.studylensmobile.data.remote.emptyApiResult
 import com.example.studylensmobile.data.remote.api.LearningApi
@@ -33,14 +37,32 @@ import java.io.IOException
 class SubjectsRepository(
     private val learningApi: LearningApi,
     private val contentResolver: ContentResolver,
-    private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> }
+    private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> },
+    private val subjectDao: SubjectDao,
+    private val moduleDao: ModuleDao
 ) {
     suspend fun getSubjects(search: String? = null): Result<List<Subject>> {
-        return apiResult(
+        val networkResult = apiResult(
             label = "Subjects",
             call = { learningApi.getSubjects(search = search?.takeIf { it.isNotBlank() }) }
         ) { body ->
             body.results.map { it.toDomain() }
+        }
+        if (networkResult.isSuccess) {
+            val subjects = networkResult.getOrThrow()
+            // Only replace cache when fetching without search filter
+            if (search.isNullOrBlank()) {
+                subjectDao.deleteAll()
+                subjectDao.upsertAll(subjects.map { it.toEntity() })
+            }
+            return networkResult
+        }
+        // Offline fallback: return whatever is in the cache
+        val cached = subjectDao.getAll()
+        return if (cached.isNotEmpty()) {
+            Result.success(cached.map { it.toDomain() })
+        } else {
+            networkResult // propagate the original error if cache is empty
         }
     }
 

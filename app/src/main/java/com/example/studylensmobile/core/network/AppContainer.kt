@@ -3,6 +3,7 @@ package com.example.studylensmobile.core.network
 import android.content.Context
 import com.example.studylensmobile.core.datastore.ThemePreferences
 import com.example.studylensmobile.core.datastore.TokenManager
+import com.example.studylensmobile.data.local.StudyLensDatabase
 import com.example.studylensmobile.data.remote.api.AiApi
 import com.example.studylensmobile.data.remote.api.AuthApi
 import com.example.studylensmobile.data.remote.api.LearningApi
@@ -21,6 +22,10 @@ class AppContainer(private val context: Context) {
 
     val themePreferences: ThemePreferences by lazy {
         ThemePreferences(context)
+    }
+
+    private val database: StudyLensDatabase by lazy {
+        StudyLensDatabase.getInstance(context)
     }
 
     val retrofit: Retrofit by lazy {
@@ -44,19 +49,19 @@ class AppContainer(private val context: Context) {
     }
 
     val dashboardRepository: DashboardRepository by lazy {
-        DashboardRepository(learningApi)
+        DashboardRepository(learningApi, database.subjectDao(), database.boardScanDao())
     }
 
     val subjectsRepository: SubjectsRepository by lazy {
-        SubjectsRepository(learningApi, context.contentResolver, aiRepository)
+        SubjectsRepository(learningApi, context.contentResolver, aiRepository, database.subjectDao(), database.moduleDao())
     }
 
     val boardScansRepository: BoardScansRepository by lazy {
-        BoardScansRepository(learningApi, context.contentResolver, aiRepository)
+        BoardScansRepository(learningApi, context.contentResolver, aiRepository, database.boardScanDao())
     }
 
     val modulesRepository: ModulesRepository by lazy {
-        ModulesRepository(learningApi)
+        ModulesRepository(learningApi, database.moduleDao())
     }
 
     val aiRepository: AiRepository by lazy {

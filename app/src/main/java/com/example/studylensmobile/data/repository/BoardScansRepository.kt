@@ -16,6 +16,9 @@ import com.example.studylensmobile.data.remote.dto.BoardScanDto
 import com.example.studylensmobile.data.remote.dto.BoardScanTagDto
 import com.example.studylensmobile.data.remote.dto.BoardScanUpdateRequest
 import com.example.studylensmobile.data.remote.dto.BoardScanWriteRequest
+import com.example.studylensmobile.data.local.dao.BoardScanDao
+import com.example.studylensmobile.data.local.entity.toDomain
+import com.example.studylensmobile.data.local.entity.toEntity
 import com.example.studylensmobile.domain.model.BoardScan
 import com.example.studylensmobile.domain.model.BoardScanTag
 import java.io.IOException
@@ -30,13 +33,14 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class BoardScansRepository(
     private val learningApi: LearningApi,
     private val contentResolver: ContentResolver,
-    private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> }
+    private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> },
+    private val boardScanDao: BoardScanDao
 ) {
     suspend fun getBoardScans(
         search: String? = null,
         reviewStatus: String? = null
     ): Result<List<BoardScan>> {
-        return apiResult(
+        val networkResult = apiResult(
             label = "Board scans",
             call = {
                 learningApi.getBoardScans(
@@ -47,12 +51,32 @@ class BoardScansRepository(
         ) { body ->
             body.results.map { it.toDomain() }
         }
+        if (networkResult.isSuccess) {
+            val scans = networkResult.getOrThrow()
+            if (search.isNullOrBlank() && reviewStatus.isNullOrBlank()) {
+                boardScanDao.deleteAll()
+                boardScanDao.upsertAll(scans.map { it.toEntity() })
+            }
+            return networkResult
+        }
+        val cached = boardScanDao.getAll()
+        return if (cached.isNotEmpty()) {
+            Result.success(cached.map { it.toDomain() })
+        } else {
+            networkResult
+        }
     }
 
     suspend fun getBoardScan(scanId: String): Result<BoardScan> {
-        return apiResult("Board scan", { learningApi.getBoardScan(scanId) }) {
+        val networkResult = apiResult("Board scan", { learningApi.getBoardScan(scanId) }) {
             it.toDomain()
         }
+        if (networkResult.isSuccess) {
+            boardScanDao.upsert(networkResult.getOrThrow().toEntity())
+            return networkResult
+        }
+        val cached = boardScanDao.getById(scanId)
+        return if (cached != null) Result.success(cached.toDomain()) else networkResult
     }
 
     suspend fun updateBoardScan(
@@ -159,6 +183,7 @@ class BoardScansRepository(
             call = { learningApi.deleteBoardScan(scanId) }
         ).onSuccess {
             aiCacheInvalidator.invalidateSource("board_scan", scanId)
+            boardScanDao.deleteById(scanId)
         }
     }
 }
