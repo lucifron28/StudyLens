@@ -1,6 +1,8 @@
 package com.example.studylensmobile.data.repository
 
 import com.example.studylensmobile.core.format.toReadableDate
+import com.example.studylensmobile.data.local.dao.BoardScanDao
+import com.example.studylensmobile.data.local.dao.SubjectDao
 import com.example.studylensmobile.data.remote.apiResult
 import com.example.studylensmobile.data.remote.api.LearningApi
 import com.example.studylensmobile.data.remote.dto.DashboardActivityItemDto
@@ -14,10 +16,34 @@ import com.example.studylensmobile.domain.model.DashboardStats
 import com.example.studylensmobile.domain.model.DashboardUpcomingItem
 
 class DashboardRepository(
-    private val learningApi: LearningApi
+    private val learningApi: LearningApi,
+    private val subjectDao: SubjectDao,
+    private val boardScanDao: BoardScanDao
 ) {
     suspend fun getDashboard(): Result<Dashboard> {
-        return apiResult("Dashboard", learningApi::getDashboard) { it.toDomain() }
+        val networkResult = apiResult("Dashboard", learningApi::getDashboard) { it.toDomain() }
+        if (networkResult.isSuccess) return networkResult
+
+        // Offline fallback: construct a minimal dashboard from local cache
+        val cachedSubjects = subjectDao.getAll()
+        val cachedScans = boardScanDao.getAll()
+        return if (cachedSubjects.isNotEmpty() || cachedScans.isNotEmpty()) {
+            Result.success(
+                Dashboard(
+                    overallProgress = 0,
+                    stats = DashboardStats(
+                        modulesInProgress = 0,
+                        notesSaved = cachedScans.size,
+                        quizzesCompleted = 0
+                    ),
+                    upcoming = emptyList(),
+                    continueLearning = emptyList(),
+                    recentActivity = emptyList()
+                )
+            )
+        } else {
+            networkResult
+        }
     }
 }
 
@@ -67,4 +93,3 @@ private fun DashboardActivityItemDto.toDomain(): DashboardActivityItem {
         createdAt = createdAt.toReadableDate()
     )
 }
-

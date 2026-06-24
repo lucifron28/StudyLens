@@ -7,6 +7,7 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 kotlin = "2.2.10"
+ksp = "2.2.10-2.0.2"
 composeBom = "2026.06.00"
 navigationCompose = "2.9.0"
 lifecycleViewModelCompose = "2.11.0"
@@ -14,6 +15,7 @@ coilCompose = "2.7.0"
 retrofit = "3.0.0"
 okhttp = "5.4.0"
 datastore = "1.2.0"
+room = "2.7.1"
 mlkitTextRecognition = "16.0.1"
 camerax = "1.6.0"
 
@@ -45,8 +47,12 @@ camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = 
 camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
