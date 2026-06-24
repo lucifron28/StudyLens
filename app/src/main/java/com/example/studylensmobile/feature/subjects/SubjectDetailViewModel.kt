@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.net.Uri
 
 class SubjectDetailViewModel(
     private val subjectId: String,
@@ -31,6 +32,7 @@ class SubjectDetailViewModel(
         description: String,
         contentType: String,
         markdownContent: String,
+        fileUri: Uri? = null,
         onSaved: () -> Unit = {}
     ) {
         mutateModule(
@@ -41,7 +43,8 @@ class SubjectDetailViewModel(
                     title = title,
                     description = description,
                     contentType = contentType,
-                    markdownContent = markdownContent
+                    markdownContent = markdownContent,
+                    fileUri = fileUri
                 )
             },
             onSaved = onSaved
@@ -54,6 +57,7 @@ class SubjectDetailViewModel(
         description: String,
         contentType: String,
         markdownContent: String,
+        fileUri: Uri? = null,
         onSaved: () -> Unit = {}
     ) {
         mutateModule(
@@ -64,7 +68,8 @@ class SubjectDetailViewModel(
                     title = title,
                     description = description,
                     contentType = contentType,
-                    markdownContent = markdownContent
+                    markdownContent = markdownContent,
+                    fileUri = fileUri
                 )
             },
             onSaved = onSaved

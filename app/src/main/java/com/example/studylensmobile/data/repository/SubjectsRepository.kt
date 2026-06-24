@@ -18,9 +18,19 @@ import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
+import android.content.ContentResolver
+import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 
 class SubjectsRepository(
     private val learningApi: LearningApi,
+    private val contentResolver: ContentResolver,
     private val aiCacheInvalidator: AiCacheInvalidator = AiCacheInvalidator { _, _ -> }
 ) {
     suspend fun getSubjects(search: String? = null): Result<List<Subject>> {
@@ -103,20 +113,33 @@ class SubjectsRepository(
         title: String,
         description: String,
         contentType: String,
-        markdownContent: String
+        markdownContent: String,
+        fileUri: Uri? = null
     ): Result<Unit> {
         return apiResult(
             label = "Create module",
             call = {
-                learningApi.createModule(
-                    ModuleWriteRequest(
-                        subject = subjectId.toIntOrNull(),
-                        title = title.trim(),
-                        description = description.trim(),
-                        contentType = contentType.toApiContentType(),
-                        markdownContent = markdownContent.trim()
+                if (fileUri != null) {
+                    val filePart = contentResolver.toFilePart(fileUri, "module_file")
+                    val fields = mutableMapOf<String, okhttp3.RequestBody>()
+                    fields["subject"] = subjectId.toRequestBody("text/plain".toMediaTypeOrNull())
+                    fields["title"] = title.trim().toRequestBody("text/plain".toMediaTypeOrNull())
+                    if (description.isNotBlank()) fields["description"] = description.trim().toRequestBody("text/plain".toMediaTypeOrNull())
+                    fields["content_type"] = contentType.toApiContentType().toRequestBody("text/plain".toMediaTypeOrNull())
+                    if (markdownContent.isNotBlank()) fields["markdown_content"] = markdownContent.trim().toRequestBody("text/plain".toMediaTypeOrNull())
+                    
+                    learningApi.createModuleWithFile(filePart, fields)
+                } else {
+                    learningApi.createModule(
+                        ModuleWriteRequest(
+                            subject = subjectId.toIntOrNull(),
+                            title = title.trim(),
+                            description = description.trim(),
+                            contentType = contentType.toApiContentType(),
+                            markdownContent = markdownContent.trim()
+                        )
                     )
-                )
+                }
             }
         ) {
             Unit
@@ -128,20 +151,32 @@ class SubjectsRepository(
         title: String,
         description: String,
         contentType: String,
-        markdownContent: String? = null
+        markdownContent: String? = null,
+        fileUri: Uri? = null
     ): Result<Unit> {
         return apiResult(
             label = "Update module",
             call = {
-                learningApi.updateModule(
-                    moduleId = moduleId,
-                    request = ModuleWriteRequest(
-                        title = title.trim(),
-                        description = description.trim(),
-                        contentType = contentType.toApiContentType(),
-                        markdownContent = markdownContent?.trim()?.takeIf { it.isNotBlank() }
+                if (fileUri != null) {
+                    val filePart = contentResolver.toFilePart(fileUri, "module_file")
+                    val fields = mutableMapOf<String, okhttp3.RequestBody>()
+                    fields["title"] = title.trim().toRequestBody("text/plain".toMediaTypeOrNull())
+                    if (description.isNotBlank()) fields["description"] = description.trim().toRequestBody("text/plain".toMediaTypeOrNull())
+                    fields["content_type"] = contentType.toApiContentType().toRequestBody("text/plain".toMediaTypeOrNull())
+                    if (!markdownContent.isNullOrBlank()) fields["markdown_content"] = markdownContent.trim().toRequestBody("text/plain".toMediaTypeOrNull())
+                    
+                    learningApi.updateModuleWithFile(moduleId, filePart, fields)
+                } else {
+                    learningApi.updateModule(
+                        moduleId = moduleId,
+                        request = ModuleWriteRequest(
+                            title = title.trim(),
+                            description = description.trim(),
+                            contentType = contentType.toApiContentType(),
+                            markdownContent = markdownContent?.trim()?.takeIf { it.isNotBlank() }
+                        )
                     )
-                )
+                }
             }
         ) {
             Unit
@@ -157,6 +192,14 @@ class SubjectsRepository(
         ).onSuccess {
             aiCacheInvalidator.invalidateSource("module", moduleId)
         }
+    }
+
+    private suspend fun ContentResolver.toFilePart(uri: Uri, partName: String): MultipartBody.Part = withContext(Dispatchers.IO) {
+        val bytes = openInputStream(uri)?.use { it.readBytes() }
+            ?: throw IOException("Unable to read the selected file.")
+        val mediaType = getType(uri)?.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType()
+        val body = bytes.toRequestBody(mediaType)
+        MultipartBody.Part.createFormData(partName, "uploaded_file", body)
     }
 }
 

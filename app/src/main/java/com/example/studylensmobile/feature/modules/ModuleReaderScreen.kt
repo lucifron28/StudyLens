@@ -14,6 +14,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material.icons.filled.Summarize
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -173,41 +179,31 @@ private fun ModuleReaderContent(
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = onNavigateToSummary,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Summary")
-                    }
-                    Button(
-                        onClick = onNavigateToFlashcards,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cards")
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = onNavigateToQuiz,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Quiz")
-                    }
-                    Button(
-                        onClick = onNavigateToTutor,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Tutor")
-                    }
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                StudyToolActionCard(
+                    title = "AI Summary",
+                    description = "Get a high-level overview of this module.",
+                    icon = Icons.Default.Summarize,
+                    onClick = onNavigateToSummary
+                )
+                StudyToolActionCard(
+                    title = "Flashcards",
+                    description = "Memorize key concepts with active recall.",
+                    icon = Icons.Default.Style,
+                    onClick = onNavigateToFlashcards
+                )
+                StudyToolActionCard(
+                    title = "Practice Quiz",
+                    description = "Test your knowledge with AI questions.",
+                    icon = Icons.Default.Quiz,
+                    onClick = onNavigateToQuiz
+                )
+                StudyToolActionCard(
+                    title = "Lumi Tutor",
+                    description = "Chat with Lumi to clarify any confusing topics.",
+                    icon = Icons.Default.SmartToy,
+                    onClick = onNavigateToTutor
+                )
             }
         }
     }
@@ -352,4 +348,44 @@ private fun LearningModule.readerText(): String {
 
 private fun LearningChapter.readerText(): String {
     return markdownContent.ifBlank { extractedText }
+}
+
+@Composable
+private fun StudyToolActionCard(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    StudyLensCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }
