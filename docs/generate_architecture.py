@@ -46,7 +46,9 @@ with Diagram(
         compose = Kotlin("Jetpack Compose\nscreens and navigation")
         view_models = Kotlin("ViewModels\nUI state and actions")
         repositories = Kotlin("Repositories\nRetrofit and DTO mapping")
-        token_store = Storage("DataStore\nJWT tokens")
+        room = Storage("Room cache\nsubjects, modules, scans")
+        token_store = Storage("DataStore\nJWT and theme")
+        profile = Kotlin("Profile\naccount details and avatar")
 
         camera = Android("CameraX\nboard capture")
         cropper = Kotlin("Image cropper\npinch, drag, resize")
@@ -56,23 +58,24 @@ with Diagram(
         pdf_viewer = Client("Native PdfRenderer\nmodule reader")
 
         compose >> view_models >> repositories
+        repositories << Edge(label="offline fallback") << room
         token_store >> Edge(label="tokens") >> repositories
+        compose >> profile >> repositories
         camera >> cropper >> ocr >> Edge(label="OCR text") >> repositories
         repositories >> Edge(label="download") >> pdf_cache >> pdf_viewer
 
     with Cluster("Docker Compose Backend"):
         docker = Docker("Docker Compose\nweb and database services")
         api = Django("Django REST Framework\nJWT, learning, study tools, Swagger")
-        libreoffice = Server("LibreOffice\nDOCX/PPTX to PDF")
-        extractor = Python("PyMuPDF and fallback parsers\nreadable module text")
+        extractor = Python("PyMuPDF, python-docx, python-pptx\nreadable module text")
+        conversion = Server("Office-to-PDF conversion\nfuture background work")
         ai_service = Django("AI Service\nsummaries, quizzes, tutor")
         database = PostgreSQL("PostgreSQL\nstudent-owned data")
         media = Storage("Media volume\nfiles and scan images")
 
         docker >> Edge(label="runs") >> api
-        api >> Edge(label="DOCX/PPTX") >> libreoffice
-        api >> Edge(label="PDF") >> extractor
-        libreoffice >> Edge(label="converted PDF") >> extractor
+        api >> Edge(label="uploaded files") >> extractor
+        api >> Edge(label="planned") >> conversion
         api >> Edge(label="uploads") >> media
         extractor >> Edge(label="extracted text") >> database
         api >> ai_service
@@ -80,8 +83,8 @@ with Diagram(
 
     with Cluster("AI Providers"):
         ollama = Server("Ollama\nqwen3:4b-instruct")
-        gemini = AIPlatform("Gemini\noptional provider")
+        deepseek = AIPlatform("DeepSeek\noptional provider")
 
     repositories >> Edge(label="HTTPS REST\nJSON and multipart") >> api
     ai_service >> Edge(label="local default", color="purple") >> ollama
-    ai_service >> Edge(label="when configured", color="purple", style="dashed") >> gemini
+    ai_service >> Edge(label="when configured", color="purple", style="dashed") >> deepseek

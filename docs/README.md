@@ -10,6 +10,7 @@ This folder contains the tracked Markdown documentation for StudyLens.
 - [Android Guide](android/README.md)
 - [API Guide](api.md)
 - [AI Service Guide](ai.md)
+- [Architecture and Design Decisions](architecture-design.md)
 - [Development Workflow](development.md)
 - [Troubleshooting](troubleshooting.md)
 - [Future Work](future-work.md)

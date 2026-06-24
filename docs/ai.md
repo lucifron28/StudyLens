@@ -20,12 +20,14 @@ Current providers:
 Provider selection is controlled by:
 
 ```env
-AI_PROVIDER=deepseek
+AI_PROVIDER=ollama
 ```
+
+Ollama is the default local-development provider. Set `AI_PROVIDER=deepseek` only when the backend has a configured DeepSeek key and model.
 
 ## DeepSeek
 
-Default cloud model (requires API key):
+Optional cloud provider (requires a backend-only API key):
 
 ```env
 DEEPSEEK_API_KEY=your_key_here
