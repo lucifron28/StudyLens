@@ -91,7 +91,7 @@ Do not create a shared component for one screen only unless it clearly improves 
 Keep in mind:
 
 - Android should not build prompts.
-- Android should not call DeepSeek, Ollama, or Gemini.
+- Android should not call DeepSeek or Ollama.
 - Android should only send source IDs or text to the backend.
 
 ## Checklist Before Committing Android Changes

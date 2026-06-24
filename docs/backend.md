@@ -122,7 +122,6 @@ Important files:
 - `providers/base.py`: provider interface
 - `providers/deepseek_provider.py`: DeepSeek implementation via OpenAI SDK (Default)
 - `providers/ollama_provider.py`: local Ollama implementation
-- `providers/gemini_provider.py`: placeholder Gemini provider
 
 ## Media Uploads
 

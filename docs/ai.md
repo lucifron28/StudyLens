@@ -1,6 +1,6 @@
 # AI Service Guide
 
-AI runs through the backend. Android does not call Ollama, Gemini, or any AI provider directly.
+AI runs through the backend. Android does not call DeepSeek, Ollama, or any AI provider directly.
 
 ## Provider Design
 
@@ -16,7 +16,6 @@ Current providers:
 
 - `DeepSeekProvider`
 - `OllamaProvider`
-- `GeminiProvider` (placeholder)
 
 Provider selection is controlled by:
 
@@ -46,16 +45,7 @@ OLLAMA_MODEL=qwen3:4b-instruct
 
 Docker uses `host.docker.internal` so the backend container can reach Ollama running on the Windows host.
 
-## Gemini
 
-Gemini is intentionally not active yet.
-
-```env
-GEMINI_API_KEY=
-GEMINI_MODEL=
-```
-
-If Gemini is selected without a configured provider/API key, the backend should return a clear error instead of failing silently.
 
 ## AI Endpoints
 

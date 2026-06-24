@@ -64,7 +64,7 @@ DEEPSEEK_API_KEY=your_key_here
 DEEPSEEK_MODEL=deepseek-chat
 ```
 
-Local development can also fallback to Ollama if configured. Gemini is intentionally left as a placeholder until needed.
+Local development can also fallback to Ollama if configured.
 
 ## Repository Rule
 
