@@ -1,7 +1,10 @@
 package com.example.studylensmobile.data.repository
 
+import android.content.ContentResolver
+import android.net.Uri
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.core.format.toReadableDate
+import com.example.studylensmobile.core.utils.displayName
 import com.example.studylensmobile.data.remote.apiResult
 import com.example.studylensmobile.data.remote.emptyApiResult
 import com.example.studylensmobile.data.remote.api.LearningApi
@@ -18,14 +21,13 @@ import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
-import android.content.ContentResolver
-import android.net.Uri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.BufferedSink
+import okio.source
 import java.io.IOException
 
 class SubjectsRepository(
@@ -194,12 +196,17 @@ class SubjectsRepository(
         }
     }
 
-    private suspend fun ContentResolver.toFilePart(uri: Uri, partName: String): MultipartBody.Part = withContext(Dispatchers.IO) {
-        val bytes = openInputStream(uri)?.use { it.readBytes() }
-            ?: throw IOException("Unable to read the selected file.")
+    private fun ContentResolver.toFilePart(uri: Uri, partName: String): MultipartBody.Part {
         val mediaType = getType(uri)?.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType()
-        val body = bytes.toRequestBody(mediaType)
-        MultipartBody.Part.createFormData(partName, "uploaded_file", body)
+        val body = object : RequestBody() {
+            override fun contentType() = mediaType
+
+            override fun writeTo(sink: BufferedSink) {
+                openInputStream(uri)?.source()?.use(sink::writeAll)
+                    ?: throw IOException("Unable to read the selected file.")
+            }
+        }
+        return MultipartBody.Part.createFormData(partName, displayName(uri), body)
     }
 }
 
