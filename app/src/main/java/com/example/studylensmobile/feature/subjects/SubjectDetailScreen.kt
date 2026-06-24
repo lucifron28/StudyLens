@@ -175,7 +175,7 @@ fun SubjectDetailScreen(
     deletingModule?.let { module ->
         DeleteConfirmationDialog(
             title = "Delete module?",
-            message = "This will delete ${module.title} and its chapters, notes, progress, and study tools.",
+            message = "This will delete ${module.title} and its related notes and study tools.",
             isDeleting = uiState.isMutating,
             onConfirm = {
                 viewModel.deleteModule(

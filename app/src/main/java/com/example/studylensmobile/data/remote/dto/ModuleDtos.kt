@@ -35,22 +35,3 @@ data class ModuleWriteRequest(
     @SerializedName("extracted_text") val extractedText: String? = null,
     @SerializedName("is_favorite") val isFavorite: Boolean? = null
 )
-
-data class PaginatedChaptersDto(
-    val count: Int,
-    val next: String?,
-    val previous: String?,
-    val results: List<ChapterDto>
-)
-
-data class ChapterDto(
-    val id: Int,
-    val module: Int,
-    @SerializedName("module_title") val moduleTitle: String,
-    val title: String,
-    val order: Int,
-    @SerializedName("markdown_content") val markdownContent: String,
-    @SerializedName("extracted_text") val extractedText: String,
-    @SerializedName("created_at") val createdAt: String,
-    @SerializedName("updated_at") val updatedAt: String
-)

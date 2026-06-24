@@ -8,7 +8,6 @@ import com.example.studylensmobile.data.remote.dto.DashboardDto
 import com.example.studylensmobile.data.remote.dto.ModuleDto
 import com.example.studylensmobile.data.remote.dto.ModuleWriteRequest
 import com.example.studylensmobile.data.remote.dto.PaginatedBoardScansDto
-import com.example.studylensmobile.data.remote.dto.PaginatedChaptersDto
 import com.example.studylensmobile.data.remote.dto.PaginatedModulesDto
 import com.example.studylensmobile.data.remote.dto.PaginatedSubjectsDto
 import com.example.studylensmobile.data.remote.dto.SubjectDto
@@ -150,9 +149,4 @@ interface LearningApi {
         @Path("moduleId") moduleId: String
     ): Response<Unit>
 
-    @GET("api/learning/chapters/")
-    suspend fun getChapters(
-        @Query("module") moduleId: String,
-        @Query("ordering") ordering: String = "order"
-    ): Response<PaginatedChaptersDto>
 }

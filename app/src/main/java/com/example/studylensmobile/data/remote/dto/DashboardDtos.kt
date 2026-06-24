@@ -30,8 +30,6 @@ data class DashboardContinueLearningDto(
     val id: Int,
     val module: Int,
     @SerializedName("module_title") val moduleTitle: String,
-    val chapter: Int?,
-    @SerializedName("chapter_title") val chapterTitle: String,
     @SerializedName("last_position") val lastPosition: String,
     val status: String,
     @SerializedName("last_read_at") val lastReadAt: String
