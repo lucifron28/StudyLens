@@ -78,6 +78,37 @@ class ModuleFileValidationTests(SimpleTestCase):
                 {"module_file": module_file, "content_type": Module.ContentType.PDF}
             )
 
+    def test_rejects_file_larger_than_limit(self):
+        module_file = SimpleNamespace(
+            name="android-layouts.pdf",
+            size=MAX_MODULE_FILE_SIZE_BYTES + 1,
+        )
+
+        with self.assertRaises(serializers.ValidationError):
+            ModuleSerializer().validate(
+                {"module_file": module_file, "content_type": Module.ContentType.PDF}
+            )
+
+
+class ModuleOfficeUploadTests(SimpleTestCase):
+    @patch("learning.serializers.extract_pdf_text", return_value="Converted lesson text")
+    @patch("learning.serializers.convert_office_to_pdf")
+    def test_docx_upload_is_saved_as_pdf(self, convert_office_file, _):
+        original_file = ContentFile(b"document", name="lesson.docx")
+        converted_file = ContentFile(b"%PDF-1.4", name="lesson.pdf")
+        convert_office_file.return_value = converted_file
+        validated_data = {
+            "module_file": original_file,
+            "content_type": Module.ContentType.DOCX,
+        }
+
+        ModuleSerializer()._prepare_uploaded_file(validated_data, Module.ContentType.MARKDOWN)
+
+        self.assertEqual(validated_data["module_file"], converted_file)
+        self.assertEqual(validated_data["content_type"], Module.ContentType.PDF)
+        self.assertEqual(validated_data["original_filename"], "lesson.docx")
+        self.assertEqual(validated_data["extracted_text"], "Converted lesson text")
+
 
 class OfficeConversionServiceTests(TestCase):
     @patch("learning.services.conversion.subprocess.run")
@@ -103,14 +134,3 @@ class OfficeConversionServiceTests(TestCase):
 
         with self.assertRaises(ConversionError):
             convert_office_to_pdf(ContentFile(b"document", name="lesson.docx"))
-
-    def test_rejects_file_larger_than_limit(self):
-        module_file = SimpleNamespace(
-            name="android-layouts.pdf",
-            size=MAX_MODULE_FILE_SIZE_BYTES + 1,
-        )
-
-        with self.assertRaises(serializers.ValidationError):
-            ModuleSerializer().validate(
-                {"module_file": module_file, "content_type": Module.ContentType.PDF}
-            )

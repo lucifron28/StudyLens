@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
-from learning.services.extraction import ExtractionError, extract_pdf_text, extract_docx_text, extract_pptx_text
+from learning.services.conversion import ConversionError, convert_office_to_pdf
+from learning.services.extraction import ExtractionError, extract_pdf_text
 
 MAX_MODULE_FILE_SIZE_BYTES = 20 * 1024 * 1024
 MODULE_FILE_EXTENSIONS = {
@@ -173,48 +174,38 @@ class ModuleSerializer(OwnedRelationMixin, serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        module_file = validated_data.get("module_file")
-        if module_file:
-            validated_data["original_filename"] = module_file.name
-            content_type = validated_data.get("content_type", Module.ContentType.MARKDOWN)
-            if content_type == Module.ContentType.PDF:
-                try:
-                    validated_data["extracted_text"] = extract_pdf_text(module_file)
-                except ExtractionError:
-                    pass
-            elif content_type == Module.ContentType.DOCX:
-                try:
-                    validated_data["extracted_text"] = extract_docx_text(module_file)
-                except ExtractionError:
-                    pass
-            elif content_type == Module.ContentType.PPTX:
-                try:
-                    validated_data["extracted_text"] = extract_pptx_text(module_file)
-                except ExtractionError:
-                    pass
+        self._prepare_uploaded_file(validated_data, Module.ContentType.MARKDOWN)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        module_file = validated_data.get("module_file")
-        if module_file:
-            validated_data["original_filename"] = module_file.name
-            content_type = validated_data.get("content_type", instance.content_type)
-            if content_type == Module.ContentType.PDF:
-                try:
-                    validated_data["extracted_text"] = extract_pdf_text(module_file)
-                except ExtractionError:
-                    pass
-            elif content_type == Module.ContentType.DOCX:
-                try:
-                    validated_data["extracted_text"] = extract_docx_text(module_file)
-                except ExtractionError:
-                    pass
-            elif content_type == Module.ContentType.PPTX:
-                try:
-                    validated_data["extracted_text"] = extract_pptx_text(module_file)
-                except ExtractionError:
-                    pass
+        self._prepare_uploaded_file(validated_data, instance.content_type)
         return super().update(instance, validated_data)
+
+    def _prepare_uploaded_file(self, validated_data, default_content_type: str) -> None:
+        module_file = validated_data.get("module_file")
+        if not module_file:
+            return
+
+        original_filename = module_file.name
+        content_type = validated_data.get("content_type", default_content_type)
+        if content_type in {Module.ContentType.DOCX, Module.ContentType.PPTX}:
+            try:
+                module_file = convert_office_to_pdf(module_file)
+            except ConversionError as error:
+                raise serializers.ValidationError({"module_file": str(error)}) from error
+
+            if module_file.size > MAX_MODULE_FILE_SIZE_BYTES:
+                raise serializers.ValidationError({"module_file": "Converted PDFs must be 20 MB or smaller."})
+
+            validated_data["module_file"] = module_file
+            validated_data["content_type"] = Module.ContentType.PDF
+
+        validated_data["original_filename"] = original_filename
+        validated_data["extracted_text"] = ""
+        try:
+            validated_data["extracted_text"] = extract_pdf_text(module_file)
+        except ExtractionError:
+            pass
 
 
 class ChapterSerializer(OwnedRelationMixin, serializers.ModelSerializer):
