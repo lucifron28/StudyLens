@@ -40,7 +40,6 @@ private fun ModuleDto.toDomain(chapterDtos: List<ChapterDto>): LearningModule {
         subjectId = subject.toString(),
         title = title,
         contentPreview = readableContent.toPreview(),
-        progressPercentage = 0,
         subjectTitle = subjectTitle,
         description = description,
         contentType = contentType.toDisplayLabel(),

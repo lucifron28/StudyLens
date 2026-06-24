@@ -5,8 +5,7 @@ data class Subject(
     val code: String,
     val title: String,
     val description: String,
-    val itemSummary: String,
-    val progressPercentage: Int
+    val itemSummary: String
 )
 
 data class SubjectOverview(

@@ -216,8 +216,7 @@ private fun SubjectDto.toDomain(): Subject {
         code = title.toSubjectCode(id),
         title = title,
         description = description,
-        itemSummary = itemSummary.replace("|", "-"),
-        progressPercentage = progressPercentage.coerceIn(0, 100)
+        itemSummary = itemSummary.replace("|", "-")
     )
 }
 
@@ -227,8 +226,7 @@ private fun SubjectOverviewDto.toDomain(): SubjectOverview {
         code = title.toSubjectCode(id),
         title = title,
         description = description,
-        itemSummary = "$moduleCount Modules - $boardScanCount Notes - $postCount Posts",
-        progressPercentage = progressPercentage.coerceIn(0, 100)
+        itemSummary = "$moduleCount Modules - $boardScanCount Notes - $postCount Posts"
     )
 
     return SubjectOverview(
