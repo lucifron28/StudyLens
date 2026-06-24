@@ -51,7 +51,8 @@ classes: {
   "Core & Data Layer": {
     class: android_layer
     "Repositories (DTO Mapping)": { icon: "https://api.iconify.design/mdi:package.svg" }
-    "DataStore (JWT Tokens)": { icon: "https://api.iconify.design/mdi:database-outline.svg" }
+    "Room Cache (Subjects, Modules, Scans)": { icon: "https://api.iconify.design/mdi:database.svg" }
+    "DataStore (JWT and Theme)": { icon: "https://api.iconify.design/mdi:database-outline.svg" }
     "Retrofit & AuthInterceptor": { icon: "https://api.iconify.design/mdi:api.svg" }
   }
 
@@ -68,15 +69,23 @@ classes: {
     "Local File Cache": { icon: "https://api.iconify.design/mdi:folder-multiple.svg" }
   }
 
+  "Profile": {
+    class: android_layer
+    "Account Details and Avatar": { icon: "https://api.iconify.design/mdi:account-circle.svg" }
+  }
+
   # Android Internal Routing
   "UI & Feature Layer"."Jetpack Compose (Screens)" -> "UI & Feature Layer"."ViewModels (State & Actions)"
   "UI & Feature Layer"."ViewModels (State & Actions)" -> "Core & Data Layer"."Repositories (DTO Mapping)"
+  "Core & Data Layer"."Repositories (DTO Mapping)" <-> "Core & Data Layer"."Room Cache (Subjects, Modules, Scans)": "Read cache or refresh"
   "Core & Data Layer"."Repositories (DTO Mapping)" -> "Core & Data Layer"."Retrofit & AuthInterceptor"
-  "Core & Data Layer"."DataStore (JWT Tokens)" -> "Core & Data Layer"."Retrofit & AuthInterceptor": "Injects Token"
+  "Core & Data Layer"."DataStore (JWT and Theme)" -> "Core & Data Layer"."Retrofit & AuthInterceptor": "Injects Token"
+  "UI & Feature Layer"."Jetpack Compose (Screens)" -> "Profile"."Account Details and Avatar"
+  "Profile"."Account Details and Avatar" -> "Core & Data Layer"."Repositories (DTO Mapping)"
   
   "Hardware & OCR"."CameraX" -> "Hardware & OCR"."Image Cropper"
   "Hardware & OCR"."Image Cropper" -> "Hardware & OCR"."ML Kit OCR"
-  "Hardware & OCR"."ML Kit OCR" -> "Core & Data Layer"."Repositories (DTO Mapping)": "Extracted Text"
+  "Hardware & OCR"."ML Kit OCR" -> "Core & Data Layer"."Repositories (DTO Mapping)": "Text and optional image"
   "Core & Data Layer"."Repositories (DTO Mapping)" -> "File Management"."Local File Cache": "Downloads"
   "File Management"."Local File Cache" -> "File Management"."Native PdfRenderer"
 }
@@ -104,10 +113,11 @@ classes: {
     "PyMuPDF (PDF)": { icon: "https://api.iconify.design/mdi:file-pdf-box.svg" }
     "python-docx (Word)": { icon: "https://api.iconify.design/mdi:file-word-box.svg" }
     "python-pptx (PowerPoint)": { icon: "https://api.iconify.design/mdi:file-powerpoint-box.svg" }
+    "Office to PDF Conversion (Future)": { icon: "https://api.iconify.design/mdi:clock-outline.svg" }
   }
   
   # Backend Internal Routing
-  "Django REST Framework"."learning (Subjects, Modules)" -> "Document Extraction Pipeline": "Routes Files"
+  "Django REST Framework"."learning (Subjects, Modules)" -> "Document Extraction Pipeline": "Extracts uploaded text"
   "Django REST Framework"."ai_services (Tutor, Prompts)" -> "Django REST Framework"."learning (Subjects, Modules)": "Reads Context"
 }
 
@@ -140,7 +150,7 @@ classes: {
     icon: "https://api.iconify.design/mdi:cloud-outline.svg"
     class: ai_node
     shape: cloud
-    label: "DeepSeek V4\n(Default via API)"
+    label: "DeepSeek\n(Optional cloud provider)"
   }
   "Ollama": {
     icon: "https://api.iconify.design/mdi:server-network.svg"
@@ -156,13 +166,13 @@ classes: {
 # =================
 
 # Mobile to Backend
-"Android Application (StudyLens)"."Core & Data Layer"."Retrofit & AuthInterceptor" -> "Dockerized Backend Server"."Django REST Framework": "HTTPS / JSON API"
+"Android Application (StudyLens)"."Core & Data Layer"."Retrofit & AuthInterceptor" -> "Dockerized Backend Server"."Django REST Framework": "HTTPS REST, JSON, multipart"
 
 # Backend to DB/Storage
 "Dockerized Backend Server"."Django REST Framework" <-> "PostgreSQL": "Read/Write (psycopg)"
 "Dockerized Backend Server"."Django REST Framework" -> "Media Volume": "Uploads & Static"
 
 # Backend to AI (Enforcing the security rule: Mobile never touches AI directly)
-"Dockerized Backend Server"."Django REST Framework"."ai_services (Tutor, Prompts)" -> "AI Providers"."DeepSeek": "Primary HTTPS"
-"Dockerized Backend Server"."Django REST Framework"."ai_services (Tutor, Prompts)" -> "AI Providers"."Ollama": "Local HTTP"
+"Dockerized Backend Server"."Django REST Framework"."ai_services (Tutor, Prompts)" -> "AI Providers"."DeepSeek": "When configured"
+"Dockerized Backend Server"."Django REST Framework"."ai_services (Tutor, Prompts)" -> "AI Providers"."Ollama": "Local default"
 

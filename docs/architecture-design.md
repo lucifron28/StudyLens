@@ -2,7 +2,7 @@
 
 StudyLens is a student-only study companion with a native Android client and a Django REST Framework backend. This document explains the decisions behind the current implementation, its boundaries, and the intentionally deferred work.
 
-The companion visual diagram is [`architecture.svg`](architecture.svg). It shows the major runtime components; this document explains why they are arranged that way.
+[`architecture.d2`](architecture.d2) and [`generate_architecture.py`](generate_architecture.py) are the maintained diagram sources. Regenerate the visual diagram after changing either source; this document explains why the runtime components are arranged this way.
 
 ## 1. System Boundaries
 
