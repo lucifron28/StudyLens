@@ -294,7 +294,6 @@ private fun FilingDetailsCard(scan: BoardScan) {
             )
             DetailLine(label = "Subject", value = scan.subjectTitle.ifBlank { "Not linked" })
             DetailLine(label = "Module", value = scan.moduleTitle.ifBlank { "Not linked" })
-            DetailLine(label = "Chapter", value = scan.chapterTitle.ifBlank { "Not linked" })
         }
     }
 }

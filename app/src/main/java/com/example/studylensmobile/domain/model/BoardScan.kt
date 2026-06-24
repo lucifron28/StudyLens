@@ -11,8 +11,6 @@ data class BoardScan(
     val subjectTitle: String = "",
     val moduleId: String? = null,
     val moduleTitle: String = "",
-    val chapterId: String? = null,
-    val chapterTitle: String = "",
     val imageUrl: String? = null,
     val rawOcrText: String = "",
     val cleanedText: String = "",

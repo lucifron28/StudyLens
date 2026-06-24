@@ -59,7 +59,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.BoardScan
-import com.example.studylensmobile.domain.model.LearningChapter
 import com.example.studylensmobile.domain.model.Subject
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
@@ -185,7 +184,7 @@ fun BoardNotesScreen(
                     onNavigateToQuiz = onNavigateToQuiz,
                     onNavigateToTutor = onNavigateToTutor,
                     onEditScan = { scan ->
-                        viewModel.loadRelationOptions(scan.subjectId, scan.moduleId)
+                        viewModel.loadModuleOptions(scan.subjectId)
                         editingScan = scan
                     },
                     onDeleteScan = { deletingScan = it },
@@ -205,24 +204,18 @@ fun BoardNotesScreen(
             pendingImageUri = uiState.pendingImageUri,
             availableSubjects = uiState.availableSubjects,
             availableModules = uiState.availableModules,
-            availableChapters = uiState.availableChapters,
             isLoadingModules = uiState.isLoadingModules,
-            isLoadingChapters = uiState.isLoadingChapters,
             onPickImage = openImagePicker,
             onOcrDraftApplied = viewModel::clearOcrDraft,
             onSubjectSelected = { subjectId ->
                 if (subjectId != null) viewModel.fetchModulesForSubject(subjectId)
-                else viewModel.clearModulesAndChapters()
-            },
-            onModuleSelected = { moduleId ->
-                if (moduleId != null) viewModel.fetchChaptersForModule(moduleId)
-                else viewModel.clearModulesAndChapters()
+                else viewModel.clearModules()
             },
             onDismiss = {
                 viewModel.discardPendingImage()
                 showCreateDialog = false
             },
-            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId, imageUri ->
+            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, imageUri ->
                 viewModel.createBoardScan(
                     rawOcrText = rawText,
                     cleanedText = cleanedText,
@@ -230,7 +223,6 @@ fun BoardNotesScreen(
                     reviewStatus = reviewStatus,
                     subjectId = subjectId,
                     moduleId = moduleId,
-                    chapterId = chapterId,
                     imageUri = imageUri,
                     onSaved = { showCreateDialog = false }
                 )
@@ -247,24 +239,18 @@ fun BoardNotesScreen(
             pendingImageUri = uiState.pendingImageUri,
             availableSubjects = uiState.availableSubjects,
             availableModules = uiState.availableModules,
-            availableChapters = uiState.availableChapters,
             isLoadingModules = uiState.isLoadingModules,
-            isLoadingChapters = uiState.isLoadingChapters,
             onPickImage = openImagePicker,
             onOcrDraftApplied = viewModel::clearOcrDraft,
             onSubjectSelected = { subjectId ->
                 if (subjectId != null) viewModel.fetchModulesForSubject(subjectId)
-                else viewModel.clearModulesAndChapters()
-            },
-            onModuleSelected = { moduleId ->
-                if (moduleId != null) viewModel.fetchChaptersForModule(moduleId)
-                else viewModel.clearModulesAndChapters()
+                else viewModel.clearModules()
             },
             onDismiss = {
                 viewModel.discardPendingImage()
                 editingScan = null
             },
-            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, chapterId, imageUri ->
+            onSave = { rawText, cleanedText, summary, reviewStatus, subjectId, moduleId, imageUri ->
                 viewModel.updateBoardScan(
                     scanId = scan.id,
                     rawOcrText = rawText,
@@ -273,7 +259,6 @@ fun BoardNotesScreen(
                     reviewStatus = reviewStatus,
                     subjectId = subjectId,
                     moduleId = moduleId,
-                    chapterId = chapterId,
                     imageUri = imageUri,
                     onSaved = { editingScan = null }
                 )
@@ -492,13 +477,10 @@ private fun BoardNoteFormDialog(
     pendingImageUri: String?,
     availableSubjects: List<Subject>,
     availableModules: List<SubjectModulePreview>,
-    availableChapters: List<LearningChapter>,
     isLoadingModules: Boolean,
-    isLoadingChapters: Boolean,
     onPickImage: () -> Unit,
     onOcrDraftApplied: () -> Unit,
     onSubjectSelected: (String?) -> Unit,
-    onModuleSelected: (String?) -> Unit,
     onDismiss: () -> Unit,
     onSave: (
         rawText: String,
@@ -507,7 +489,6 @@ private fun BoardNoteFormDialog(
         reviewStatus: String,
         subjectId: String?,
         moduleId: String?,
-        chapterId: String?,
         imageUri: String?
     ) -> Unit
 ) {
@@ -521,10 +502,8 @@ private fun BoardNoteFormDialog(
     }
     var subjectId by remember(scan?.id) { mutableStateOf(scan?.subjectId.orEmpty()) }
     var moduleId by remember(scan?.id) { mutableStateOf(scan?.moduleId.orEmpty()) }
-    var chapterId by remember(scan?.id) { mutableStateOf(scan?.chapterId.orEmpty()) }
     var subjectDropdownExpanded by remember { mutableStateOf(false) }
     var moduleDropdownExpanded by remember { mutableStateOf(false) }
-    var chapterDropdownExpanded by remember { mutableStateOf(false) }
     var validationMessage by remember(scan?.id) { mutableStateOf<String?>(null) }
 
     LaunchedEffect(ocrDraftText) {
@@ -634,7 +613,6 @@ private fun BoardNoteFormDialog(
                             onClick = {
                                 subjectId = ""
                                 moduleId = ""
-                                chapterId = ""
                                 subjectDropdownExpanded = false
                                 onSubjectSelected(null)
                             }
@@ -645,7 +623,6 @@ private fun BoardNoteFormDialog(
                                 onClick = {
                                     subjectId = subject.id
                                     moduleId = ""
-                                    chapterId = ""
                                     subjectDropdownExpanded = false
                                     onSubjectSelected(subject.id)
                                 }
@@ -686,71 +663,21 @@ private fun BoardNoteFormDialog(
                             text = { Text("None") },
                             onClick = {
                                 moduleId = ""
-                                chapterId = ""
                                 moduleDropdownExpanded = false
-                                onModuleSelected(null)
                             }
                         )
                         availableModules.forEach { module ->
                             DropdownMenuItem(
                                 text = { Text(module.title) },
-                                onClick = {
-                                    moduleId = module.id
-                                    chapterId = ""
-                                    moduleDropdownExpanded = false
-                                    onModuleSelected(module.id)
+                            onClick = {
+                                moduleId = module.id
+                                moduleDropdownExpanded = false
                                 }
                             )
                         }
                     }
                 }
 
-                // Chapter dropdown (enabled only if a module is selected)
-                val selectedChapterLabel = availableChapters
-                    .firstOrNull { it.id == chapterId }?.title
-                    ?: if (chapterId.isNotEmpty()) chapterId else ""
-                ExposedDropdownMenuBox(
-                    expanded = chapterDropdownExpanded,
-                    onExpandedChange = {
-                        if (!isSaving && moduleId.isNotEmpty() && !isLoadingChapters)
-                            chapterDropdownExpanded = it
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = if (isLoadingChapters) "Loading..." else selectedChapterLabel,
-                        onValueChange = {},
-                        readOnly = true,
-                        enabled = !isSaving && moduleId.isNotEmpty() && !isLoadingChapters,
-                        label = { Text("Chapter (optional)") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = chapterDropdownExpanded) },
-                        singleLine = true,
-                        modifier = Modifier
-                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                            .fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = chapterDropdownExpanded,
-                        onDismissRequest = { chapterDropdownExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("None") },
-                            onClick = {
-                                chapterId = ""
-                                chapterDropdownExpanded = false
-                            }
-                        )
-                        availableChapters.forEach { chapter ->
-                            DropdownMenuItem(
-                                text = { Text(chapter.title) },
-                                onClick = {
-                                    chapterId = chapter.id
-                                    chapterDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
                 validationMessage?.let { message ->
                     Text(
                         text = message,
@@ -781,7 +708,6 @@ private fun BoardNoteFormDialog(
                                 cleanedReviewStatus,
                                 subjectId.trim().takeIf { it.isNotBlank() },
                                 moduleId.trim().takeIf { it.isNotBlank() },
-                                chapterId.trim().takeIf { it.isNotBlank() },
                                 pendingImageUri
                             )
                         }
