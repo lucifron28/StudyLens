@@ -1,5 +1,6 @@
 package com.example.studylensmobile.data.remote.api
 
+import com.google.gson.JsonObject
 import com.example.studylensmobile.data.remote.dto.BoardScanDto
 import com.example.studylensmobile.data.remote.dto.BoardScanUpdateRequest
 import com.example.studylensmobile.data.remote.dto.BoardScanWriteRequest
@@ -91,7 +92,7 @@ interface LearningApi {
     @PATCH("api/learning/board-scans/{scanId}/")
     suspend fun updateBoardScanDetails(
         @Path("scanId") scanId: String,
-        @Body request: BoardScanWriteRequest
+        @Body request: JsonObject
     ): Response<BoardScanDto>
 
     @Multipart

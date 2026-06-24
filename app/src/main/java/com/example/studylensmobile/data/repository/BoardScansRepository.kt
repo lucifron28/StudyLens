@@ -2,6 +2,10 @@ package com.example.studylensmobile.data.repository
 
 import android.content.ContentResolver
 import android.net.Uri
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.core.format.toPreview
 import com.example.studylensmobile.core.format.toReadableDate
@@ -141,10 +145,10 @@ class BoardScansRepository(
                         learningApi.updateBoardScanWithImage(
                             scanId = scanId,
                             image = contentResolver.toImagePart(Uri.parse(it)),
-                            fields = request.toMultipartFields()
+                            fields = request.toMultipartFields(includeEmptyRelations = true)
                         )
                     }
-                    ?: learningApi.updateBoardScanDetails(scanId, request)
+                    ?: learningApi.updateBoardScanDetails(scanId, request.toJsonObject())
             }
         ) {
             Unit
@@ -163,16 +167,39 @@ class BoardScansRepository(
     }
 }
 
-private fun BoardScanWriteRequest.toMultipartFields(): Map<String, RequestBody> {
+private fun BoardScanWriteRequest.toMultipartFields(
+    includeEmptyRelations: Boolean = false
+): Map<String, RequestBody> {
     return buildMap {
         subject?.let { put("subject", it.toString().toTextPart()) }
         module?.let { put("module", it.toString().toTextPart()) }
         chapter?.let { put("chapter", it.toString().toTextPart()) }
+        if (includeEmptyRelations) {
+            if (subject == null) put("subject", "".toTextPart())
+            if (module == null) put("module", "".toTextPart())
+            if (chapter == null) put("chapter", "".toTextPart())
+        }
         rawOcrText?.let { put("raw_ocr_text", it.toTextPart()) }
         cleanedText?.let { put("cleaned_text", it.toTextPart()) }
         summary?.let { put("summary", it.toTextPart()) }
         reviewStatus?.let { put("review_status", it.toTextPart()) }
     }
+}
+
+private fun BoardScanWriteRequest.toJsonObject(): JsonObject {
+    return JsonObject().apply {
+        add("subject", subject.toJsonElement())
+        add("module", module.toJsonElement())
+        add("chapter", chapter.toJsonElement())
+        addProperty("raw_ocr_text", rawOcrText)
+        addProperty("cleaned_text", cleanedText)
+        addProperty("summary", summary)
+        addProperty("review_status", reviewStatus)
+    }
+}
+
+private fun Int?.toJsonElement(): JsonElement {
+    return this?.let(::JsonPrimitive) ?: JsonNull.INSTANCE
 }
 
 private fun String.toTextPart(): RequestBody {
