@@ -140,18 +140,6 @@ private fun DashboardContent(
             )
         }
 
-        item {
-            QuickActionsRow()
-        }
-
-        item {
-            OverallProgressCard(dashboard = dashboard, isRefreshing = isRefreshing)
-        }
-
-        item {
-            StatsRow(dashboard = dashboard)
-        }
-
         if (dashboard.continueLearning.isNotEmpty()) {
             item {
                 SectionHeader(title = "Continue Learning")
@@ -222,12 +210,7 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 8.dp)
                 )
-                Button(
-                    onClick = { /* TODO: Hook up navigation */ },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Start Study Session")
-                }
+
             }
             Image(
                 painter = painterResource(id = R.drawable.lumi_thinking),
@@ -236,139 +219,6 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
                     .height(100.dp)
                     .padding(start = 16.dp)
                     .floatingAnimation()
-            )
-        }
-    }
-}
-
-@Composable
-private fun QuickActionsRow() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        QuickActionChip(
-            text = "Tutor",
-            icon = Icons.Default.School,
-            modifier = Modifier.weight(1f)
-        )
-        QuickActionChip(
-            text = "Flashcards",
-            icon = Icons.Default.Style,
-            modifier = Modifier.weight(1f)
-        )
-        QuickActionChip(
-            text = "New Scan",
-            icon = Icons.Default.PhotoCamera,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun QuickActionChip(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
-) {
-    FilledTonalButton(
-        onClick = { /* TODO: Hook up navigation */ },
-        modifier = modifier,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(imageVector = icon, contentDescription = text)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = text, style = MaterialTheme.typography.labelMedium)
-        }
-    }
-}
-
-@Composable
-private fun OverallProgressCard(
-    dashboard: Dashboard,
-    isRefreshing: Boolean
-) {
-    StudyLensCard {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Overall Progress",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Mastery: ${dashboard.overallProgress}%",
-                    color = MaterialTheme.colorScheme.secondary,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-            Spacer(modifier = Modifier.height(14.dp))
-            ProgressBar(progress = dashboard.overallProgress.coerceIn(0, 100) / 100f)
-            Text(
-                text = if (isRefreshing) "Refreshing your latest progress..." else "You're on track for your weekly goals.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 10.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatsRow(dashboard: Dashboard) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        StatCard(
-            value = dashboard.stats.modulesInProgress.toString(),
-            label = "Reading",
-            modifier = Modifier.weight(1f)
-        )
-        StatCard(
-            value = dashboard.stats.notesSaved.toString(),
-            label = "Notes",
-            modifier = Modifier.weight(1f)
-        )
-        StatCard(
-            value = dashboard.stats.quizzesCompleted.toString(),
-            label = "Quizzes",
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun StatCard(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    StudyLensCard(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }
