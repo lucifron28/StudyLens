@@ -1,0 +1,81 @@
+direction: right
+
+Android App: {
+  shape: cylinder
+  style.fill: "#3DDC84"
+  label: "📱 Android App"
+  
+  CameraX: {
+    label: "📸 CameraX"
+  }
+  ML Kit OCR: {
+    label: "🔍 ML Kit OCR"
+  }
+  Jetpack Compose: {
+    label: "🎨 Jetpack Compose"
+  }
+  Retrofit: {
+    label: "🌐 Retrofit"
+  }
+  DataStore: {
+    label: "💾 DataStore"
+  }
+
+  CameraX -> ML Kit OCR: Feed Image Frames
+}
+
+Backend Server: {
+  shape: package
+  style.fill: "#092E20"
+  style.font-color: white
+  label: "🖥️ Backend Server"
+
+  Django REST Framework: {
+    label: "🐍 Django REST Framework"
+    
+    PyMuPDF: {
+      label: "📄 PyMuPDF"
+    }
+    python-docx: {
+      label: "📝 python-docx"
+    }
+    python-pptx: {
+      label: "📊 python-pptx"
+    }
+    
+    API Endpoints
+    AI Service Manager
+    Database Models
+  }
+}
+
+Database: {
+  shape: cylinder
+  style.fill: "#336791"
+  style.font-color: white
+  label: "🐘 PostgreSQL"
+}
+
+AI Providers: {
+  label: "🧠 AI Providers"
+  
+  DeepSeek: {
+    shape: cloud
+    label: "☁️ DeepSeek V4 (OpenAI SDK)"
+  }
+  Gemini: {
+    shape: cloud
+    label: "☁️ Google Gemini"
+  }
+  Ollama: {
+    shape: queue
+    label: "🦙 Local Ollama Model"
+  }
+}
+
+Android App.ML Kit OCR -> Backend Server.Django REST Framework.API Endpoints: HTTP/JSON via adb reverse
+Android App.Retrofit -> Backend Server.Django REST Framework.API Endpoints: HTTP/JSON via adb reverse
+Backend Server.Django REST Framework.Database Models -> Database: Read/Write (psycopg)
+Backend Server.Django REST Framework.AI Service Manager -> AI Providers.DeepSeek: HTTPS API Request
+Backend Server.Django REST Framework.AI Service Manager -> AI Providers.Gemini: HTTPS API Request
+Backend Server.Django REST Framework.AI Service Manager -> AI Providers.Ollama: HTTP API Request

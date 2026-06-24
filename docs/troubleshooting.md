@@ -75,9 +75,16 @@ Recreate web:
 docker compose up -d --force-recreate web
 ```
 
-## AI Timeout
+## AI Errors / Timeouts
 
-Check Ollama:
+If using DeepSeek:
+
+- Check your `.env` for a valid `DEEPSEEK_API_KEY`
+- Verify that `AI_PROVIDER=deepseek`
+- Make sure your Docker container has internet access
+- Check if you have sufficient API credits
+
+If using Ollama (local fallback):
 
 ```powershell
 ollama list

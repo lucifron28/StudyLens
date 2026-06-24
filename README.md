@@ -56,15 +56,15 @@ The API base URL is configured in `app/build.gradle.kts` through `BuildConfig.AP
 
 ## Current AI Model
 
-Local development uses Ollama:
+The default provider is DeepSeek:
 
 ```env
-AI_PROVIDER=ollama
-OLLAMA_BASE_URL=http://host.docker.internal:11434
-OLLAMA_MODEL=qwen3:4b-instruct
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your_key_here
+DEEPSEEK_MODEL=deepseek-chat
 ```
 
-Gemini is intentionally left as a placeholder until an API key and provider implementation are needed.
+Local development can also fallback to Ollama if configured. Gemini is intentionally left as a placeholder until needed.
 
 ## Repository Rule
 

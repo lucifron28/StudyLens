@@ -764,7 +764,7 @@ interface AiApi {
 }
 ```
 
-Android calls the backend AI endpoints. It does not call Ollama or Gemini directly.
+Android calls the backend AI endpoints. It does not call AI providers like DeepSeek or Ollama directly.
 
 ```kotlin
 suspend fun generateSummary(sourceType: String, sourceId: String): Result<Summary> {

@@ -99,7 +99,7 @@ After login, API requests use the saved access token automatically through `Auth
 
 ## Why Android Does Not Call AI Directly
 
-The app never talks directly to Ollama or Gemini. It sends study requests to the backend.
+The app never talks directly to DeepSeek, Ollama, or Gemini. It sends study requests to the backend.
 
 Reasons:
 
