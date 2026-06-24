@@ -3,6 +3,13 @@ from rest_framework import serializers
 from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
 from learning.services.extraction import ExtractionError, extract_pdf_text, extract_docx_text, extract_pptx_text
 
+MAX_MODULE_FILE_SIZE_BYTES = 20 * 1024 * 1024
+MODULE_FILE_EXTENSIONS = {
+    Module.ContentType.PDF: ".pdf",
+    Module.ContentType.DOCX: ".docx",
+    Module.ContentType.PPTX: ".pptx",
+}
+
 
 class OwnedRelationMixin:
     owned_relation_fields: dict[str, type] = {}
@@ -141,6 +148,29 @@ class ModuleSerializer(OwnedRelationMixin, serializers.ModelSerializer):
         if request and subject.owner_id != request.user.id:
             raise serializers.ValidationError("Subject does not belong to the current user.")
         return subject
+
+    def validate(self, attrs):
+        module_file = attrs.get("module_file")
+        if not module_file:
+            return attrs
+
+        content_type = attrs.get(
+            "content_type",
+            self.instance.content_type if self.instance else Module.ContentType.MARKDOWN,
+        )
+        expected_extension = MODULE_FILE_EXTENSIONS.get(content_type)
+        if not expected_extension:
+            raise serializers.ValidationError(
+                {"module_file": "Files can only be uploaded as PDF, DOCX, or PPTX modules."}
+            )
+        if module_file.size > MAX_MODULE_FILE_SIZE_BYTES:
+            raise serializers.ValidationError({"module_file": "Module files must be 20 MB or smaller."})
+        if not module_file.name.lower().endswith(expected_extension):
+            raise serializers.ValidationError(
+                {"module_file": f"Selected file must use the {expected_extension} extension."}
+            )
+
+        return attrs
 
     def create(self, validated_data):
         module_file = validated_data.get("module_file")

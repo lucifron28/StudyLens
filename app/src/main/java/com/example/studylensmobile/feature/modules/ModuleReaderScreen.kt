@@ -149,14 +149,22 @@ private fun ModuleReaderContent(
             SectionHeader(title = "Module Content")
         }
         
-        if (module.moduleFileUrl != null) {
+        if (module.canOpenInPdfViewer()) {
             item {
                 Button(
-                    onClick = { onNavigateToPdfViewer(module.moduleFileUrl) },
+                    onClick = { onNavigateToPdfViewer(module.moduleFileUrl.orEmpty()) },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                 ) {
-                    Text("Open Document Viewer")
+                    Text("Open PDF Viewer")
                 }
+            }
+        } else if (module.moduleFileUrl != null) {
+            item {
+                Text(
+                    text = "Document attached. Its extracted text is shown below.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
 
@@ -331,6 +339,10 @@ private fun ChapterCard(chapter: LearningChapter) {
 
 private fun LearningModule.readerText(): String {
     return markdownContent.ifBlank { extractedText }
+}
+
+private fun LearningModule.canOpenInPdfViewer(): Boolean {
+    return moduleFileUrl != null && contentType.equals("pdf", ignoreCase = true)
 }
 
 private fun LearningChapter.readerText(): String {

@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.SubjectPostPreview
+import com.example.studylensmobile.core.utils.displayName
 import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
@@ -394,6 +396,7 @@ private fun ModuleFormDialog(
         fileUri: android.net.Uri?
     ) -> Unit
 ) {
+    val context = LocalContext.current
     var title by remember(module?.id) { mutableStateOf(module?.title.orEmpty()) }
     var description by remember(module?.id) { mutableStateOf(module?.description.orEmpty()) }
     var contentType by remember(module?.id) { mutableStateOf(module?.contentType?.lowercase() ?: "markdown") }
@@ -402,11 +405,11 @@ private fun ModuleFormDialog(
     var validationMessage by remember(module?.id) { mutableStateOf<String?>(null) }
 
     val filePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
     ) { uri: android.net.Uri? ->
         fileUri = uri
         if (uri != null) {
-            val type = uri.lastPathSegment?.lowercase() ?: ""
+            val type = context.contentResolver.displayName(uri).lowercase()
             if (type.endsWith("pdf")) contentType = "pdf"
             else if (type.endsWith("docx")) contentType = "docx"
             else if (type.endsWith("pptx")) contentType = "pptx"
@@ -447,11 +450,12 @@ private fun ModuleFormDialog(
                 }
                 item {
                     Button(
-                        onClick = { filePickerLauncher.launch("*/*") },
+                        onClick = { filePickerLauncher.launch(supportedDocumentMimeTypes) },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                         enabled = !isSaving
                     ) {
-                        Text(if (fileUri != null) "File Selected: ${fileUri?.lastPathSegment}" else "Upload Document (PDF/Docx)")
+                        val selectedFileName = fileUri?.let(context.contentResolver::displayName)
+                        Text(selectedFileName?.let { "File Selected: $it" } ?: "Upload Document")
                     }
                 }
                 item {
@@ -527,6 +531,12 @@ private fun ModuleFormDialog(
 }
 
 private val validModuleContentTypes = setOf("markdown", "text", "pdf", "docx", "pptx")
+
+private val supportedDocumentMimeTypes = arrayOf(
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+)
 
 @Composable
 private fun BoardScanPreviewCard(boardScan: SubjectBoardScanPreview) {
