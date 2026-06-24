@@ -1,93 +1,154 @@
-# StudyLens: Architecture & Design Decisions
+# StudyLens Architecture and Design Decisions
 
-This document outlines the end-to-end architecture of **StudyLens**, a mobile-first study companion. It details the technical choices, data flows, and security rules that govern the system from the Android client to the Django backend and out to the AI providers.
+StudyLens is a student-only study companion with a native Android client and a Django REST Framework backend. This document explains the decisions behind the current implementation, its boundaries, and the intentionally deferred work.
 
----
+The companion visual diagram is [`architecture.svg`](architecture.svg). It shows the major runtime components; this document explains why they are arranged that way.
 
-## 1. Authentication Flow
+## 1. System Boundaries
 
-**Design Choice:** Stateless JWT (JSON Web Tokens) Authentication.
+```text
+Android app
+  Compose UI -> ViewModels -> Repositories -> Django REST API
+                                      |              |
+                                 Room/DataStore    PostgreSQL/media
+                                      |              |
+                                 CameraX/ML Kit   AI providers
+```
 
-### Backend (Django REST Framework)
-We use `djangorestframework-simplejwt`. The backend does not keep track of active sessions in the database. Instead, it issues a short-lived `access_token` (e.g., 60 minutes) and a long-lived `refresh_token` (e.g., 7 days).
-- **Why?** Stateless JWTs allow the backend to remain highly scalable. Any instance of the Django server can verify a token without needing to query a session database table.
+The Android app owns interaction, local device work, and short-term offline access. The backend owns shared student data, authorization, file storage, AI prompts, AI output validation, and mastery rules. The mobile app never talks to an AI provider directly.
 
-### Android Client
-- **Storage:** Tokens are stored securely in **Jetpack DataStore** (Preferences). 
-  - **Why?** Unlike the older `SharedPreferences` which reads synchronously and can freeze the app (causing ANRs), DataStore uses Kotlin Coroutines and Flow to safely read/write asynchronously on background threads. It is also transactional, preventing data corruption.
-- **Interceptors:** An **OkHttp Interceptor** (`AuthInterceptor`) automatically intercepts every outbound network request, reads the `access_token` from DataStore, and injects it into the `Authorization: Bearer <token>` header.
-- **Auto-Refresh:** If the server returns a 401 Unauthorized (because the access token expired), a specialized `Authenticator` class automatically intercepts the failure, uses the refresh token to silently request a new access token, and retries the original request without interrupting the user's flow.
+## 2. Android Application
 
----
+### Layered Feature Structure
 
-## 2. Core Features: Modules, Board Scans, and Extraction
+The Android project uses a practical layered structure rather than a large framework:
 
-StudyLens organizes knowledge hierarchically (`Modules` -> `Chapters` -> `Study Materials`). Handling documents and images gracefully is critical to the app's success.
+- `feature/`: Compose screens, ViewModels, and UI-state classes grouped by user feature.
+- `domain/`: UI-friendly Kotlin models.
+- `data/`: Retrofit APIs, network DTOs, Room entities/DAOs, and repositories.
+- `core/`: token storage, networking, OCR helpers, file helpers, and formatting.
+- `ui/`: shared components, navigation, and theme tokens.
 
-### Board Scans (Camera & OCR)
-**Design Choice:** Perform OCR (Optical Character Recognition) directly on the Android device, rather than the server.
+**Decision:** Screens render state and send user actions to a ViewModel. Repositories hide transport and mapping details.
 
-1. **Capture:** Android uses **CameraX** to capture high-quality images of whiteboards or notes.
-2. **Cropping:** A custom `ImageCropper` allows the user to frame the exact text they want, discarding background noise.
-3. **Extraction:** **Google ML Kit** processes the cropped image entirely *on-device*. 
-4. **Upload:** The Android app sends only the *extracted text* to the Django backend.
+**Why:** This keeps a screen readable during a defense. UI code does not need to know JSON field names, authorization headers, or cache tables.
 
-**Why On-Device OCR?** 
-1. **Bandwidth:** Sending a few kilobytes of raw text to the server is magnitudes faster than uploading a 5MB high-resolution photo over a cellular network.
-2. **Privacy:** Photos of classrooms, whiteboards, or private notes never leave the user's phone. Only the text is sent.
-3. **Server Load:** It saves the Django backend from doing heavy, GPU/CPU intensive image processing, drastically reducing hosting costs.
+### Local Data: Room and DataStore
 
-### Document Uploads (PDF, DOCX, PPTX)
-**Design Choice:** Perform document extraction on the Backend.
+StudyLens uses two different local stores because they solve different problems:
 
-Unlike images, parsing complex files like PDFs and PowerPoints requires heavy libraries and substantial memory. 
-- The Android app uploads the raw file to the Django backend.
-- The backend's Extraction Pipeline uses native Python libraries (`PyMuPDF`, `python-docx`, `python-pptx`) to parse text.
-- **Why?** It keeps the Android APK size incredibly small. Furthermore, Python has the richest ecosystem for document parsing, ensuring much higher accuracy than attempting to parse a `.docx` file natively in Kotlin. (Note: We explicitly avoided using `LibreOffice` to keep the Docker container lightweight and fast).
+| Store | Current responsibility | Reason |
+| --- | --- | --- |
+| Room | Cached subjects, modules, and board scans | Relational data with queryable lists and offline fallbacks |
+| DataStore | JWT tokens and theme preference | Small asynchronous preferences that do not need relational queries |
 
----
+Repositories fetch fresh data from the API first. Successful unfiltered list responses replace the corresponding Room cache. When the request fails, the repository returns cached data if it exists; otherwise the original error reaches the ViewModel. The cache is a convenience layer, not a second source of truth.
 
-## 3. AI & LLM Integration (The Brain)
+**Limit:** CRUD changes are sent to the backend immediately. There is no queued offline-write or conflict-resolution system yet.
 
-The AI engine generates Flashcards, Quizzes, Summaries, and powers the interactive Tutor Mode.
+### Authentication Lifecycle
 
-### The "Golden Rule" of AI Security
-**Mobile Never Touches AI Directly.**
-The Android application must **never** make HTTP requests to DeepSeek, Ollama, or any AI provider.
+1. A student signs in with an email or username and password.
+2. Django returns an access token and a refresh token.
+3. `TokenManager` saves both tokens in DataStore.
+4. `AuthInterceptor` adds `Authorization: Bearer <access token>` to protected requests.
+5. `TokenRefreshAuthenticator` requests a new access token after a `401` response, then retries the original request.
+6. Logging out clears local tokens and returns the user to the sign-in flow.
 
-**Why?**
-1. **API Key Security:** Embedding a DeepSeek API key in an Android APK guarantees it will be stolen via reverse engineering. Moving this to the backend keeps keys completely hidden.
-2. **Prompt Engineering:** Prompts must be centralized. If we tweak the "Tutor Persona" prompt, we only deploy an update to the backend. If prompts were in the Android code, users would have to download an app update from the Google Play Store just to see the changes.
-3. **JSON Validation:** LLMs are notorious for returning malformed JSON. The backend has strict parsing rules (`parse_json_output`) to catch and sanitize bad JSON, preventing app crashes before the payload ever reaches the Android client.
+**Decision:** Use JWT rather than a server-side browser session.
 
-### Provider Factory Pattern
-The backend uses a Factory pattern (`ai_services/providers/base.py`) to hot-swap LLMs without changing any core business logic:
-- **DeepSeek V4:** The primary, lightning-fast cloud provider (interfaced via the standard OpenAI SDK).
-- **Ollama:** A local, offline fallback (e.g., `qwen3:4b-instruct`) used for local development and testing to save on API costs and enable offline development.
+**Why:** Android can authenticate each API request without cookie handling, while the backend remains stateless between requests.
 
----
+### Profile and Appearance
 
-## 4. The Data Layer (Android vs. Backend)
+The profile screen reads and updates the current user through `/api/auth/me/`, uploads an optional avatar through `/api/auth/me/image`, and stores the selected light, dark, or system theme in DataStore.
 
-### Backend Database (PostgreSQL 16)
-Postgres serves as the ultimate source of truth. It stores relational links between Users, Modules, Quizzes, and tracks the state of Tutor Sessions (e.g., `clear_answers_count`).
+**Decision:** Keep account identity on the backend and device appearance on the device.
 
-### Android Offline Caching (Room Database)
-To ensure the app feels fast and responsive even on spotty campus Wi-Fi, Android utilizes a **Room Database**.
-1. When a user fetches their Modules or Chapters, the Android `Repository` saves a copy in the local SQLite database.
-2. The UI instantly reads from the local Room database (Cache-first approach).
-3. The app silently fetches the latest data from the Django API in the background and updates the Room cache.
-4. Because the UI is observing the Room database via Kotlin `Flow`, the UI updates automatically and reactively the moment new data arrives.
+**Why:** Names and avatars must follow the student across devices; a theme setting is personal to one installed app and does not need a server round trip.
 
----
+## 3. Camera, OCR, and Board Scans
 
-## Summary of the Tech Stack
+1. CameraX captures a board image.
+2. The student can crop, pan, and pinch-zoom the captured image before extraction.
+3. ML Kit recognizes text on-device from the cropped image.
+4. Android sends the cleaned OCR text, selected subject/module links, and optionally the board image to the backend.
+5. Django stores the `BoardScan` record and its optional media file under the current student.
 
-| Component | Technology | Rationale |
-| :--- | :--- | :--- |
-| **Mobile UI** | Kotlin + Jetpack Compose | Declarative UI, state-driven, modern Android standard. |
-| **Mobile DB** | Room + DataStore | Room for complex relational caching; DataStore for asynchronous, safe JWT storage. |
-| **Backend API** | Django REST Framework | Rapid development, robust ORM, excellent admin panel. |
-| **Database** | PostgreSQL 16 | ACID compliant, reliable, handles relational text data well. |
-| **AI Models** | DeepSeek V4 & Ollama | Cost-effective, highly capable, easy to swap via standard API interfaces. |
-| **Infrastructure** | Docker Compose | Ensures the backend environment is identical across dev, staging, and production. |
+**Decision:** Perform OCR on-device, but allow the image to be retained when the student chooses to upload it.
+
+**Why:** On-device OCR gives quick feedback, reduces backend compute, and avoids requiring a cloud OCR service. Retaining an image is still useful when students need to review a difficult extraction, so it is a deliberate student-controlled trade-off rather than a claim that images never leave the device.
+
+## 4. Modules and Document Processing
+
+### Current Implementation
+
+Module uploads support PDF, DOCX, and PPTX files up to the backend validation limit. The backend stores the original upload, records its original filename, and extracts usable text for AI features:
+
+- PDF: PyMuPDF
+- DOCX: `python-docx`
+- PPTX: `python-pptx`
+
+The Android reader uses the platform `PdfRenderer` for PDF modules and cached downloaded files. Markdown and text modules render directly in Compose.
+
+**Decision:** Extract document text on the backend.
+
+**Why:** Python parsing libraries are mature and keep document-parsing complexity out of the Android app. The extracted text also becomes a stable source for summaries, flashcards, quizzes, and tutor sessions.
+
+### Deliberately Deferred Conversion
+
+DOCX/PPTX-to-PDF conversion through LibreOffice is not part of the active backend extraction service in this repository. It is a planned compatibility improvement for rendering Office uploads in the Android PDF reader.
+
+When implemented, it should run outside the request/response path through a background worker, preserve the original Office file, store the converted PDF separately, and expose conversion status to Android. This avoids making a user wait on a potentially slow office conversion request.
+
+## 5. Backend and Data Ownership
+
+The Docker Compose environment runs a Django web service and PostgreSQL. Django REST Framework exposes JWT-protected endpoints for accounts, learning records, study tools, and AI features. Swagger/OpenAPI documents the API for development.
+
+PostgreSQL is the authoritative store for student-owned records. Module files, board images, and profile images use Django media storage. Every user-facing learning record is scoped to `request.user` before it is listed, read, updated, or deleted.
+
+**Decision:** Enforce ownership in backend querysets and serializer validation, not only in Android UI.
+
+**Why:** A client can be modified or a request can be replayed. The server must remain responsible for preventing one student from accessing another student's subjects, modules, scans, study tools, and tutor sessions.
+
+## 6. AI Service Layer
+
+Android calls StudyLens AI endpoints, never DeepSeek or Ollama directly. The backend resolves owned source text, truncates it to a safe limit, builds the prompt, calls the selected provider, validates structured output, and saves the result.
+
+Current provider choices are:
+
+- Ollama for local development, with `qwen3:4b-instruct` as the default configuration.
+- DeepSeek when a backend-only API key and model are configured.
+
+**Decision:** Keep provider selection and prompt text on the server.
+
+**Why:** API keys remain out of the APK, prompt changes do not require an Android release, and malformed model JSON becomes a controlled backend error rather than an app crash.
+
+### AI Caching and Tutor Completion
+
+The Android client caches generated summaries, flashcards, quizzes, and tutor sessions to avoid repeating slow model calls during normal review. Source changes invalidate the relevant cached study-tool results.
+
+Tutor completion is not a permanent chat thread. The backend counts clear answers, marks a session mastered when the target is met, and the client presents completion or retry actions. The tutor should guide a student who is stuck without simply revealing the answer.
+
+## 7. Reliability and Operational Limits
+
+- API loading, refreshing, empty, and error states are shared Compose components.
+- Repositories return `Result<T>` so screens do not handle transport exceptions directly.
+- AI provider failures and invalid AI JSON are returned as readable backend errors.
+- Docker provides repeatable local PostgreSQL and Django environments.
+
+The project does not yet include background task processing, push notifications, server-side OCR, offline mutation queues, conflict resolution, teacher roles, or production object storage. These are intentional future work rather than hidden assumptions.
+
+## 8. Decision Summary
+
+| Decision | Chosen approach | Main reason |
+| --- | --- | --- |
+| Mobile UI | Kotlin and Jetpack Compose | State-driven native Android UI |
+| App structure | Feature, domain, data, core, UI layers | Readable separation without excessive abstraction |
+| Auth | JWT with DataStore and token refresh | Mobile-friendly stateless authentication |
+| Offline access | Room cache for selected read models | Faster repeat views and basic offline fallback |
+| OCR | CameraX plus on-device ML Kit | Fast local recognition with lower backend load |
+| Documents | Backend extraction with Python libraries | Better parsing ecosystem and AI-ready text |
+| API | Django REST Framework | Clear serializers, viewsets, permissions, and admin tools |
+| Main database | PostgreSQL in Docker Compose | Reliable relational source of truth |
+| AI | Backend-managed provider interface | Key security, centralized prompts, validated output |

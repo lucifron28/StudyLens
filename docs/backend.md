@@ -83,7 +83,6 @@ Main models:
 - `Tag`
 - `BoardScan`
 - `ReadingProgress`
-- `AcademicTask`
 - `SubjectPost`
 
 Key behavior:
@@ -129,8 +128,8 @@ Module files:
 
 - field: `module_file`
 - upload folder: `media/modules/user_<id>/`
-- current use: PDF/module file storage
-- future use: DOCX/PPTX support and text extraction
+- current use: PDF, DOCX, and PPTX storage with backend text extraction
+- reader support: Android renders PDF files with `PdfRenderer`; Office-to-PDF conversion is future work
 
 Board scan images:
 
@@ -162,3 +161,5 @@ The backend has implemented text extraction for several file types uploaded by s
 - **PPTX**: Uses `python-pptx` to extract text from PowerPoint slides.
 
 When files are attached to a `Module`, the backend parses the text contents and makes them available to the AI tools (Summarize, Flashcards, Quiz, Tutor) to use as study materials.
+
+DOCX/PPTX-to-PDF conversion is not part of the active backend pipeline. If added later, it should run as a background task and retain the original upload alongside the converted PDF.
