@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.core.format.toReadableDate
+import com.example.studylensmobile.core.utils.contentSize
 import com.example.studylensmobile.core.utils.displayName
 import com.example.studylensmobile.data.remote.apiResult
 import com.example.studylensmobile.data.remote.emptyApiResult
@@ -130,7 +131,7 @@ class SubjectsRepository(
                     fields["content_type"] = contentType.toApiContentType().toRequestBody("text/plain".toMediaTypeOrNull())
                     if (markdownContent.isNotBlank()) fields["markdown_content"] = markdownContent.trim().toRequestBody("text/plain".toMediaTypeOrNull())
                     
-                    learningApi.createModuleWithFile(filePart, fields)
+                    learningApi.createModuleWithFile(fields = fields, file = filePart)
                 } else {
                     learningApi.createModule(
                         ModuleWriteRequest(
@@ -167,7 +168,7 @@ class SubjectsRepository(
                     fields["content_type"] = contentType.toApiContentType().toRequestBody("text/plain".toMediaTypeOrNull())
                     if (!markdownContent.isNullOrBlank()) fields["markdown_content"] = markdownContent.trim().toRequestBody("text/plain".toMediaTypeOrNull())
                     
-                    learningApi.updateModuleWithFile(moduleId, filePart, fields)
+                    learningApi.updateModuleWithFile(moduleId = moduleId, fields = fields, file = filePart)
                 } else {
                     learningApi.updateModule(
                         moduleId = moduleId,
@@ -200,6 +201,8 @@ class SubjectsRepository(
         val mediaType = getType(uri)?.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType()
         val body = object : RequestBody() {
             override fun contentType() = mediaType
+
+            override fun contentLength() = contentSize(uri)
 
             override fun writeTo(sink: BufferedSink) {
                 openInputStream(uri)?.source()?.use(sink::writeAll)
