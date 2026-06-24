@@ -8,6 +8,10 @@ import com.example.studylensmobile.data.remote.dto.RegisterRequest
 import com.example.studylensmobile.domain.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import okhttp3.MultipartBody
+import java.io.File
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 
 class AuthRepository(
     private val authApi: AuthApi,
@@ -86,11 +90,38 @@ class AuthRepository(
                         username = body.username ?: body.email,
                         email = body.email,
                         firstName = body.firstName,
-                        lastName = body.lastName
+                        lastName = body.lastName,
+                        profileImageUrl = body.profileImageUrl
                     )
                 )
             } else {
                 Result.failure(Exception("Could not fetch user (${response.code()})."))
+            }
+        } catch (e: Exception) {
+            networkFailure(e)
+        }
+    }
+
+    suspend fun uploadProfileImage(imageFile: File): Result<User> {
+        return try {
+            val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+            val response = authApi.uploadProfileImage(body)
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                    ?: return Result.failure(Exception("Image uploaded but server response was empty."))
+                Result.success(
+                    User(
+                        id = responseBody.id,
+                        username = responseBody.username ?: responseBody.email,
+                        email = responseBody.email,
+                        firstName = responseBody.firstName,
+                        lastName = responseBody.lastName,
+                        profileImageUrl = responseBody.profileImageUrl
+                    )
+                )
+            } else {
+                Result.failure(Exception("Could not upload profile image (${response.code()})."))
             }
         } catch (e: Exception) {
             networkFailure(e)

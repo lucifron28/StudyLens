@@ -30,5 +30,6 @@ data class UserResponse(
     val username: String?,
     val email: String,
     @SerializedName("first_name") val firstName: String,
-    @SerializedName("last_name") val lastName: String
+    @SerializedName("last_name") val lastName: String,
+    val profileImageUrl: String? = null
 )
