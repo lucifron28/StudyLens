@@ -210,12 +210,7 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 8.dp)
                 )
-                Button(
-                    onClick = { /* TODO: Hook up navigation */ },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Start Study Session")
-                }
+
             }
             Image(
                 painter = painterResource(id = R.drawable.lumi_thinking),
