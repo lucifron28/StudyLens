@@ -24,9 +24,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -115,6 +120,8 @@ private fun DashboardContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var isActivityExpanded by remember { mutableStateOf(false) }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(20.dp),
@@ -169,8 +176,24 @@ private fun DashboardContent(
                 StudyLensEmptyState(text = "Your recent study activity will appear here.")
             }
         } else {
-            items(dashboard.recentActivity, key = { "${it.type}-${it.id}" }) { item ->
-                ActivityRow(item = item)
+            item {
+                Column(
+                    modifier = Modifier.animateContentSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val itemsToShow = if (isActivityExpanded) dashboard.recentActivity else dashboard.recentActivity.take(3)
+                    itemsToShow.forEach { item ->
+                        ActivityRow(item = item)
+                    }
+                    if (dashboard.recentActivity.size > 3) {
+                        TextButton(
+                            onClick = { isActivityExpanded = !isActivityExpanded },
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        ) {
+                            Text(if (isActivityExpanded) "Show Less" else "See All Activity")
+                        }
+                    }
+                }
             }
         }
     }
@@ -393,20 +416,32 @@ private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: 
 
 @Composable
 private fun ActivityRow(item: DashboardActivityItem) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        StatusChip(status = item.type.toDisplayLabel())
-        Column(modifier = Modifier.weight(1f)) {
+    StudyLensCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusChip(status = item.type.toDisplayLabel())
+                Text(
+                    text = item.createdAt,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = item.title,
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium
             )
             if (item.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = item.description,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -415,11 +450,6 @@ private fun ActivityRow(item: DashboardActivityItem) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Text(
-                text = item.createdAt,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }
