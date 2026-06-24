@@ -364,32 +364,41 @@ private fun StudyToolsBanner(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ActionChip(
-                        text = "Summary",
-                        icon = Icons.Default.Summarize,
-                        onClick = onNavigateToSummary
-                    )
-                    ActionChip(
-                        text = "Cards",
-                        icon = Icons.Default.Style,
-                        onClick = onNavigateToFlashcards
-                    )
-                    ActionChip(
-                        text = "Quiz",
-                        icon = Icons.Default.Quiz,
-                        onClick = onNavigateToQuiz
-                    )
-                    ActionChip(
-                        text = "Tutor",
-                        icon = Icons.Default.SmartToy,
-                        onClick = onNavigateToTutor
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ActionChip(
+                            text = "Summary",
+                            icon = Icons.Default.Summarize,
+                            onClick = onNavigateToSummary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ActionChip(
+                            text = "Cards",
+                            icon = Icons.Default.Style,
+                            onClick = onNavigateToFlashcards,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ActionChip(
+                            text = "Quiz",
+                            icon = Icons.Default.Quiz,
+                            onClick = onNavigateToQuiz,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ActionChip(
+                            text = "Tutor",
+                            icon = Icons.Default.SmartToy,
+                            onClick = onNavigateToTutor,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }

@@ -11,11 +11,21 @@ git switch main
 git pull origin main
 ```
 
-Create a focused branch:
+Create a focused branch using the right prefix:
 
 ```powershell
-git switch -c codex/feature-name
+git switch -c feature/short-description
 ```
+
+| Prefix | Use for |
+|---|---|
+| `feature/` | New screens, endpoints, or user-facing capabilities |
+| `fix/` | Bug fixes that are not urgent |
+| `hotfix/` | Urgent fixes that need to go straight to `main` |
+| `refactor/` | Code restructuring with no behavior change |
+| `docs/` | Documentation-only changes |
+| `chore/` | Dependency bumps, build config, tooling |
+| `test/` | Adding or fixing unit/integration tests |
 
 Commit in small batches:
 
