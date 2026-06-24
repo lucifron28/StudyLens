@@ -18,6 +18,7 @@ object AppRoutes {
     const val PROFILE = "profile"
     const val CAMERA_CAPTURE = "camera_capture"
     const val IMAGE_CROP = "image_crop/{imageUri}"
+    const val PDF_VIEWER = "pdf_viewer/{title}?url={url}"
 
     fun createSubjectDetailRoute(subjectId: String) = "subjectDetail/$subjectId"
     fun createModuleReaderRoute(moduleId: String) = "moduleReader/$moduleId"
@@ -27,4 +28,5 @@ object AppRoutes {
     fun createQuizRoute(sourceType: String, sourceId: String) = "quiz/$sourceType/$sourceId"
     fun createTutorRoute(sourceType: String, sourceId: String) = "tutor/$sourceType/$sourceId"
     fun createImageCropRoute(imageUri: String) = "image_crop/${Uri.encode(imageUri)}"
+    fun createPdfViewerRoute(title: String, url: String) = "pdf_viewer/${Uri.encode(title)}?url=${Uri.encode(url)}"
 }

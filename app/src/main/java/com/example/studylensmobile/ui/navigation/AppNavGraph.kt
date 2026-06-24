@@ -31,6 +31,7 @@ import com.example.studylensmobile.feature.home.HomeScreen
 import com.example.studylensmobile.feature.home.HomeViewModel
 import com.example.studylensmobile.feature.modules.ModuleReaderScreen
 import com.example.studylensmobile.feature.modules.ModuleReaderViewModel
+import com.example.studylensmobile.feature.modules.PdfReaderScreen
 import com.example.studylensmobile.feature.profile.ProfileScreen
 import com.example.studylensmobile.feature.scans.BoardNotesScreen
 import com.example.studylensmobile.feature.scans.BoardNotesViewModel
@@ -173,13 +174,30 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToTutor = {
                         navController.navigate(AppRoutes.createTutorRoute("module", moduleId))
+                    },
+                    onNavigateToPdfViewer = { url ->
+                        val moduleTitle = moduleReaderViewModel.uiState.value.module?.title ?: "Document"
+                        navController.navigate(AppRoutes.createPdfViewerRoute(moduleTitle, url))
                     }
+                )
+            }
+            composable(AppRoutes.PDF_VIEWER) { backStackEntry ->
+                val title = backStackEntry.arguments?.getString("title") ?: "Document"
+                val url = backStackEntry.arguments?.getString("url") ?: ""
+                PdfReaderScreen(
+                    title = title,
+                    url = url,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(AppRoutes.SCANS) { backStackEntry ->
                 val boardNotesViewModel: BoardNotesViewModel = viewModel(
                     factory = viewModelFactory {
-                        BoardNotesViewModel(app.container.boardScansRepository)
+                        BoardNotesViewModel(
+                            boardScansRepository = app.container.boardScansRepository,
+                            subjectsRepository = app.container.subjectsRepository,
+                            modulesRepository = app.container.modulesRepository
+                        )
                     }
                 )
                 
@@ -201,6 +219,18 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     },
                     onNavigateToCamera = {
                         navController.navigate(AppRoutes.CAMERA_CAPTURE)
+                    },
+                    onNavigateToSummary = { boardScanId ->
+                        navController.navigate(AppRoutes.createAiSummaryRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToFlashcards = { boardScanId ->
+                        navController.navigate(AppRoutes.createFlashcardsRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToQuiz = { boardScanId ->
+                        navController.navigate(AppRoutes.createQuizRoute("board_scan", boardScanId))
+                    },
+                    onNavigateToTutor = { boardScanId ->
+                        navController.navigate(AppRoutes.createTutorRoute("board_scan", boardScanId))
                     }
                 )
             }

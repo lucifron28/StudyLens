@@ -49,7 +49,8 @@ fun ModuleReaderScreen(
     onNavigateToSummary: () -> Unit,
     onNavigateToFlashcards: () -> Unit,
     onNavigateToQuiz: () -> Unit,
-    onNavigateToTutor: () -> Unit
+    onNavigateToTutor: () -> Unit,
+    onNavigateToPdfViewer: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val module = uiState.module
@@ -103,6 +104,7 @@ fun ModuleReaderScreen(
                     onNavigateToFlashcards = onNavigateToFlashcards,
                     onNavigateToQuiz = onNavigateToQuiz,
                     onNavigateToTutor = onNavigateToTutor,
+                    onNavigateToPdfViewer = onNavigateToPdfViewer,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -118,6 +120,7 @@ private fun ModuleReaderContent(
     onNavigateToFlashcards: () -> Unit,
     onNavigateToQuiz: () -> Unit,
     onNavigateToTutor: () -> Unit,
+    onNavigateToPdfViewer: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -131,6 +134,17 @@ private fun ModuleReaderContent(
 
         item {
             SectionHeader(title = "Module Content")
+        }
+        
+        if (module.moduleFileUrl != null) {
+            item {
+                Button(
+                    onClick = { onNavigateToPdfViewer(module.moduleFileUrl) },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                ) {
+                    Text("Open Document Viewer")
+                }
+            }
         }
 
         item {
