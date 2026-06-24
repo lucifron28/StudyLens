@@ -1,11 +1,13 @@
 from unittest.mock import patch, MagicMock
 from unittest import TestCase
 from types import SimpleNamespace
+from pathlib import Path
 from django.core.files.base import ContentFile
 from django.test import SimpleTestCase
 from rest_framework import serializers
 from learning.models import Module
 from learning.serializers import MAX_MODULE_FILE_SIZE_BYTES, ModuleSerializer
+from learning.services.conversion import ConversionError, convert_office_to_pdf
 from learning.services.extraction import extract_pdf_text, extract_docx_text, extract_pptx_text, ExtractionError
 
 class ExtractionServiceTests(TestCase):
@@ -75,6 +77,32 @@ class ModuleFileValidationTests(SimpleTestCase):
             ModuleSerializer().validate(
                 {"module_file": module_file, "content_type": Module.ContentType.PDF}
             )
+
+
+class OfficeConversionServiceTests(TestCase):
+    @patch("learning.services.conversion.subprocess.run")
+    def test_converts_document_to_pdf(self, run):
+        def create_pdf(command, **_):
+            output_directory = Path(command[command.index("--outdir") + 1])
+            (output_directory / "lesson.pdf").write_bytes(b"%PDF-1.4")
+            return SimpleNamespace(returncode=0)
+
+        run.side_effect = create_pdf
+        document = ContentFile(b"document", name="lesson.docx")
+
+        converted = convert_office_to_pdf(document)
+
+        self.assertEqual(converted.name, "lesson.pdf")
+        self.assertEqual(converted.read(), b"%PDF-1.4")
+        document.seek(0)
+        self.assertEqual(document.read(), b"document")
+
+    @patch("learning.services.conversion.subprocess.run")
+    def test_raises_clear_error_when_conversion_fails(self, run):
+        run.return_value = SimpleNamespace(returncode=1)
+
+        with self.assertRaises(ConversionError):
+            convert_office_to_pdf(ContentFile(b"document", name="lesson.docx"))
 
     def test_rejects_file_larger_than_limit(self):
         module_file = SimpleNamespace(
