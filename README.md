@@ -13,6 +13,7 @@ Students can read course modules, save classroom whiteboard OCR notes, review bo
 ## Start Here
 
 - [Project Overview](docs/overview.md)
+- [Architecture & Design Decisions](docs/architecture-design.md)
 - [Setup Guide](docs/setup.md)
 - [Backend Guide](docs/backend.md)
 - [Android Guide](docs/android/README.md)
