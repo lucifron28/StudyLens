@@ -19,6 +19,9 @@ class BoardNotesViewModel(
     private val subjectsRepository: SubjectsRepository,
     private val modulesRepository: ModulesRepository
 ) : ViewModel() {
+    private var modulesRequestVersion = 0
+    private var chaptersRequestVersion = 0
+
     private val _uiState = MutableStateFlow(BoardNotesUiState())
     val uiState: StateFlow<BoardNotesUiState> = _uiState.asStateFlow()
 
@@ -51,15 +54,20 @@ class BoardNotesViewModel(
     }
 
     fun fetchModulesForSubject(subjectId: String) {
+        val requestVersion = ++modulesRequestVersion
+        chaptersRequestVersion++
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoadingModules = true,
+                    isLoadingChapters = false,
                     availableModules = emptyList(),
                     availableChapters = emptyList()
                 )
             }
             val result = subjectsRepository.getSubjectModules(subjectId)
+            if (requestVersion != modulesRequestVersion) return@launch
+
             _uiState.update {
                 it.copy(
                     availableModules = result.getOrNull() ?: emptyList(),
@@ -70,6 +78,7 @@ class BoardNotesViewModel(
     }
 
     fun fetchChaptersForModule(moduleId: String) {
+        val requestVersion = ++chaptersRequestVersion
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
@@ -78,6 +87,8 @@ class BoardNotesViewModel(
                 )
             }
             val result = modulesRepository.getModuleReader(moduleId)
+            if (requestVersion != chaptersRequestVersion) return@launch
+
             _uiState.update {
                 it.copy(
                     availableChapters = result.getOrNull()?.chapters ?: emptyList(),
@@ -88,10 +99,14 @@ class BoardNotesViewModel(
     }
 
     fun clearModulesAndChapters() {
+        modulesRequestVersion++
+        chaptersRequestVersion++
         _uiState.update {
             it.copy(
                 availableModules = emptyList(),
-                availableChapters = emptyList()
+                availableChapters = emptyList(),
+                isLoadingModules = false,
+                isLoadingChapters = false
             )
         }
     }
