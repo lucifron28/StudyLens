@@ -9,9 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -111,42 +118,23 @@ private fun DashboardContent(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Hi, $firstName!",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Text(
-                        text = "Ready to continue your learning?",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.lumi_default),
-                    contentDescription = "Lumi Mascot",
-                    modifier = Modifier
-                        .height(80.dp)
-                        .padding(start = 16.dp)
-                        .floatingAnimation()
-                )
-            }
-        }
-
         if (errorMessage != null && !isRefreshing) {
             item {
                 StudyLensInlineError(message = errorMessage, onRetry = onRetry)
             }
+        }
+
+        item {
+            LumiHeroBanner(
+                firstName = firstName,
+                modulesInProgress = dashboard.stats.modulesInProgress
+            )
+        }
+
+        item {
+            QuickActionsRow()
         }
 
         item {
@@ -157,29 +145,19 @@ private fun DashboardContent(
             StatsRow(dashboard = dashboard)
         }
 
-        item {
-            SectionHeader(title = "Latest Posts")
-        }
-        if (dashboard.upcoming.isEmpty()) {
+        if (dashboard.continueLearning.isNotEmpty()) {
             item {
-                StudyLensEmptyState(text = "No posts yet.")
+                SectionHeader(title = "Continue Learning")
             }
-        } else {
-            items(dashboard.upcoming, key = { "${it.type}-${it.id}" }) { item ->
-                UpcomingCard(item = item)
-            }
-        }
-
-        item {
-            SectionHeader(title = "Continue Learning")
-        }
-        if (dashboard.continueLearning.isEmpty()) {
             item {
-                StudyLensEmptyState(text = "Open a module to start tracking reading progress.")
-            }
-        } else {
-            items(dashboard.continueLearning, key = { "continue-${it.id}" }) { item ->
-                ContinueLearningCard(item = item)
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
+                ) {
+                    items(dashboard.continueLearning, key = { "continue-${it.id}" }) { item ->
+                        ContinueLearningCard(item = item, modifier = Modifier.width(280.dp))
+                    }
+                }
             }
         }
 
@@ -194,6 +172,91 @@ private fun DashboardContent(
             items(dashboard.recentActivity, key = { "${it.type}-${it.id}" }) { item ->
                 ActivityRow(item = item)
             }
+        }
+    }
+}
+
+@Composable
+private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
+    StudyLensCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Hi, $firstName!",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (modulesInProgress > 0) "You have $modulesInProgress modules to review. Ready to jump in?" else "Ready to start learning today?",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                Button(
+                    onClick = { /* TODO: Hook up navigation */ },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Start Study Session")
+                }
+            }
+            Image(
+                painter = painterResource(id = R.drawable.lumi_thinking),
+                contentDescription = "Lumi Mascot",
+                modifier = Modifier
+                    .height(100.dp)
+                    .padding(start = 16.dp)
+                    .floatingAnimation()
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickActionsRow() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QuickActionChip(
+            text = "Tutor",
+            icon = Icons.Default.School,
+            modifier = Modifier.weight(1f)
+        )
+        QuickActionChip(
+            text = "Flashcards",
+            icon = Icons.Default.Style,
+            modifier = Modifier.weight(1f)
+        )
+        QuickActionChip(
+            text = "New Scan",
+            icon = Icons.Default.PhotoCamera,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun QuickActionChip(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier
+) {
+    FilledTonalButton(
+        onClick = { /* TODO: Hook up navigation */ },
+        modifier = modifier,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(imageVector = icon, contentDescription = text)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = text, style = MaterialTheme.typography.labelMedium)
         }
     }
 }
@@ -288,77 +351,42 @@ private fun StatCard(
     }
 }
 
-@Composable
-private fun UpcomingCard(item: DashboardUpcomingItem) {
-    StudyLensCard {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = listOf(item.subjectTitle, item.type.toDisplayLabel())
-                        .filter { it.isNotBlank() }
-                        .joinToString(" - "),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            item.postedAt?.takeIf { it.isNotBlank() }?.let { postedAt ->
-                StatusChip(status = postedAt)
-            }
-        }
-    }
-}
 
 @Composable
-private fun ContinueLearningCard(item: DashboardContinueLearningItem) {
-    StudyLensCard {
-        Row(
+private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: Modifier = Modifier) {
+    StudyLensCard(modifier = modifier) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                if (item.chapterTitle.isNotBlank()) {
-                    StatusChip(status = item.chapterTitle)
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-                Text(
-                    text = item.moduleTitle,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "Last read ${item.lastReadAt}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                ProgressBar(progress = item.progressPercentage.coerceIn(0, 100) / 100f)
+            if (item.chapterTitle.isNotBlank()) {
+                StatusChip(status = item.chapterTitle)
+                Spacer(modifier = Modifier.height(8.dp))
             }
             Text(
-                text = "${item.progressPercentage}%",
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = item.moduleTitle,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Last read ${item.lastReadAt}",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ProgressBar(progress = item.progressPercentage.coerceIn(0, 100) / 100f, modifier = Modifier.weight(1f))
+                Text(
+                    text = "${item.progressPercentage}%",
+                    color = MaterialTheme.colorScheme.secondary,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
