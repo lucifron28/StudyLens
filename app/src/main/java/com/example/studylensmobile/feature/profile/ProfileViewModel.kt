@@ -41,4 +41,18 @@ class ProfileViewModel(
             }
         }
     }
+
+    fun uploadProfileImage(file: java.io.File) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingImage = true, errorMessage = null) }
+            val result = authRepository.uploadProfileImage(file)
+            _uiState.update {
+                it.copy(
+                    isUploadingImage = false,
+                    user = result.getOrNull() ?: it.user,
+                    errorMessage = result.exceptionOrNull()?.message
+                )
+            }
+        }
+    }
 }
