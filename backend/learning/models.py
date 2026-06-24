@@ -48,8 +48,6 @@ class Module(models.Model):
     description = models.TextField(blank=True)
     content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.MARKDOWN)
     markdown_content = models.TextField(blank=True)
-    # TODO: Future phase: extract readable text from uploaded PDFs for search and AI context.
-    # TODO: Future phase: add DOCX/PPTX text extraction and optional conversion to PDF.
     extracted_text = models.TextField(blank=True)
     module_file = models.FileField(upload_to=module_file_upload_path, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
@@ -118,7 +116,6 @@ class BoardScan(models.Model):
     image = models.ImageField(upload_to=board_scan_upload_path, blank=True, null=True)
     raw_ocr_text = models.TextField(blank=True)
     cleaned_text = models.TextField(blank=True)
-    # TODO: Future phase: AI summaries can store a short board-note summary here or in a Summary model.
     summary = models.TextField(blank=True)
     review_status = models.CharField(
         max_length=20,
