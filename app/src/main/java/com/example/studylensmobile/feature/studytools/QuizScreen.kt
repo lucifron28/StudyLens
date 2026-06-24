@@ -1,5 +1,11 @@
 package com.example.studylensmobile.feature.studytools
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -171,15 +178,26 @@ private fun QuizContent(
                 StudyLensEmptyState(text = "No quiz questions generated yet.")
             }
         } else {
-            item(key = "question-${question.id}") {
-                QuizQuestionPracticeCard(
-                    question = question,
-                    progressLabel = uiState.progressLabel,
-                    selectedAnswer = uiState.selectedAnswer,
-                    isSubmitted = uiState.isCurrentSubmitted,
-                    onAnswerSelected = onAnswerSelected,
-                    onSubmit = onSubmit
-                )
+            item(key = "question_container") {
+                AnimatedContent(
+                    targetState = question,
+                    transitionSpec = {
+                        val direction = if (targetState.order > initialState.order) 1 else -1
+                        (slideInHorizontally { width -> direction * width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> -direction * width } + fadeOut()
+                        )
+                    },
+                    label = "QuestionTransition"
+                ) { targetQuestion ->
+                    QuizQuestionPracticeCard(
+                        question = targetQuestion,
+                        progressLabel = "${targetQuestion.order} / ${quiz.questions.size}",
+                        selectedAnswer = uiState.selectedAnswers[targetQuestion.id].orEmpty(),
+                        isSubmitted = targetQuestion.id in uiState.submittedQuestionIds,
+                        onAnswerSelected = onAnswerSelected,
+                        onSubmit = onSubmit
+                    )
+                }
             }
 
             item {
@@ -331,6 +349,7 @@ private fun QuizQuestionPracticeCard(
 
             if (isSubmitted) {
                 AnswerFeedback(
+                    isShortAnswer = question.isShortAnswer(),
                     isCorrect = isCorrect,
                     correctAnswer = question.correctAnswer,
                     explanation = question.explanation
@@ -368,10 +387,37 @@ private fun AnswerInput(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             question.answerChoices().forEach { choice ->
                 val isSelected = selectedAnswer == choice
-                if (isSelected) {
+                val isCorrectChoice = choice.matchesAnswer(question.correctAnswer)
+
+                val containerColor = if (isSubmitted) {
+                    when {
+                        isCorrectChoice -> MaterialTheme.colorScheme.primaryContainer
+                        isSelected && !isCorrectChoice -> MaterialTheme.colorScheme.errorContainer
+                        else -> MaterialTheme.colorScheme.surface
+                    }
+                } else {
+                    if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
+                }
+
+                val contentColor = if (isSubmitted) {
+                    when {
+                        isCorrectChoice -> MaterialTheme.colorScheme.onPrimaryContainer
+                        isSelected && !isCorrectChoice -> MaterialTheme.colorScheme.onErrorContainer
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
+                } else {
+                    if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                }
+
+                if (isSubmitted) {
+                    // When submitted, display all options as FilledTonalButton to apply custom colors
                     FilledTonalButton(
-                        onClick = { onAnswerSelected(choice) },
-                        enabled = !isSubmitted,
+                        onClick = { },
+                        enabled = false, // disabled but visually distinct
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            disabledContainerColor = containerColor,
+                            disabledContentColor = contentColor
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MarkdownInlineText(
@@ -381,16 +427,29 @@ private fun AnswerInput(
                         )
                     }
                 } else {
-                    OutlinedButton(
-                        onClick = { onAnswerSelected(choice) },
-                        enabled = !isSubmitted,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        MarkdownInlineText(
-                            markdown = choice,
-                            style = MaterialTheme.typography.labelLarge,
-                            textAlign = TextAlign.Center
-                        )
+                    // Standard selection mode
+                    if (isSelected) {
+                        FilledTonalButton(
+                            onClick = { onAnswerSelected(choice) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            MarkdownInlineText(
+                                markdown = choice,
+                                style = MaterialTheme.typography.labelLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { onAnswerSelected(choice) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            MarkdownInlineText(
+                                markdown = choice,
+                                style = MaterialTheme.typography.labelLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -400,14 +459,18 @@ private fun AnswerInput(
 
 @Composable
 private fun AnswerFeedback(
+    isShortAnswer: Boolean,
     isCorrect: Boolean,
     correctAnswer: String,
     explanation: String
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
+        val title = if (isShortAnswer) "Suggested Answer" else if (isCorrect) "Correct" else "Needs review"
+        val titleColor = if (isShortAnswer) MaterialTheme.colorScheme.primary else if (isCorrect) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
+
         Text(
-            text = if (isCorrect) "Correct" else "Needs review",
-            color = if (isCorrect) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+            text = title,
+            color = titleColor,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
