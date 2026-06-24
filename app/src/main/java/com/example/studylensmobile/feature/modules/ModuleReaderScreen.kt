@@ -355,7 +355,7 @@ private fun StudyToolsBanner(
             Image(
                 painter = painterResource(id = R.drawable.lumi_thinking),
                 contentDescription = "Lumi Mascot",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(96.dp)
             )
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
