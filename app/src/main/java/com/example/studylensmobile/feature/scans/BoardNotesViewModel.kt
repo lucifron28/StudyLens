@@ -111,6 +111,12 @@ class BoardNotesViewModel(
         }
     }
 
+    fun loadRelationOptions(subjectId: String?, moduleId: String?) {
+        clearModulesAndChapters()
+        subjectId?.let(::fetchModulesForSubject)
+        moduleId?.let(::fetchChaptersForModule)
+    }
+
     fun recognizeBoardImage(context: Context, imageUri: Uri) {
         viewModelScope.launch {
             _uiState.update {
