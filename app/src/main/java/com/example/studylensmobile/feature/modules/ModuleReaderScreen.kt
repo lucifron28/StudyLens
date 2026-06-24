@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -36,18 +35,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.R
-import com.example.studylensmobile.domain.model.LearningChapter
 import com.example.studylensmobile.domain.model.LearningModule
-import com.example.studylensmobile.ui.components.MarkdownInlineText
 import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
-import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
@@ -175,20 +169,6 @@ private fun ModuleReaderContent(
         }
 
         item {
-            SectionHeader(title = "Chapters")
-        }
-
-        if (module.chapters.isEmpty()) {
-            item {
-                StudyLensEmptyState(text = "No chapters added yet.")
-            }
-        } else {
-            items(module.chapters, key = { "chapter-${it.id}" }) { chapter ->
-                ChapterCard(chapter = chapter)
-            }
-        }
-
-        item {
             SectionHeader(title = "Study Tools")
         }
 
@@ -286,64 +266,12 @@ private fun ReaderTextCard(
     }
 }
 
-@Composable
-private fun ChapterCard(chapter: LearningChapter) {
-    val text = chapter.readerText()
-
-    StudyLensCard {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = chapter.title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                StatusChip(status = "Ch. ${chapter.order}")
-            }
-            if (text.isBlank()) {
-                Text(
-                    text = "No readable text yet.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier.padding(top = 10.dp)
-                )
-            } else {
-                MarkdownInlineText(
-                    markdown = text,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 6,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 10.dp)
-                )
-            }
-        }
-    }
-}
-
 private fun LearningModule.readerText(): String {
     return markdownContent.ifBlank { extractedText }
 }
 
 private fun LearningModule.canOpenInPdfViewer(): Boolean {
     return moduleFileUrl != null && contentType.equals("pdf", ignoreCase = true)
-}
-
-private fun LearningChapter.readerText(): String {
-    return markdownContent.ifBlank { extractedText }
 }
 
 @Composable
