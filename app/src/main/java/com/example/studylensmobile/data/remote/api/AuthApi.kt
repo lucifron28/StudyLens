@@ -5,6 +5,7 @@ import com.example.studylensmobile.data.remote.dto.RegisterRequest
 import com.example.studylensmobile.data.remote.dto.TokenRefreshResponse
 import com.example.studylensmobile.data.remote.dto.TokenResponse
 import com.example.studylensmobile.data.remote.dto.UserResponse
+import com.example.studylensmobile.data.remote.dto.UserUpdateRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -31,5 +32,10 @@ interface AuthApi {
     @PUT("api/auth/me/image")
     suspend fun uploadProfileImage(
         @Part image: MultipartBody.Part
+    ): Response<UserResponse>
+
+    @PUT("api/auth/me/")
+    suspend fun updateProfile(
+        @Body request: UserUpdateRequest
     ): Response<UserResponse>
 }

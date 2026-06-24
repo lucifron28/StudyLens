@@ -16,6 +16,7 @@ object AppRoutes {
     const val QUIZ = "quiz/{sourceType}/{sourceId}"
     const val TUTOR = "tutor/{sourceType}/{sourceId}"
     const val PROFILE = "profile"
+    const val EDIT_PROFILE = "editProfile"
     const val CAMERA_CAPTURE = "camera_capture"
     const val IMAGE_CROP = "image_crop/{imageUri}"
     const val PDF_VIEWER = "pdf_viewer/{title}?url={url}"

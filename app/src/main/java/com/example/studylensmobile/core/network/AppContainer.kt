@@ -1,6 +1,7 @@
 package com.example.studylensmobile.core.network
 
 import android.content.Context
+import com.example.studylensmobile.core.datastore.ThemePreferences
 import com.example.studylensmobile.core.datastore.TokenManager
 import com.example.studylensmobile.data.remote.api.AiApi
 import com.example.studylensmobile.data.remote.api.AuthApi
@@ -16,6 +17,10 @@ import retrofit2.Retrofit
 class AppContainer(private val context: Context) {
     val tokenManager: TokenManager by lazy {
         TokenManager(context)
+    }
+
+    val themePreferences: ThemePreferences by lazy {
+        ThemePreferences(context)
     }
 
     val retrofit: Retrofit by lazy {

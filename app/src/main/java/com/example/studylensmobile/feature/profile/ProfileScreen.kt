@@ -37,6 +37,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,6 +68,7 @@ import android.widget.Toast
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.example.studylensmobile.domain.model.User
+import com.example.studylensmobile.core.datastore.ThemeOption
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensInlineError
@@ -74,11 +79,13 @@ import com.example.studylensmobile.ui.components.StudyLensTopBar
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
+    onNavigateToEditProfile: () -> Unit,
     onLogout: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val user = uiState.user
     var showLogoutConfirmation by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -123,7 +130,9 @@ fun ProfileScreen(
                     isRefreshing = uiState.isRefreshing,
                     isUploadingImage = uiState.isUploadingImage,
                     onRetry = viewModel::loadProfile,
+                    onNavigateToEditProfile = onNavigateToEditProfile,
                     onLogout = { showLogoutConfirmation = true },
+                    onThemeClick = { showThemeDialog = true },
                     onImagePicked = { uri ->
                         val file = getFileFromUri(uri)
                         if (file != null) {
@@ -140,6 +149,17 @@ fun ProfileScreen(
         LogoutConfirmationDialog(
             onDismiss = { showLogoutConfirmation = false },
             onConfirm = onLogout
+        )
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectionSheet(
+            currentTheme = uiState.themeOption,
+            onThemeSelected = { 
+                viewModel.setThemeOption(it)
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
         )
     }
 }
@@ -168,7 +188,9 @@ private fun ProfileContent(
     isRefreshing: Boolean,
     isUploadingImage: Boolean,
     onRetry: () -> Unit,
+    onNavigateToEditProfile: () -> Unit,
     onLogout: () -> Unit,
+    onThemeClick: () -> Unit,
     onImagePicked: @Composable (Uri) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -219,13 +241,21 @@ private fun ProfileContent(
         
         item {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = "Account Details",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Account Details",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = onNavigateToEditProfile) {
+                        Text("Edit")
+                    }
+                }
                 AccountDetailsCard(user = user)
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -239,9 +269,8 @@ private fun ProfileContent(
                 )
                 StudyLensCard {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        SettingsRow(icon = Icons.Default.Palette, label = "App Appearance", onClick = { showToast("Theme settings coming soon") })
-                        SettingsRow(icon = Icons.Default.Notifications, label = "Notifications", onClick = { showToast("Notification settings coming soon") })
-                        SettingsRow(icon = Icons.Default.PrivacyTip, label = "Data & Privacy", onClick = { showToast("Privacy settings coming soon") }, isLast = true)
+                        SettingsRow(icon = Icons.Default.Palette, label = "App Appearance", onClick = onThemeClick)
+                        SettingsRow(icon = Icons.Default.Notifications, label = "Notifications", onClick = { showToast("Notification settings coming soon") }, isLast = true)
                     }
                 }
 
@@ -527,4 +556,54 @@ private fun User.initials(): String {
         .take(2)
         .joinToString(separator = "") { it.first().uppercaseChar().toString() }
         .ifBlank { "S" }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeSelectionSheet(
+    currentTheme: ThemeOption,
+    onThemeSelected: (ThemeOption) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                text = "App Appearance",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            val options = listOf(
+                ThemeOption.SYSTEM to "System Default",
+                ThemeOption.LIGHT to "Light",
+                ThemeOption.DARK to "Dark"
+            )
+
+            options.forEach { (option, label) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onThemeSelected(option) }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = currentTheme == option,
+                        onClick = null // Handled by row click
+                    )
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
+    }
 }

@@ -5,6 +5,7 @@ import com.example.studylensmobile.data.remote.networkFailure
 import com.example.studylensmobile.data.remote.api.AuthApi
 import com.example.studylensmobile.data.remote.dto.LoginRequest
 import com.example.studylensmobile.data.remote.dto.RegisterRequest
+import com.example.studylensmobile.data.remote.dto.UserUpdateRequest
 import com.example.studylensmobile.domain.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -122,6 +123,35 @@ class AuthRepository(
                 )
             } else {
                 Result.failure(Exception("Could not upload profile image (${response.code()})."))
+            }
+        } catch (e: Exception) {
+            networkFailure(e)
+        }
+    }
+
+    suspend fun updateProfile(username: String, firstName: String, lastName: String): Result<User> {
+        return try {
+            val request = UserUpdateRequest(
+                username = username,
+                firstName = firstName,
+                lastName = lastName
+            )
+            val response = authApi.updateProfile(request)
+            if (response.isSuccessful) {
+                val body = response.body()
+                    ?: return Result.failure(Exception("Could not update profile: empty server response."))
+                Result.success(
+                    User(
+                        id = body.id,
+                        username = body.username ?: body.email,
+                        email = body.email,
+                        firstName = body.firstName,
+                        lastName = body.lastName,
+                        profileImageUrl = body.profileImageUrl
+                    )
+                )
+            } else {
+                Result.failure(Exception("Could not update profile (${response.code()})."))
             }
         } catch (e: Exception) {
             networkFailure(e)

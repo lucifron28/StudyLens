@@ -32,6 +32,8 @@ import com.example.studylensmobile.feature.home.HomeViewModel
 import com.example.studylensmobile.feature.modules.ModuleReaderScreen
 import com.example.studylensmobile.feature.modules.ModuleReaderViewModel
 import com.example.studylensmobile.feature.modules.PdfReaderScreen
+import com.example.studylensmobile.feature.profile.EditProfileScreen
+import com.example.studylensmobile.feature.profile.EditProfileViewModel
 import com.example.studylensmobile.feature.profile.ProfileScreen
 import com.example.studylensmobile.feature.profile.ProfileViewModel
 import com.example.studylensmobile.feature.scans.BoardNotesScreen
@@ -380,16 +382,28 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
             }
             composable(AppRoutes.PROFILE) {
                 val profileViewModel: ProfileViewModel = viewModel(
-                    factory = viewModelFactory { ProfileViewModel(app.container.authRepository) }
+                    factory = viewModelFactory { ProfileViewModel(app.container.authRepository, app.container.themePreferences) }
                 )
                 ProfileScreen(
                     viewModel = profileViewModel,
+                    onNavigateToEditProfile = {
+                        navController.navigate(AppRoutes.EDIT_PROFILE)
+                    },
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate(AppRoutes.LOGIN) {
                             popUpTo(0) { inclusive = true }
                         }
                     }
+                )
+            }
+            composable(AppRoutes.EDIT_PROFILE) {
+                val editProfileViewModel: EditProfileViewModel = viewModel(
+                    factory = viewModelFactory { EditProfileViewModel(app.container.authRepository) }
+                )
+                EditProfileScreen(
+                    viewModel = editProfileViewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

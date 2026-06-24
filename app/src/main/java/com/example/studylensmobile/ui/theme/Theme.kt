@@ -3,6 +3,7 @@ package com.example.studylensmobile.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -31,6 +32,27 @@ private val LightColorScheme = lightColorScheme(
     onError = Color.White,
 )
 
+private val DarkColorScheme = darkColorScheme(
+    primary = StudyTeal,
+    onPrimary = StudyNavyDark,
+    primaryContainer = StudyNavyDark,
+    onPrimaryContainer = StudyTeal,
+    secondary = StudyActionBlueDark,
+    onSecondary = StudyCardDark,
+    secondaryContainer = StudyMutedSurfaceDark,
+    tertiary = StudyTealDark,
+    background = StudyBackgroundDark,
+    onBackground = StudyTextPrimaryDark,
+    surface = StudyCardDark,
+    onSurface = StudyTextPrimaryDark,
+    surfaceVariant = StudyMutedSurfaceDark,
+    onSurfaceVariant = StudyTextSecondaryDark,
+    outline = StudyTextSecondaryDark.copy(alpha = 0.35f),
+    outlineVariant = StudyMutedSurfaceDark,
+    error = StudyErrorDark,
+    onError = Color.White,
+)
+
 @Composable
 fun StudyLensTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -43,6 +65,7 @@ fun StudyLensTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+        darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
