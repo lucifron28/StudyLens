@@ -60,7 +60,7 @@ fun StudyLensLoadingState(
                 painter = painterResource(id = R.drawable.lumi_thinking),
                 contentDescription = "Lumi Thinking",
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(200.dp)
                     .floatingAnimation()
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +148,7 @@ fun StudyLensEmptyState(
                 painter = painterResource(id = R.drawable.lumi_default),
                 contentDescription = "Lumi Greeting",
                 modifier = Modifier
-                    .size(140.dp)
+                    .size(240.dp)
                     .floatingAnimation()
             )
             Spacer(modifier = Modifier.height(16.dp))
