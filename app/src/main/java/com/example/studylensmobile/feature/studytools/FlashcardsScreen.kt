@@ -29,6 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.Flashcard
 import com.example.studylensmobile.ui.components.LumiDialog
@@ -40,6 +45,7 @@ import com.example.studylensmobile.ui.components.StudyLensInlineError
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
 import com.example.studylensmobile.ui.components.StatusChip
+import com.example.studylensmobile.ui.components.floatingAnimation
 
 @Composable
 fun FlashcardsScreen(
@@ -187,12 +193,25 @@ private fun FlashcardCountSelector(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Deck Size",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Deck Size",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.lumi_default),
+                    contentDescription = "Lumi Mascot",
+                    modifier = Modifier
+                        .height(64.dp)
+                        .floatingAnimation()
+                )
+            }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(top = 10.dp)
@@ -224,58 +243,90 @@ private fun FlashcardReviewCard(
     isAnswerVisible: Boolean,
     onToggleAnswer: () -> Unit
 ) {
-    StudyLensCard {
+    val rotation by animateFloatAsState(
+        targetValue = if (isAnswerVisible) 180f else 0f,
+        animationSpec = tween(durationMillis = 500),
+        label = "flip"
+    )
+    val isBackVisible = rotation > 90f
+
+    StudyLensCard(
+        modifier = Modifier.graphicsLayer {
+            rotationY = rotation
+            cameraDistance = 12f * density
+        }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Question",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatusChip(status = flashcard.difficulty)
-                    StatusChip(status = progressLabel)
+            if (!isBackVisible) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Question",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatusChip(status = flashcard.difficulty)
+                        StatusChip(status = progressLabel)
+                    }
                 }
-            }
-            MarkdownText(
-                markdown = flashcard.question,
-                color = MaterialTheme.colorScheme.onSurface,
-                bodyStyle = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 14.dp)
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            FilledTonalButton(
-                onClick = onToggleAnswer,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (isAnswerVisible) "Hide Answer" else "Reveal Answer")
-            }
-
-            if (isAnswerVisible) {
-                Text(
-                    text = "Answer",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 18.dp)
-                )
                 MarkdownText(
-                    markdown = flashcard.answer,
+                    markdown = flashcard.question,
                     color = MaterialTheme.colorScheme.onSurface,
                     bodyStyle = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 14.dp)
                 )
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                FilledTonalButton(
+                    onClick = onToggleAnswer,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Reveal Answer")
+                }
+            } else {
+                Column(modifier = Modifier.graphicsLayer { rotationY = 180f }) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Answer",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatusChip(status = flashcard.difficulty)
+                            StatusChip(status = progressLabel)
+                        }
+                    }
+                    MarkdownText(
+                        markdown = flashcard.answer,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        bodyStyle = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 14.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    FilledTonalButton(
+                        onClick = onToggleAnswer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Hide Answer")
+                    }
+                }
             }
         }
     }

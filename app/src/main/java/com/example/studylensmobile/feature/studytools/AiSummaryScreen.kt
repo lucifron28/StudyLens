@@ -8,10 +8,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +32,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.R
 import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.domain.model.Summary
 import com.example.studylensmobile.ui.components.MarkdownText
@@ -147,7 +158,6 @@ private fun SummaryContent(
         }
 
         if (sourceId != null) {
-            SectionHeader(title = "Next Actions")
             SummaryActions(
                 onCreateFlashcards = { onCreateFlashcards(summary.sourceType, sourceId) },
                 onPracticeQuiz = { onPracticeQuiz(summary.sourceType, sourceId) },
@@ -222,28 +232,73 @@ private fun SummaryActions(
     onPracticeQuiz: () -> Unit,
     onAskTutor: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    StudyLensCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.lumi_thinking),
+                contentDescription = "Lumi Mascot",
+                modifier = Modifier.size(64.dp)
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Ready to test what you learned?",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ActionChip(
+                        text = "Cards",
+                        icon = Icons.Default.Style,
+                        onClick = onCreateFlashcards,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ActionChip(
+                        text = "Quiz",
+                        icon = Icons.Default.Quiz,
+                        onClick = onPracticeQuiz,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ActionChip(
+                        text = "Tutor",
+                        icon = Icons.Default.School,
+                        onClick = onAskTutor,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionChip(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
     ) {
-        Button(
-            onClick = onCreateFlashcards,
-            modifier = Modifier.weight(1f)
-        ) {
-            Text("Cards")
-        }
-        OutlinedButton(
-            onClick = onPracticeQuiz,
-            modifier = Modifier.weight(1f)
-        ) {
-            Text("Quiz")
-        }
-        OutlinedButton(
-            onClick = onAskTutor,
-            modifier = Modifier.weight(1f)
-        ) {
-            Text("Tutor")
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text, style = MaterialTheme.typography.labelSmall)
     }
 }
 

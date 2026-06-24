@@ -26,7 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.studylensmobile.R
 import com.example.studylensmobile.core.format.toDisplayLabel
+import com.example.studylensmobile.ui.components.floatingAnimation
 import com.example.studylensmobile.domain.model.Dashboard
 import com.example.studylensmobile.domain.model.DashboardActivityItem
 import com.example.studylensmobile.domain.model.DashboardContinueLearningItem
@@ -110,17 +114,33 @@ private fun DashboardContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Text(
-                text = "Hi, $firstName!",
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.headlineMedium
-            )
-            Text(
-                text = "Ready to continue your learning?",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Hi, $firstName!",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Text(
+                        text = "Ready to continue your learning?",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                Image(
+                    painter = painterResource(id = R.drawable.lumi_default),
+                    contentDescription = "Lumi Mascot",
+                    modifier = Modifier
+                        .height(80.dp)
+                        .padding(start = 16.dp)
+                        .floatingAnimation()
+                )
+            }
         }
 
         if (errorMessage != null && !isRefreshing) {
