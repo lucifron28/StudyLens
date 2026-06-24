@@ -33,3 +33,9 @@ data class UserResponse(
     @SerializedName("last_name") val lastName: String,
     val profileImageUrl: String? = null
 )
+
+data class UserUpdateRequest(
+    val username: String,
+    @SerializedName("first_name") val firstName: String,
+    @SerializedName("last_name") val lastName: String
+)

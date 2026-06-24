@@ -3,6 +3,8 @@ package com.example.studylensmobile.feature.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.studylensmobile.data.repository.AuthRepository
+import com.example.studylensmobile.core.datastore.ThemePreferences
+import com.example.studylensmobile.core.datastore.ThemeOption
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,13 +12,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val themePreferences: ThemePreferences
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
         loadProfile()
+        observeTheme()
+    }
+
+    private fun observeTheme() {
+        viewModelScope.launch {
+            themePreferences.themeOption.collect { option ->
+                _uiState.update { it.copy(themeOption = option) }
+            }
+        }
     }
 
     fun loadProfile() {
@@ -53,6 +65,12 @@ class ProfileViewModel(
                     errorMessage = result.exceptionOrNull()?.message
                 )
             }
+        }
+    }
+
+    fun setThemeOption(option: ThemeOption) {
+        viewModelScope.launch {
+            themePreferences.setThemeOption(option)
         }
     }
 }

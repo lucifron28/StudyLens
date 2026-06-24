@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "first_name", "last_name", "profileImageUrl"]
-        read_only_fields = ["id", "username", "email", "first_name", "last_name"]
+        read_only_fields = ["id", "email"]
 
     def get_profileImageUrl(self, obj):
         if hasattr(obj, "profile") and obj.profile.profile_image:

@@ -13,3 +13,13 @@ val StudyTextPrimary = Color(0xFF202124)
 val StudyTextSecondary = Color(0xFF4D4D5C)
 val StudyWarning = Color(0xFFF97316)
 val StudyError = Color(0xFFC62828)
+
+// Dark Theme Colors
+val StudyNavyDark = Color(0xFF1E293B)
+val StudyActionBlueDark = Color(0xFF3B82F6)
+val StudyBackgroundDark = Color(0xFF0F172A)
+val StudyCardDark = Color(0xFF1E293B)
+val StudyMutedSurfaceDark = Color(0xFF334155)
+val StudyTextPrimaryDark = Color(0xFFF8FAFC)
+val StudyTextSecondaryDark = Color(0xFF94A3B8)
+val StudyErrorDark = Color(0xFFEF4444)
