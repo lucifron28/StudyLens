@@ -232,10 +232,6 @@ private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: 
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            if (item.chapterTitle.isNotBlank()) {
-                StatusChip(status = item.chapterTitle)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
             Text(
                 text = item.moduleTitle,
                 style = MaterialTheme.typography.titleLarge,

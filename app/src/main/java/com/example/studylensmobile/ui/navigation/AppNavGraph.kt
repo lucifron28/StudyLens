@@ -195,8 +195,7 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                     factory = viewModelFactory {
                         BoardNotesViewModel(
                             boardScansRepository = app.container.boardScansRepository,
-                            subjectsRepository = app.container.subjectsRepository,
-                            modulesRepository = app.container.modulesRepository
+                            subjectsRepository = app.container.subjectsRepository
                         )
                     }
                 )

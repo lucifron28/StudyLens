@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.studylensmobile.core.ocr.OcrTextRecognizer
 import com.example.studylensmobile.data.repository.BoardScansRepository
-import com.example.studylensmobile.data.repository.ModulesRepository
 import com.example.studylensmobile.data.repository.SubjectsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,11 +15,9 @@ import kotlinx.coroutines.launch
 
 class BoardNotesViewModel(
     private val boardScansRepository: BoardScansRepository,
-    private val subjectsRepository: SubjectsRepository,
-    private val modulesRepository: ModulesRepository
+    private val subjectsRepository: SubjectsRepository
 ) : ViewModel() {
     private var modulesRequestVersion = 0
-    private var chaptersRequestVersion = 0
 
     private val _uiState = MutableStateFlow(BoardNotesUiState())
     val uiState: StateFlow<BoardNotesUiState> = _uiState.asStateFlow()
@@ -55,14 +52,11 @@ class BoardNotesViewModel(
 
     fun fetchModulesForSubject(subjectId: String) {
         val requestVersion = ++modulesRequestVersion
-        chaptersRequestVersion++
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoadingModules = true,
-                    isLoadingChapters = false,
-                    availableModules = emptyList(),
-                    availableChapters = emptyList()
+                    availableModules = emptyList()
                 )
             }
             val result = subjectsRepository.getSubjectModules(subjectId)
@@ -77,44 +71,19 @@ class BoardNotesViewModel(
         }
     }
 
-    fun fetchChaptersForModule(moduleId: String) {
-        val requestVersion = ++chaptersRequestVersion
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoadingChapters = true,
-                    availableChapters = emptyList()
-                )
-            }
-            val result = modulesRepository.getModuleReader(moduleId)
-            if (requestVersion != chaptersRequestVersion) return@launch
-
-            _uiState.update {
-                it.copy(
-                    availableChapters = result.getOrNull()?.chapters ?: emptyList(),
-                    isLoadingChapters = false
-                )
-            }
-        }
-    }
-
-    fun clearModulesAndChapters() {
+    fun clearModules() {
         modulesRequestVersion++
-        chaptersRequestVersion++
         _uiState.update {
             it.copy(
                 availableModules = emptyList(),
-                availableChapters = emptyList(),
-                isLoadingModules = false,
-                isLoadingChapters = false
+                isLoadingModules = false
             )
         }
     }
 
-    fun loadRelationOptions(subjectId: String?, moduleId: String?) {
-        clearModulesAndChapters()
+    fun loadModuleOptions(subjectId: String?) {
+        clearModules()
         subjectId?.let(::fetchModulesForSubject)
-        moduleId?.let(::fetchChaptersForModule)
     }
 
     fun recognizeBoardImage(context: Context, imageUri: Uri) {
@@ -170,7 +139,6 @@ class BoardNotesViewModel(
         reviewStatus: String,
         subjectId: String?,
         moduleId: String?,
-        chapterId: String?,
         imageUri: String?,
         onSaved: () -> Unit = {}
     ) {
@@ -184,7 +152,6 @@ class BoardNotesViewModel(
                     reviewStatus = reviewStatus,
                     subjectId = subjectId,
                     moduleId = moduleId,
-                    chapterId = chapterId,
                     imageUri = imageUri
                 )
             },
@@ -200,7 +167,6 @@ class BoardNotesViewModel(
         reviewStatus: String,
         subjectId: String?,
         moduleId: String?,
-        chapterId: String?,
         imageUri: String?,
         onSaved: () -> Unit = {}
     ) {
@@ -215,7 +181,6 @@ class BoardNotesViewModel(
                     reviewStatus = reviewStatus,
                     subjectId = subjectId,
                     moduleId = moduleId,
-                    chapterId = chapterId,
                     imageUri = imageUri
                 )
             },

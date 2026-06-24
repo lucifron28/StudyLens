@@ -28,8 +28,6 @@ data class DashboardContinueLearningItem(
     val id: Int,
     val moduleId: Int,
     val moduleTitle: String,
-    val chapterId: Int?,
-    val chapterTitle: String,
     val lastPosition: String,
     val status: String,
     val lastReadAt: String

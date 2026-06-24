@@ -85,13 +85,11 @@ class BoardScansRepository(
         reviewStatus: String,
         subjectId: String? = null,
         moduleId: String? = null,
-        chapterId: String? = null,
         imageUri: String? = null
     ): Result<Unit> {
         val request = BoardScanWriteRequest(
             subject = subjectId.toNullableId(),
             module = moduleId.toNullableId(),
-            chapter = chapterId.toNullableId(),
             rawOcrText = rawOcrText.trim(),
             cleanedText = cleanedText.trim(),
             summary = summary.trim(),
@@ -124,13 +122,11 @@ class BoardScansRepository(
         reviewStatus: String,
         subjectId: String? = null,
         moduleId: String? = null,
-        chapterId: String? = null,
         imageUri: String? = null
     ): Result<Unit> {
         val request = BoardScanWriteRequest(
             subject = subjectId.toNullableId(),
             module = moduleId.toNullableId(),
-            chapter = chapterId.toNullableId(),
             rawOcrText = rawOcrText.trim(),
             cleanedText = cleanedText.trim(),
             summary = summary.trim(),
@@ -173,11 +169,9 @@ private fun BoardScanWriteRequest.toMultipartFields(
     return buildMap {
         subject?.let { put("subject", it.toString().toTextPart()) }
         module?.let { put("module", it.toString().toTextPart()) }
-        chapter?.let { put("chapter", it.toString().toTextPart()) }
         if (includeEmptyRelations) {
             if (subject == null) put("subject", "".toTextPart())
             if (module == null) put("module", "".toTextPart())
-            if (chapter == null) put("chapter", "".toTextPart())
         }
         rawOcrText?.let { put("raw_ocr_text", it.toTextPart()) }
         cleanedText?.let { put("cleaned_text", it.toTextPart()) }
@@ -190,7 +184,6 @@ private fun BoardScanWriteRequest.toJsonObject(): JsonObject {
     return JsonObject().apply {
         add("subject", subject.toJsonElement())
         add("module", module.toJsonElement())
-        add("chapter", chapter.toJsonElement())
         addProperty("raw_ocr_text", rawOcrText)
         addProperty("cleaned_text", cleanedText)
         addProperty("summary", summary)
@@ -216,9 +209,7 @@ private suspend fun ContentResolver.toImagePart(uri: Uri): MultipartBody.Part = 
 }
 
 private fun BoardScanDto.toDomain(): BoardScan {
-    val displayTitle = chapterTitle
-        ?.takeIf { it.isNotBlank() }
-        ?: moduleTitle?.takeIf { it.isNotBlank() }
+    val displayTitle = moduleTitle?.takeIf { it.isNotBlank() }
         ?: subjectTitle?.takeIf { it.isNotBlank() }
         ?: "Board Note #$id"
     val text = cleanedText.ifBlank { rawOcrText }
@@ -234,8 +225,6 @@ private fun BoardScanDto.toDomain(): BoardScan {
         subjectTitle = subjectTitle.orEmpty(),
         moduleId = module?.toString(),
         moduleTitle = moduleTitle.orEmpty(),
-        chapterId = chapter?.toString(),
-        chapterTitle = chapterTitle.orEmpty(),
         imageUrl = imageUrl,
         rawOcrText = rawOcrText,
         cleanedText = cleanedText,

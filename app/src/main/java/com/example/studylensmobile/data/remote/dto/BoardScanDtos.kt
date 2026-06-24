@@ -15,8 +15,6 @@ data class BoardScanDto(
     @SerializedName("subject_title") val subjectTitle: String?,
     val module: Int?,
     @SerializedName("module_title") val moduleTitle: String?,
-    val chapter: Int?,
-    @SerializedName("chapter_title") val chapterTitle: String?,
     val image: String?,
     @SerializedName("image_url") val imageUrl: String?,
     @SerializedName("raw_ocr_text") val rawOcrText: String,
@@ -32,7 +30,6 @@ data class BoardScanDto(
 data class BoardScanWriteRequest(
     val subject: Int? = null,
     val module: Int? = null,
-    val chapter: Int? = null,
     @SerializedName("raw_ocr_text") val rawOcrText: String? = null,
     @SerializedName("cleaned_text") val cleanedText: String? = null,
     val summary: String? = null,

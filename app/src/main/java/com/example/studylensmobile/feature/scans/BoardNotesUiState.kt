@@ -1,7 +1,6 @@
 package com.example.studylensmobile.feature.scans
 
 import com.example.studylensmobile.domain.model.BoardScan
-import com.example.studylensmobile.domain.model.LearningChapter
 import com.example.studylensmobile.domain.model.Subject
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 
@@ -18,8 +17,6 @@ data class BoardNotesUiState(
     // Dropdown data for the form
     val availableSubjects: List<Subject> = emptyList(),
     val availableModules: List<SubjectModulePreview> = emptyList(),
-    val availableChapters: List<LearningChapter> = emptyList(),
     val isLoadingSubjects: Boolean = false,
     val isLoadingModules: Boolean = false,
-    val isLoadingChapters: Boolean = false,
 )

@@ -6,9 +6,7 @@ import com.example.studylensmobile.core.format.toReadableDate
 import com.example.studylensmobile.data.remote.networkFailure
 import com.example.studylensmobile.data.remote.toResult
 import com.example.studylensmobile.data.remote.api.LearningApi
-import com.example.studylensmobile.data.remote.dto.ChapterDto
 import com.example.studylensmobile.data.remote.dto.ModuleDto
-import com.example.studylensmobile.domain.model.LearningChapter
 import com.example.studylensmobile.domain.model.LearningModule
 
 class ModulesRepository(
@@ -19,18 +17,15 @@ class ModulesRepository(
             val module = learningApi.getModule(moduleId)
                 .toResult("Module") { it }
                 .getOrElse { return Result.failure(it) }
-            val chapters = learningApi.getChapters(moduleId = moduleId)
-                .toResult("Chapters") { it.results }
-                .getOrElse { return Result.failure(it) }
 
-            Result.success(module.toDomain(chapters))
+            Result.success(module.toDomain())
         } catch (e: Exception) {
             networkFailure(e)
         }
     }
 }
 
-private fun ModuleDto.toDomain(chapterDtos: List<ChapterDto>): LearningModule {
+private fun ModuleDto.toDomain(): LearningModule {
     val readableContent = listOf(markdownContent, extractedText, description)
         .firstOrNull { it.isNotBlank() }
         .orEmpty()
@@ -47,19 +42,6 @@ private fun ModuleDto.toDomain(chapterDtos: List<ChapterDto>): LearningModule {
         extractedText = extractedText,
         moduleFileUrl = moduleFileUrl,
         isFavorite = isFavorite,
-        updatedAt = updatedAt.toReadableDate(),
-        chapters = chapterDtos.map { it.toDomain() }
-    )
-}
-
-private fun ChapterDto.toDomain(): LearningChapter {
-    return LearningChapter(
-        id = id.toString(),
-        moduleId = module.toString(),
-        title = title,
-        order = order,
-        markdownContent = markdownContent,
-        extractedText = extractedText,
         updatedAt = updatedAt.toReadableDate()
     )
 }
