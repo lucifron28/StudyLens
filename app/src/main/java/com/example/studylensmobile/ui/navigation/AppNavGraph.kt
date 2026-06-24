@@ -33,6 +33,7 @@ import com.example.studylensmobile.feature.modules.ModuleReaderScreen
 import com.example.studylensmobile.feature.modules.ModuleReaderViewModel
 import com.example.studylensmobile.feature.modules.PdfReaderScreen
 import com.example.studylensmobile.feature.profile.ProfileScreen
+import com.example.studylensmobile.feature.profile.ProfileViewModel
 import com.example.studylensmobile.feature.scans.BoardNotesScreen
 import com.example.studylensmobile.feature.scans.BoardNotesViewModel
 import com.example.studylensmobile.feature.scans.CameraCaptureScreen
@@ -378,7 +379,11 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                 )
             }
             composable(AppRoutes.PROFILE) {
+                val profileViewModel: ProfileViewModel = viewModel(
+                    factory = viewModelFactory { ProfileViewModel(app.container.authRepository) }
+                )
                 ProfileScreen(
+                    viewModel = profileViewModel,
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate(AppRoutes.LOGIN) {
