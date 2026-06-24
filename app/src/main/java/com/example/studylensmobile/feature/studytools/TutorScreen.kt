@@ -31,6 +31,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,6 +46,7 @@ import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
 import com.example.studylensmobile.ui.components.StatusChip
+import com.example.studylensmobile.ui.components.floatingAnimation
 
 @Composable
 fun TutorScreen(
@@ -159,12 +163,7 @@ private fun TutorContent(
 
         if (uiState.isSending) {
             item {
-                Text(
-                    text = "Tutor is checking your answer...",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                TypingIndicatorBubble()
             }
         }
     }
@@ -198,6 +197,7 @@ private fun TutorHeader(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .size(96.dp)
+                    .floatingAnimation()
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -310,6 +310,61 @@ private fun TutorInputBar(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("I don't know yet")
+        }
+    }
+}
+
+@Composable
+private fun TypingIndicatorBubble() {
+    val infiniteTransition = rememberInfiniteTransition(label = "typing")
+    
+    val dot1 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes { durationMillis = 1000; 0f at 0; 1f at 250; 0f at 500; 0f at 1000 },
+            repeatMode = RepeatMode.Restart
+        ), label = "dot1"
+    )
+    val dot2 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes { durationMillis = 1000; 0f at 0; 0f at 150; 1f at 400; 0f at 650; 0f at 1000 },
+            repeatMode = RepeatMode.Restart
+        ), label = "dot2"
+    )
+    val dot3 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes { durationMillis = 1000; 0f at 0; 0f at 300; 1f at 550; 0f at 800; 0f at 1000 },
+            repeatMode = RepeatMode.Restart
+        ), label = "dot3"
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(18.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                listOf(dot1, dot2, dot3).forEach { scale ->
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .offset(y = (-4 * scale).dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            )
+                    )
+                }
+            }
         }
     }
 }
