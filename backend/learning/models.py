@@ -177,29 +177,30 @@ class ReadingProgress(models.Model):
         return f"{self.owner} - {self.module} ({self.progress_percentage}%)"
 
 
-class SubjectPost(models.Model):
-    class PostType(models.TextChoices):
-        ANNOUNCEMENT = "announcement", "Announcement"
+class StudyTask(models.Model):
+    class TaskType(models.TextChoices):
+        NOTE = "note", "Note"
         REMINDER = "reminder", "Reminder"
-        UPDATE = "update", "Update"
+        TODO = "todo", "To-Do"
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="subject_posts")
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="posts")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_tasks")
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="tasks")
     title = models.CharField(max_length=200)
-    content = models.TextField()
-    post_type = models.CharField(max_length=20, choices=PostType.choices, default=PostType.ANNOUNCEMENT)
-    posted_at = models.DateTimeField(default=timezone.now)
+    content = models.TextField(blank=True)
+    task_type = models.CharField(max_length=20, choices=TaskType.choices, default=TaskType.NOTE)
+    is_completed = models.BooleanField(default=False)
+    due_date = models.DateTimeField(blank=True, null=True)
     is_pinned = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-is_pinned", "-posted_at", "-created_at"]
+        ordering = ["-is_pinned", "is_completed", "-created_at"]
         indexes = [
             models.Index(fields=["owner", "subject"]),
-            models.Index(fields=["owner", "post_type"]),
+            models.Index(fields=["owner", "task_type"]),
             models.Index(fields=["owner", "is_pinned"]),
-            models.Index(fields=["owner", "posted_at"]),
+            models.Index(fields=["owner", "is_completed"]),
         ]
 
     def __str__(self) -> str:

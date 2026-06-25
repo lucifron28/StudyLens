@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsOwner
 from learning.filters import apply_exact_query_filters
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, StudyTask, Subject, Tag
 from learning.serializers import (
     BoardScanSerializer,
     ChapterSerializer,
@@ -18,7 +18,7 @@ from learning.serializers import (
     ReadingProgressSerializer,
     SubjectSerializer,
     SubjectOverviewSerializer,
-    SubjectPostSerializer,
+    StudyTaskSerializer,
     TagSerializer,
 )
 from studytools.models import Quiz, QuizAttempt, Summary
@@ -58,23 +58,24 @@ class DashboardView(APIView):
         progress_qs = ReadingProgress.objects.select_related("module", "chapter").filter(owner=user)
         average_progress = progress_qs.aggregate(value=Avg("progress_percentage"))["value"] or 0
 
-        recent_posts = SubjectPost.objects.select_related("subject").filter(owner=user).order_by(
+        recent_tasks = StudyTask.objects.select_related("subject").filter(owner=user).order_by(
             "-is_pinned",
             "-posted_at",
         )[:5]
 
-        upcoming = [
-            {
-                "type": "post",
-                "id": post.id,
-                "title": post.title,
-                "description": post.content[:160],
-                "subject": post.subject_id,
-                "subject_title": post.subject.title,
-                "posted_at": post.posted_at,
-            }
-            for post in recent_posts
-        ]
+        upcoming = []
+        for task in recent_tasks:
+            upcoming.append(
+                {
+                    "type": "task",
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.content[:100] + ("..." if len(task.content) > 100 else ""),
+                    "subject": task.subject.id,
+                    "subject_title": task.subject.title,
+                    "posted_at": task.created_at,
+                }
+            )
 
         continue_learning = [
             {
@@ -97,8 +98,8 @@ class DashboardView(APIView):
             for scan in BoardScan.objects.filter(owner=user).order_by("-created_at")[:3]
         )
         recent_activity.extend(
-            _activity_item("post", post.id, post.title, post.content[:120], post.created_at)
-            for post in SubjectPost.objects.filter(owner=user).order_by("-created_at")[:3]
+            _activity_item("task", task.id, task.title, task.content[:120], task.created_at)
+            for task in StudyTask.objects.filter(owner=user).order_by("-created_at")[:3]
         )
         recent_activity.extend(
             _activity_item("summary", summary.id, "Summary generated", summary.content[:120], summary.created_at)
@@ -155,7 +156,7 @@ class SubjectViewSet(OwnedModelViewSet):
 
         latest_modules = Module.objects.filter(owner=user, subject=subject).order_by("-updated_at")[:5]
         recent_board_scans = BoardScan.objects.filter(owner=user, subject=subject).order_by("-created_at")[:5]
-        latest_posts = SubjectPost.objects.filter(owner=user, subject=subject).order_by("-is_pinned", "-posted_at")[:5]
+        latest_tasks = StudyTask.objects.filter(owner=user, subject=subject).order_by("-is_pinned", "-created_at")[:5]
 
         return Response(
             {
@@ -164,7 +165,7 @@ class SubjectViewSet(OwnedModelViewSet):
                 "description": subject.description,
                 "module_count": subject_data["module_count"],
                 "board_scan_count": subject_data["board_scan_count"],
-                "post_count": subject_data["post_count"],
+                "task_count": subject_data["task_count"],
                 "progress_percentage": subject_data["progress_percentage"],
                 "latest_modules": [
                     {
@@ -186,16 +187,18 @@ class SubjectViewSet(OwnedModelViewSet):
                     }
                     for scan in recent_board_scans
                 ],
-                "latest_posts": [
+                "tasks": [
                     {
-                        "id": post.id,
-                        "title": post.title,
-                        "content": post.content,
-                        "post_type": post.post_type,
-                        "is_pinned": post.is_pinned,
-                        "posted_at": post.posted_at,
+                        "id": task.id,
+                        "title": task.title,
+                        "content": task.content,
+                        "task_type": task.task_type,
+                        "is_completed": task.is_completed,
+                        "due_date": task.due_date,
+                        "is_pinned": task.is_pinned,
+                        "created_at": task.created_at,
                     }
-                    for post in latest_posts
+                    for task in latest_tasks
                 ],
             }
         )
@@ -309,12 +312,12 @@ class ReadingProgressViewSet(OwnedModelViewSet):
         return Response(self.get_serializer(progress).data, status=response_status)
 
 
-class SubjectPostViewSet(OwnedModelViewSet):
-    queryset = SubjectPost.objects.select_related("subject").all()
-    serializer_class = SubjectPostSerializer
+class StudyTaskViewSet(OwnedModelViewSet):
+    queryset = StudyTask.objects.select_related("subject").all()
+    serializer_class = StudyTaskSerializer
     search_fields = ["title", "content", "subject__title"]
-    ordering_fields = ["posted_at", "created_at", "updated_at", "is_pinned"]
-    ordering = ["-is_pinned", "-posted_at", "-created_at"]
+    ordering_fields = ["created_at", "updated_at", "is_pinned", "is_completed", "due_date"]
+    ordering = ["-is_pinned", "is_completed", "-created_at"]
 
     def get_queryset(self):
         queryset = super().get_queryset()

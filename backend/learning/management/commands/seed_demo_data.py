@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from ai_services.models import TutorMessage, TutorSession
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, StudyTask, Subject, Tag
 from studytools.models import Difficulty, Flashcard, Quiz, QuizAttempt, QuizQuestion, SourceType, Summary
 
 
@@ -30,7 +30,7 @@ class Command(BaseCommand):
         subjects = self._create_subjects(user)
         tags = self._create_tags(user)
         modules, chapters = self._create_modules_and_chapters(user, subjects)
-        self._create_posts(user, subjects, now)
+        self._create_study_tasks(user, subjects, now)
         scans = self._create_board_scans(user, subjects, modules, chapters, tags, now)
         self._create_reading_progress(user, modules, chapters)
         self._create_study_tools(user, modules, chapters, scans, now)
@@ -61,7 +61,7 @@ class Command(BaseCommand):
         TutorSession.objects.filter(owner=user).delete()
         ReadingProgress.objects.filter(owner=user).delete()
         BoardScan.objects.filter(owner=user).delete()
-        SubjectPost.objects.filter(owner=user).delete()
+        StudyTask.objects.filter(owner=user).delete()
         Chapter.objects.filter(owner=user).delete()
         Module.objects.filter(owner=user).delete()
         Tag.objects.filter(owner=user).delete()
@@ -220,42 +220,37 @@ class Command(BaseCommand):
 
         return modules, chapters
 
-    def _create_posts(self, user, subjects, now):
-        posts = [
+    def _create_study_tasks(self, user, subjects, now):
+        cs_subject = list(subjects.values())[0]
+        tasks_to_create = [
             (
-                "New Lab Instructions",
-                "DB204 lab instructions are posted. Bring your ER diagram and SQL draft.",
-                "Database Systems",
-                SubjectPost.PostType.ANNOUNCEMENT,
-                now,
+                "Read Chapter 1",
+                "Don't forget to read chapter 1 of Introduction before next week's lecture.",
+                StudyTask.TaskType.TODO,
                 True,
             ),
             (
-                "Prototype Review Checklist",
-                "Check that all screens have consistent navigation and readable spacing.",
-                "Software Engineering",
-                SubjectPost.PostType.REMINDER,
-                now - timedelta(hours=2),
+                "CS50 Lecture Notes Uploaded",
+                "Uploaded the notes from the CS50 introductory lecture.",
+                StudyTask.TaskType.NOTE,
                 False,
             ),
             (
-                "Android UI Consultation",
-                "Bring questions about layout, state, and navigation for the next lab meeting.",
-                "Native Android Development",
-                SubjectPost.PostType.UPDATE,
-                now - timedelta(hours=5),
+                "Midterm Date Changed",
+                "The midterm has been pushed back to November 15th.",
+                StudyTask.TaskType.REMINDER,
                 False,
             ),
         ]
-        for title, content, subject_title, post_type, posted_at, is_pinned in posts:
-            SubjectPost.objects.update_or_create(
+
+        for title, content, task_type, is_pinned in tasks_to_create:
+            StudyTask.objects.update_or_create(
                 owner=user,
-                subject=subjects[subject_title],
+                subject=cs_subject,
                 title=title,
                 defaults={
                     "content": content,
-                    "post_type": post_type,
-                    "posted_at": posted_at,
+                    "task_type": task_type,
                     "is_pinned": is_pinned,
                 },
             )
