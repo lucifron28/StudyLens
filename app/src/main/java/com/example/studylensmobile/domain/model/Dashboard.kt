@@ -21,6 +21,9 @@ data class DashboardUpcomingItem(
     val description: String,
     val subjectId: Int?,
     val subjectTitle: String,
+    val taskType: String,
+    val isCompleted: Boolean,
+    val dueDate: String?,
     val postedAt: String?
 )
 

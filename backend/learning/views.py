@@ -58,7 +58,8 @@ class DashboardView(APIView):
         progress_qs = ReadingProgress.objects.select_related("module", "chapter").filter(owner=user)
         average_progress = progress_qs.aggregate(value=Avg("progress_percentage"))["value"] or 0
 
-        recent_tasks = StudyTask.objects.select_related("subject").filter(owner=user).order_by(
+        recent_tasks = StudyTask.objects.select_related("subject").filter(owner=user, is_completed=False).order_by(
+            "due_date",
             "-is_pinned",
             "-created_at",
         )[:5]
@@ -73,6 +74,9 @@ class DashboardView(APIView):
                     "description": task.content[:100] + ("..." if len(task.content) > 100 else ""),
                     "subject": task.subject.id,
                     "subject_title": task.subject.title,
+                    "task_type": task.task_type,
+                    "is_completed": task.is_completed,
+                    "due_date": task.due_date,
                     "posted_at": task.created_at,
                 }
             )

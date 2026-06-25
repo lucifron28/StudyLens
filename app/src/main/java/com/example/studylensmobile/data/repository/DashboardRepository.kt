@@ -69,6 +69,9 @@ private fun DashboardUpcomingItemDto.toDomain(): DashboardUpcomingItem {
         description = description,
         subjectId = subject,
         subjectTitle = subjectTitle,
+        taskType = taskType.orEmpty(),
+        isCompleted = isCompleted,
+        dueDate = dueDate?.toReadableDate(),
         postedAt = postedAt?.toReadableDate()
     )
 }

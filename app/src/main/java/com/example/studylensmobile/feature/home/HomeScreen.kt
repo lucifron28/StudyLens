@@ -39,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.ui.res.painterResource
 import com.example.studylensmobile.R
 import com.example.studylensmobile.core.format.toDisplayLabel
@@ -55,6 +57,8 @@ import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensTopBar
 import com.example.studylensmobile.ui.components.SectionHeader
 import com.example.studylensmobile.ui.components.StatusChip
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 @Composable
 fun HomeScreen(viewModel: HomeViewModel) {
@@ -137,6 +141,22 @@ private fun DashboardContent(
                 firstName = firstName,
                 modulesInProgress = dashboard.stats.modulesInProgress
             )
+        }
+
+        if (dashboard.upcoming.isNotEmpty()) {
+            item {
+                SectionHeader(title = "Upcoming Tasks")
+            }
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
+                ) {
+                    items(dashboard.upcoming, key = { "upcoming-${it.id}" }) { item ->
+                        UpcomingTaskCard(item = item, modifier = Modifier.width(300.dp))
+                    }
+                }
+            }
         }
 
         if (dashboard.continueLearning.isNotEmpty()) {
@@ -225,6 +245,76 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
 
 
 @Composable
+private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = Modifier) {
+    StudyLensCard(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusChip(status = item.taskType.ifBlank { item.type }.toDisplayLabel())
+                item.dueDate?.let { dueDate ->
+                    Text(
+                        text = dueDate.toDueLabel(),
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Icon(
+                    imageVector = if (item.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = null,
+                    tint = if (item.isCompleted) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = item.subjectTitle,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = 2.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (item.description.isNotBlank()) {
+                        Text(
+                            text = item.description,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 6.dp),
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: Modifier = Modifier) {
     StudyLensCard(modifier = modifier) {
         Column(
@@ -246,6 +336,20 @@ private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: 
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+    }
+}
+
+private fun String.toDueLabel(): String {
+    val dueDate = try {
+        LocalDate.parse(this)
+    } catch (_: DateTimeParseException) {
+        return "Due $this"
+    }
+    val today = LocalDate.now()
+    return when (dueDate) {
+        today -> "Due today"
+        today.plusDays(1) -> "Due tomorrow"
+        else -> "Due $this"
     }
 }
 

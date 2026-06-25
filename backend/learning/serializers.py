@@ -398,6 +398,9 @@ class DashboardUpcomingItemSerializer(serializers.Serializer):
     subject_title = serializers.CharField(allow_blank=True)
     module = serializers.IntegerField(allow_null=True, required=False)
     module_title = serializers.CharField(allow_blank=True, required=False)
+    task_type = serializers.CharField(required=False, allow_blank=True)
+    is_completed = serializers.BooleanField(required=False)
+    due_date = serializers.DateTimeField(allow_null=True, required=False)
     posted_at = serializers.DateTimeField(allow_null=True, required=False)
 
 
