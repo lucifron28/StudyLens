@@ -5,6 +5,7 @@ import com.example.studylensmobile.data.local.dao.BoardScanDao
 import com.example.studylensmobile.data.local.dao.SubjectDao
 import com.example.studylensmobile.data.remote.apiResult
 import com.example.studylensmobile.data.remote.api.LearningApi
+import com.example.studylensmobile.data.remote.dto.DashboardActivityItemDto
 import com.example.studylensmobile.data.remote.dto.DashboardBoardScanDto
 import com.example.studylensmobile.data.remote.dto.DashboardDto
 import com.example.studylensmobile.data.remote.dto.DashboardUpcomingItemDto
