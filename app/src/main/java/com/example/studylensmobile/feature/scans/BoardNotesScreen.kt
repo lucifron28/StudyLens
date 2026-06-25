@@ -571,18 +571,48 @@ private fun BoardNoteFormDialog(
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = reviewStatus,
-                    onValueChange = {
-                        reviewStatus = it
-                        validationMessage = null
-                    },
-                    enabled = !isSaving,
-                    label = { Text("Review status") },
-                    placeholder = { Text("new, needs_review, reviewed, mastered") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                var statusDropdownExpanded by remember { mutableStateOf(false) }
+                val statusOptions = listOf(
+                    "new" to "New",
+                    "needs_review" to "Needs Review",
+                    "reviewed" to "Reviewed",
+                    "mastered" to "Mastered"
                 )
+                val selectedStatusLabel = statusOptions.firstOrNull { it.first == reviewStatus }?.second ?: "New"
+
+                ExposedDropdownMenuBox(
+                    expanded = statusDropdownExpanded,
+                    onExpandedChange = { if (!isSaving) statusDropdownExpanded = it },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = selectedStatusLabel,
+                        onValueChange = {},
+                        readOnly = true,
+                        enabled = !isSaving,
+                        label = { Text("Review status") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusDropdownExpanded) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = statusDropdownExpanded,
+                        onDismissRequest = { statusDropdownExpanded = false }
+                    ) {
+                        statusOptions.forEach { (value, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    reviewStatus = value
+                                    statusDropdownExpanded = false
+                                    validationMessage = null
+                                }
+                            )
+                        }
+                    }
+                }
                 // Subject dropdown
                 val selectedSubjectLabel = availableSubjects
                     .firstOrNull { it.id == subjectId }?.title
