@@ -12,7 +12,7 @@ data class SubjectOverview(
     val subject: Subject,
     val latestModules: List<SubjectModulePreview>,
     val recentBoardScans: List<SubjectBoardScanPreview>,
-    val latestPosts: List<SubjectPostPreview>
+    val tasks: List<StudyTaskPreview>
 )
 
 data class SubjectModulePreview(
@@ -31,11 +31,13 @@ data class SubjectBoardScanPreview(
     val createdAt: String
 )
 
-data class SubjectPostPreview(
+data class StudyTaskPreview(
     val id: String,
     val title: String,
     val content: String,
-    val postType: String,
+    val taskType: String,
+    val isCompleted: Boolean,
+    val dueDate: String?,
     val isPinned: Boolean,
-    val postedAt: String
+    val createdAt: String
 )

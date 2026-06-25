@@ -8,7 +8,7 @@ from learning.views import (
     ModuleViewSet,
     ReadingProgressViewSet,
     SubjectViewSet,
-    SubjectPostViewSet,
+    StudyTaskViewSet,
     TagViewSet,
 )
 
@@ -20,7 +20,7 @@ router.register("chapters", ChapterViewSet, basename="chapter")
 router.register("tags", TagViewSet, basename="tag")
 router.register("board-scans", BoardScanViewSet, basename="board-scan")
 router.register("reading-progress", ReadingProgressViewSet, basename="reading-progress")
-router.register("posts", SubjectPostViewSet, basename="post")
+router.register("tasks", StudyTaskViewSet, basename="task")
 
 urlpatterns = [
     path("dashboard/", DashboardView.as_view(), name="learning-dashboard"),

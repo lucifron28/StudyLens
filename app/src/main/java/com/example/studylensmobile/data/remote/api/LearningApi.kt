@@ -13,6 +13,8 @@ import com.example.studylensmobile.data.remote.dto.PaginatedSubjectsDto
 import com.example.studylensmobile.data.remote.dto.SubjectDto
 import com.example.studylensmobile.data.remote.dto.SubjectOverviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectWriteRequest
+import com.example.studylensmobile.data.remote.dto.StudyTaskPreviewDto
+import com.example.studylensmobile.data.remote.dto.StudyTaskWriteRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -147,6 +149,22 @@ interface LearningApi {
     @DELETE("api/learning/modules/{moduleId}/")
     suspend fun deleteModule(
         @Path("moduleId") moduleId: String
+    ): Response<Unit>
+
+    @POST("api/learning/tasks/")
+    suspend fun createStudyTask(
+        @Body request: StudyTaskWriteRequest
+    ): Response<StudyTaskPreviewDto>
+
+    @PATCH("api/learning/tasks/{taskId}/")
+    suspend fun updateStudyTask(
+        @Path("taskId") taskId: String,
+        @Body request: StudyTaskWriteRequest
+    ): Response<StudyTaskPreviewDto>
+
+    @DELETE("api/learning/tasks/{taskId}/")
+    suspend fun deleteStudyTask(
+        @Path("taskId") taskId: String
     ): Response<Unit>
 
 }

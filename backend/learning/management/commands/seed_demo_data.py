@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from ai_services.models import TutorMessage, TutorSession
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, StudyTask, Subject, Tag
 from studytools.models import Difficulty, Flashcard, Quiz, QuizAttempt, QuizQuestion, SourceType, Summary
 
 
@@ -30,7 +30,7 @@ class Command(BaseCommand):
         subjects = self._create_subjects(user)
         tags = self._create_tags(user)
         modules, chapters = self._create_modules_and_chapters(user, subjects)
-        self._create_posts(user, subjects, now)
+        self._create_study_tasks(user, subjects, now)
         scans = self._create_board_scans(user, subjects, modules, chapters, tags, now)
         self._create_reading_progress(user, modules, chapters)
         self._create_study_tools(user, modules, chapters, scans, now)
@@ -61,7 +61,7 @@ class Command(BaseCommand):
         TutorSession.objects.filter(owner=user).delete()
         ReadingProgress.objects.filter(owner=user).delete()
         BoardScan.objects.filter(owner=user).delete()
-        SubjectPost.objects.filter(owner=user).delete()
+        StudyTask.objects.filter(owner=user).delete()
         Chapter.objects.filter(owner=user).delete()
         Module.objects.filter(owner=user).delete()
         Tag.objects.filter(owner=user).delete()
@@ -88,6 +88,11 @@ class Command(BaseCommand):
                 "Calculus Concepts",
                 "Limits, derivatives, and integrals for technical problem solving.",
                 "#5651A6",
+            ),
+            (
+                "C Programming Fundamentals",
+                "Introduction to C programming, memory management, pointers, and data structures.",
+                "#D44000",
             ),
         ]
         subjects = {}
@@ -149,6 +154,10 @@ class Command(BaseCommand):
                 ("Limits Refresher", "Understanding behavior near a point."),
                 ("Derivatives", "Rates of change and tangent lines."),
                 ("Integrals", "Area under curves and accumulation."),
+            ],
+            "C Programming Fundamentals": [
+                ("Pointers and Memory", "Understanding how pointers work and managing memory manually.", True),
+                ("Data Structures", "Implementing linked lists, stacks, and queues in C.", False),
             ],
         }
 
@@ -220,42 +229,72 @@ class Command(BaseCommand):
 
         return modules, chapters
 
-    def _create_posts(self, user, subjects, now):
-        posts = [
+    def _create_study_tasks(self, user, subjects, now):
+        cs_subject = list(subjects.values())[0]
+        tasks_to_create = [
             (
-                "New Lab Instructions",
-                "DB204 lab instructions are posted. Bring your ER diagram and SQL draft.",
-                "Database Systems",
-                SubjectPost.PostType.ANNOUNCEMENT,
-                now,
+                "Read Chapter 1",
+                "Don't forget to read chapter 1 of Introduction before next week's lecture.",
+                StudyTask.TaskType.TODO,
                 True,
             ),
             (
-                "Prototype Review Checklist",
-                "Check that all screens have consistent navigation and readable spacing.",
-                "Software Engineering",
-                SubjectPost.PostType.REMINDER,
-                now - timedelta(hours=2),
+                "CS50 Lecture Notes Uploaded",
+                "Uploaded the notes from the CS50 introductory lecture.",
+                StudyTask.TaskType.NOTE,
                 False,
             ),
             (
-                "Android UI Consultation",
-                "Bring questions about layout, state, and navigation for the next lab meeting.",
-                "Native Android Development",
-                SubjectPost.PostType.UPDATE,
-                now - timedelta(hours=5),
+                "Midterm Date Changed",
+                "The midterm has been pushed back to November 15th.",
+                StudyTask.TaskType.REMINDER,
                 False,
             ),
         ]
-        for title, content, subject_title, post_type, posted_at, is_pinned in posts:
-            SubjectPost.objects.update_or_create(
+
+        c_tasks_to_create = [
+            (
+                "Finish Linked List Assignment",
+                "Due next Friday. Must use malloc and free correctly.",
+                StudyTask.TaskType.TODO,
+                True,
+            ),
+            (
+                "Midterm 1 Topics",
+                "Pointers, arrays, and basic dynamic memory.",
+                StudyTask.TaskType.NOTE,
+                False,
+            ),
+            (
+                "Debug Session with TA",
+                "Went over memory leaks in valgrind. Need to remember to free all mallocs in reverse order.",
+                StudyTask.TaskType.NOTE,
+                False,
+            ),
+        ]
+
+        c_subject = subjects.get("C Programming Fundamentals")
+        if c_subject:
+            for title, content, task_type, is_pinned in c_tasks_to_create:
+                StudyTask.objects.update_or_create(
+                    owner=user,
+                    subject=c_subject,
+                    title=title,
+                    defaults={
+                        "content": content,
+                        "task_type": task_type,
+                        "is_pinned": is_pinned,
+                    },
+                )
+
+        for title, content, task_type, is_pinned in tasks_to_create:
+            StudyTask.objects.update_or_create(
                 owner=user,
-                subject=subjects[subject_title],
+                subject=cs_subject,
                 title=title,
                 defaults={
                     "content": content,
-                    "post_type": post_type,
-                    "posted_at": posted_at,
+                    "task_type": task_type,
                     "is_pinned": is_pinned,
                 },
             )
@@ -294,6 +333,28 @@ class Command(BaseCommand):
                 BoardScan.ReviewStatus.NEW,
                 ["important"],
                 now - timedelta(days=3),
+            ),
+            (
+                "C Programming Fundamentals",
+                "Pointers and Memory",
+                "Overview",
+                "Oct 01 - Pointer Arithmetic",
+                "Pointer arithmetic is tied to the data type size. Array names decay to pointers. Double pointers (**p) are used for matrix allocations.",
+                "Board note on pointer arithmetic and memory.",
+                BoardScan.ReviewStatus.NEW,
+                ["important", "review"],
+                now - timedelta(days=2),
+            ),
+            (
+                "C Programming Fundamentals",
+                "Data Structures",
+                "Overview",
+                "Oct 15 - Linked Lists",
+                "A linked list node contains data and a pointer to the next node. Useful for dynamic size allocations compared to arrays.",
+                "Board note on linked lists creation and traversal.",
+                BoardScan.ReviewStatus.NEEDS_REVIEW,
+                ["important"],
+                now - timedelta(days=1),
             ),
             (
                 "Database Systems",

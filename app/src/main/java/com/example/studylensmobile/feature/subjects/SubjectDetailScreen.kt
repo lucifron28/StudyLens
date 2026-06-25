@@ -38,16 +38,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
-import com.example.studylensmobile.domain.model.SubjectPostPreview
+import com.example.studylensmobile.domain.model.StudyTaskPreview
 import com.example.studylensmobile.core.utils.displayName
 import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensInlineError
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.text.style.TextDecoration
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
 import com.example.studylensmobile.ui.components.SectionHeader
@@ -62,8 +71,12 @@ fun SubjectDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val overview = uiState.overview
     var showCreateModuleDialog by remember { mutableStateOf(false) }
+    var showCreateTaskDialog by remember { mutableStateOf(false) }
+    var showAddActionSheet by remember { mutableStateOf(false) }
     var editingModule by remember { mutableStateOf<SubjectModulePreview?>(null) }
     var deletingModule by remember { mutableStateOf<SubjectModulePreview?>(null) }
+    var editingTask by remember { mutableStateOf<StudyTaskPreview?>(null) }
+    var deletingTask by remember { mutableStateOf<StudyTaskPreview?>(null) }
 
     Scaffold(
         topBar = {
@@ -79,12 +92,12 @@ fun SubjectDetailScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { showCreateModuleDialog = true },
+                        onClick = { showAddActionSheet = true },
                         enabled = !uiState.isMutating
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Add module"
+                            contentDescription = "Add to subject"
                         )
                     }
                     IconButton(
@@ -128,9 +141,50 @@ fun SubjectDetailScreen(
                     onNavigateToModuleReader = onNavigateToModuleReader,
                     onEditModule = { editingModule = it },
                     onDeleteModule = { deletingModule = it },
+                    onEditTask = { editingTask = it },
+                    onDeleteTask = { deletingTask = it },
+                    onTaskChecked = { task, isChecked ->
+                        viewModel.updateTask(
+                            taskId = task.id.toString(),
+                            title = task.title,
+                            content = task.content,
+                            taskType = task.taskType,
+                            isCompleted = isChecked,
+                            dueDate = task.dueDate,
+                            isPinned = task.isPinned
+                        )
+                    },
                     actionsEnabled = !uiState.isMutating,
                     modifier = Modifier.padding(padding)
                 )
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    if (showAddActionSheet) {
+        ModalBottomSheet(onDismissRequest = { showAddActionSheet = false }) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = "Add to Subject", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                ListItem(
+                    headlineContent = { Text("Add Module") },
+                    supportingContent = { Text("Create a new learning module") },
+                    leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    modifier = Modifier.clickable { 
+                        showAddActionSheet = false
+                        showCreateModuleDialog = true 
+                    }
+                )
+                ListItem(
+                    headlineContent = { Text("Add Task / Note") },
+                    supportingContent = { Text("Create a to-do item, reminder, or note") },
+                    leadingContent = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                    modifier = Modifier.clickable { 
+                        showAddActionSheet = false
+                        showCreateTaskDialog = true 
+                    }
+                )
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -186,6 +240,60 @@ fun SubjectDetailScreen(
             onDismiss = { deletingModule = null }
         )
     }
+
+    if (showCreateTaskDialog && overview != null) {
+        StudyTaskFormDialog(
+            task = null,
+            isSaving = uiState.isMutating,
+            onDismiss = { showCreateTaskDialog = false },
+            onSave = { title, content, taskType, isCompleted, dueDate, isPinned ->
+                viewModel.createTask(
+                    title = title,
+                    content = content,
+                    taskType = taskType,
+                    isCompleted = isCompleted,
+                    dueDate = dueDate,
+                    isPinned = isPinned,
+                    onSaved = { showCreateTaskDialog = false }
+                )
+            }
+        )
+    }
+
+    editingTask?.let { task ->
+        StudyTaskFormDialog(
+            task = task,
+            isSaving = uiState.isMutating,
+            onDismiss = { editingTask = null },
+            onSave = { title, content, taskType, isCompleted, dueDate, isPinned ->
+                viewModel.updateTask(
+                    taskId = task.id.toString(),
+                    title = title,
+                    content = content,
+                    taskType = taskType,
+                    isCompleted = isCompleted,
+                    dueDate = dueDate,
+                    isPinned = isPinned,
+                    onSaved = { editingTask = null }
+                )
+            }
+        )
+    }
+
+    deletingTask?.let { task ->
+        DeleteConfirmationDialog(
+            title = "Delete task/log?",
+            message = "Are you sure you want to delete ${task.title}?",
+            isDeleting = uiState.isMutating,
+            onConfirm = {
+                viewModel.deleteTask(
+                    taskId = task.id.toString(),
+                    onDeleted = { deletingTask = null }
+                )
+            },
+            onDismiss = { deletingTask = null }
+        )
+    }
 }
 @Composable
 private fun SubjectOverviewContent(
@@ -197,6 +305,9 @@ private fun SubjectOverviewContent(
     onNavigateToModuleReader: (String) -> Unit,
     onEditModule: (SubjectModulePreview) -> Unit,
     onDeleteModule: (SubjectModulePreview) -> Unit,
+    onEditTask: (StudyTaskPreview) -> Unit,
+    onDeleteTask: (StudyTaskPreview) -> Unit,
+    onTaskChecked: (StudyTaskPreview, Boolean) -> Unit,
     actionsEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -248,15 +359,21 @@ private fun SubjectOverviewContent(
         }
 
         item {
-            SectionHeader(title = "Latest Posts")
+            SectionHeader(title = "Tasks & Notes")
         }
-        if (overview.latestPosts.isEmpty()) {
+        if (overview.tasks.isEmpty()) {
             item {
-                StudyLensEmptyState(text = "No posts for this subject yet.")
+                StudyLensEmptyState(text = "No tasks or notes recorded yet.")
             }
         } else {
-            items(overview.latestPosts, key = { "post-${it.id}" }) { post ->
-                PostPreviewCard(post = post)
+            items(overview.tasks, key = { "task-${it.id}" }) { task ->
+                StudyTaskPreviewCard(
+                    task = task,
+                    onEdit = { onEditTask(task) },
+                    onDelete = { onDeleteTask(task) },
+                    onCheckedChange = { isChecked -> onTaskChecked(task, isChecked) },
+                    actionsEnabled = actionsEnabled
+                )
             }
         }
     }
@@ -455,15 +572,17 @@ private fun ModuleFormDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                item {
-                    OutlinedTextField(
-                        value = markdownContent,
-                        onValueChange = { markdownContent = it },
-                        enabled = !isSaving,
-                        label = { Text(if (module == null) "Markdown Content (Optional)" else "New markdown (Optional)") },
-                        minLines = 3,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                if (contentType.trim().lowercase() in listOf("markdown", "text", "")) {
+                    item {
+                        OutlinedTextField(
+                            value = markdownContent,
+                            onValueChange = { markdownContent = it },
+                            enabled = !isSaving,
+                            label = { Text(if (module == null) "Markdown Content (Optional)" else "New markdown (Optional)") },
+                            minLines = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 item {
                     validationMessage?.let { message ->
@@ -554,42 +673,103 @@ private fun BoardScanPreviewCard(boardScan: SubjectBoardScanPreview) {
 }
 
 @Composable
-private fun PostPreviewCard(post: SubjectPostPreview) {
+private fun StudyTaskPreviewCard(
+    task: StudyTaskPreview,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onCheckedChange: (Boolean) -> Unit,
+    actionsEnabled: Boolean
+) {
     StudyLensCard {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = post.title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+            if (task.taskType.lowercase() in listOf("todo", "reminder")) {
+                Checkbox(
+                    checked = task.isCompleted,
+                    onCheckedChange = onCheckedChange,
+                    enabled = actionsEnabled,
+                    modifier = Modifier.padding(end = 8.dp)
                 )
-                StatusChip(status = post.postType)
             }
-            Text(
-                text = post.content,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            Text(
-                text = post.postedAt,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = task.title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatusChip(status = task.taskType.toDisplayLabel())
+                }
+                if (task.content.isNotBlank()) {
+                    Text(
+                        text = task.content,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = task.createdAt,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (task.dueDate != null) {
+                        Text(
+                            text = "Due: ${task.dueDate}",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+            
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Row {
+                    IconButton(
+                        onClick = onEdit,
+                        enabled = actionsEnabled
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit task",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(
+                        onClick = onDelete,
+                        enabled = actionsEnabled
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete task",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
         }
     }
 }

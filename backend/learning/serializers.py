@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from learning.models import BoardScan, Chapter, Module, ReadingProgress, Subject, SubjectPost, Tag
+from learning.models import BoardScan, Chapter, Module, ReadingProgress, StudyTask, Subject, Tag
 from learning.services.extraction import ExtractionError, extract_pdf_text, extract_docx_text, extract_pptx_text
 
 MAX_MODULE_FILE_SIZE_BYTES = 20 * 1024 * 1024
@@ -33,7 +33,7 @@ class OwnedRelationMixin:
 class SubjectSerializer(serializers.ModelSerializer):
     module_count = serializers.SerializerMethodField()
     board_scan_count = serializers.SerializerMethodField()
-    post_count = serializers.SerializerMethodField()
+    task_count = serializers.SerializerMethodField()
     progress_percentage = serializers.SerializerMethodField()
     item_summary = serializers.SerializerMethodField()
 
@@ -46,7 +46,7 @@ class SubjectSerializer(serializers.ModelSerializer):
             "color",
             "module_count",
             "board_scan_count",
-            "post_count",
+            "task_count",
             "progress_percentage",
             "item_summary",
             "created_at",
@@ -56,7 +56,7 @@ class SubjectSerializer(serializers.ModelSerializer):
             "id",
             "module_count",
             "board_scan_count",
-            "post_count",
+            "task_count",
             "progress_percentage",
             "item_summary",
             "created_at",
@@ -81,14 +81,14 @@ class SubjectSerializer(serializers.ModelSerializer):
     def get_board_scan_count(self, obj) -> int:
         return getattr(obj, "board_scan_count_value", None) or obj.board_scans.count()
 
-    def get_post_count(self, obj) -> int:
-        return getattr(obj, "post_count_value", None) or obj.posts.count()
+    def get_task_count(self, obj) -> int:
+        return getattr(obj, "task_count_value", None) or obj.tasks.count()
 
     def get_progress_percentage(self, obj) -> int:
         return round(getattr(obj, "progress_average", None) or 0)
 
     def get_item_summary(self, obj) -> str:
-        return f"{self.get_module_count(obj)} Modules | {self.get_board_scan_count(obj)} Notes | {self.get_post_count(obj)} Posts"
+        return f"{self.get_module_count(obj)} Modules | {self.get_board_scan_count(obj)} Notes | {self.get_task_count(obj)} Tasks"
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -354,21 +354,22 @@ class ReadingProgressSerializer(OwnedRelationMixin, serializers.ModelSerializer)
         return attrs
 
 
-class SubjectPostSerializer(OwnedRelationMixin, serializers.ModelSerializer):
+class StudyTaskSerializer(OwnedRelationMixin, serializers.ModelSerializer):
     subject_title = serializers.CharField(source="subject.title", read_only=True)
 
     owned_relation_fields = {"subject": Subject}
 
     class Meta:
-        model = SubjectPost
+        model = StudyTask
         fields = [
             "id",
             "subject",
             "subject_title",
             "title",
             "content",
-            "post_type",
-            "posted_at",
+            "task_type",
+            "is_completed",
+            "due_date",
             "is_pinned",
             "created_at",
             "updated_at",
@@ -434,8 +435,8 @@ class SubjectOverviewSerializer(serializers.Serializer):
     description = serializers.CharField(allow_blank=True)
     module_count = serializers.IntegerField()
     board_scan_count = serializers.IntegerField()
-    post_count = serializers.IntegerField()
+    task_count = serializers.IntegerField()
     progress_percentage = serializers.IntegerField()
     latest_modules = serializers.ListField(child=serializers.DictField())
     recent_board_scans = serializers.ListField(child=serializers.DictField())
-    latest_posts = serializers.ListField(child=serializers.DictField())
+    tasks = serializers.ListField(child=serializers.DictField())
