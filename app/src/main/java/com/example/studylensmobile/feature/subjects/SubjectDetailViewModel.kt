@@ -129,7 +129,7 @@ class SubjectDetailViewModel(
         isPinned: Boolean = false,
         onSaved: () -> Unit
     ) {
-        performMutation(onSaved) {
+        mutateModule(validateTitle = title, action = {
             subjectsRepository.createTask(
                 subjectId = subjectId,
                 title = title,
@@ -139,7 +139,7 @@ class SubjectDetailViewModel(
                 dueDate = dueDate,
                 isPinned = isPinned
             )
-        }
+        }, onSaved = onSaved)
     }
 
     fun updateTask(
@@ -152,7 +152,7 @@ class SubjectDetailViewModel(
         isPinned: Boolean,
         onSaved: () -> Unit = {}
     ) {
-        performMutation(onSaved) {
+        mutateModule(validateTitle = title, action = {
             subjectsRepository.updateTask(
                 taskId = taskId,
                 subjectId = subjectId,
@@ -163,13 +163,13 @@ class SubjectDetailViewModel(
                 dueDate = dueDate,
                 isPinned = isPinned
             )
-        }
+        }, onSaved = onSaved)
     }
 
     fun deleteTask(taskId: String, onDeleted: () -> Unit) {
-        performMutation(onDeleted) {
+        mutateModule(validateTitle = "delete", action = {
             subjectsRepository.deleteTask(taskId)
-        }
+        }, onSaved = onDeleted)
     }
 
     private suspend fun refreshOverview(showRefreshing: Boolean = true) {
