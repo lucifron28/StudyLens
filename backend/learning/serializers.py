@@ -384,7 +384,7 @@ class StudyTaskSerializer(OwnedRelationMixin, serializers.ModelSerializer):
 
 
 class DashboardStatsSerializer(serializers.Serializer):
-    modules_in_progress = serializers.IntegerField()
+    pending_tasks = serializers.IntegerField()
     notes_saved = serializers.IntegerField()
     quizzes_completed = serializers.IntegerField()
 
