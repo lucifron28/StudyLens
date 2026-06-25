@@ -6,7 +6,7 @@ data class DashboardDto(
     @SerializedName("overall_progress") val overallProgress: Int,
     val stats: DashboardStatsDto,
     val upcoming: List<DashboardUpcomingItemDto>,
-    @SerializedName("continue_learning") val continueLearning: List<DashboardContinueLearningDto>,
+    @SerializedName("recent_board_scans") val recentBoardScans: List<DashboardBoardScanDto>,
     @SerializedName("recent_activity") val recentActivity: List<DashboardActivityItemDto>
 )
 
@@ -29,13 +29,14 @@ data class DashboardUpcomingItemDto(
     @SerializedName("posted_at") val postedAt: String? = null
 )
 
-data class DashboardContinueLearningDto(
+data class DashboardBoardScanDto(
     val id: Int,
-    val module: Int,
+    val subject: Int?,
+    @SerializedName("subject_title") val subjectTitle: String,
     @SerializedName("module_title") val moduleTitle: String,
-    @SerializedName("last_position") val lastPosition: String,
-    val status: String,
-    @SerializedName("last_read_at") val lastReadAt: String
+    val summary: String,
+    @SerializedName("review_status") val reviewStatus: String,
+    @SerializedName("created_at") val createdAt: String
 )
 
 data class DashboardActivityItemDto(
