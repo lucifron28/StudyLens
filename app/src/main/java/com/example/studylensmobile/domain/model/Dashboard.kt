@@ -9,7 +9,7 @@ data class Dashboard(
 )
 
 data class DashboardStats(
-    val modulesInProgress: Int,
+    val pendingTasks: Int,
     val notesSaved: Int,
     val quizzesCompleted: Int
 )
