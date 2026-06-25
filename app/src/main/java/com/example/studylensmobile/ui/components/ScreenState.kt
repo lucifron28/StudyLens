@@ -139,7 +139,7 @@ fun StudyLensEmptyState(
     showLumi: Boolean = true
 ) {
     Column(
-        modifier = modifier.padding(24.dp),
+        modifier = modifier.fillMaxWidth().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -148,7 +148,7 @@ fun StudyLensEmptyState(
                 painter = painterResource(id = R.drawable.lumi_default),
                 contentDescription = "Lumi Greeting",
                 modifier = Modifier
-                    .size(240.dp)
+                    .size(140.dp)
                     .floatingAnimation()
             )
             Spacer(modifier = Modifier.height(16.dp))

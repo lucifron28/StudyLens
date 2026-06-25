@@ -89,6 +89,11 @@ class Command(BaseCommand):
                 "Limits, derivatives, and integrals for technical problem solving.",
                 "#5651A6",
             ),
+            (
+                "C Programming Fundamentals",
+                "Introduction to C programming, memory management, pointers, and data structures.",
+                "#D44000",
+            ),
         ]
         subjects = {}
         for title, description, color in data:
@@ -149,6 +154,10 @@ class Command(BaseCommand):
                 ("Limits Refresher", "Understanding behavior near a point."),
                 ("Derivatives", "Rates of change and tangent lines."),
                 ("Integrals", "Area under curves and accumulation."),
+            ],
+            "C Programming Fundamentals": [
+                ("Pointers and Memory", "Understanding how pointers work and managing memory manually.", True),
+                ("Data Structures", "Implementing linked lists, stacks, and queues in C.", False),
             ],
         }
 
@@ -243,6 +252,35 @@ class Command(BaseCommand):
             ),
         ]
 
+        c_tasks_to_create = [
+            (
+                "Finish Linked List Assignment",
+                "Due next Friday. Must use malloc and free correctly.",
+                StudyTask.TaskType.TODO,
+                True,
+            ),
+            (
+                "Midterm 1 Topics",
+                "Pointers, arrays, and basic dynamic memory.",
+                StudyTask.TaskType.NOTE,
+                False,
+            ),
+        ]
+
+        c_subject = subjects.get("C Programming Fundamentals")
+        if c_subject:
+            for title, content, task_type, is_pinned in c_tasks_to_create:
+                StudyTask.objects.update_or_create(
+                    owner=user,
+                    subject=c_subject,
+                    title=title,
+                    defaults={
+                        "content": content,
+                        "task_type": task_type,
+                        "is_pinned": is_pinned,
+                    },
+                )
+
         for title, content, task_type, is_pinned in tasks_to_create:
             StudyTask.objects.update_or_create(
                 owner=user,
@@ -289,6 +327,17 @@ class Command(BaseCommand):
                 BoardScan.ReviewStatus.NEW,
                 ["important"],
                 now - timedelta(days=3),
+            ),
+            (
+                "C Programming Fundamentals",
+                "Pointers and Memory",
+                "Overview",
+                "Oct 01 - Pointer Arithmetic",
+                "Pointer arithmetic is tied to the data type size. Array names decay to pointers. Double pointers (**p) are used for matrix allocations.",
+                "Board note on pointer arithmetic and memory.",
+                BoardScan.ReviewStatus.NEW,
+                ["important", "review"],
+                now - timedelta(days=2),
             ),
             (
                 "Database Systems",
