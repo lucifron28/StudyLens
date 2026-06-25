@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -61,7 +62,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel) {
+fun HomeScreen(
+    viewModel: HomeViewModel,
+    onNavigateToSubjectDetail: (Int) -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsState()
     val dashboard = uiState.dashboard
 
@@ -107,6 +111,8 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     errorMessage = uiState.errorMessage,
                     isRefreshing = uiState.isRefreshing,
                     onRetry = viewModel::loadDashboard,
+                    onNavigateToSubjectDetail = onNavigateToSubjectDetail,
+                    onTaskToggle = viewModel::toggleTaskCompletion,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -121,6 +127,8 @@ private fun DashboardContent(
     errorMessage: String?,
     isRefreshing: Boolean,
     onRetry: () -> Unit,
+    onNavigateToSubjectDetail: (Int) -> Unit,
+    onTaskToggle: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isActivityExpanded by remember { mutableStateOf(false) }
@@ -153,7 +161,12 @@ private fun DashboardContent(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
                 ) {
                     items(dashboard.upcoming, key = { "upcoming-${it.id}" }) { item ->
-                        UpcomingTaskCard(item = item, modifier = Modifier.width(300.dp))
+                        UpcomingTaskCard(
+                            item = item, 
+                            modifier = Modifier.width(300.dp),
+                            onTaskToggle = { onTaskToggle(item.id) },
+                            onClick = { item.subjectId?.let { onNavigateToSubjectDetail(it) } }
+                        )
                     }
                 }
             }
@@ -245,8 +258,15 @@ private fun LumiHeroBanner(firstName: String, pendingTasks: Int) {
 
 
 @Composable
-private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = Modifier) {
-    StudyLensCard(modifier = modifier) {
+private fun UpcomingTaskCard(
+    item: DashboardUpcomingItem, 
+    modifier: Modifier = Modifier,
+    onTaskToggle: () -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    StudyLensCard(
+        modifier = modifier.clickable { onClick() }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -270,11 +290,12 @@ private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = M
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.clickable { onTaskToggle() }
             ) {
                 Icon(
                     imageVector = if (item.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                    contentDescription = null,
+                    contentDescription = "Toggle completion",
                     tint = if (item.isCompleted) {
                         MaterialTheme.colorScheme.secondary
                     } else {

@@ -51,5 +51,35 @@ class HomeViewModel(
             }
         }
     }
+    fun toggleTaskCompletion(taskId: Int) {
+        val currentDashboard = _uiState.value.dashboard ?: return
+        val task = currentDashboard.upcoming.find { it.id == taskId } ?: return
+        val newStatus = !task.isCompleted
+
+        // Optimistically update UI
+        val updatedUpcoming = currentDashboard.upcoming.map {
+            if (it.id == taskId) it.copy(isCompleted = newStatus) else it
+        }
+        val pendingDelta = if (newStatus) -1 else 1
+        val updatedStats = currentDashboard.stats.copy(
+            pendingTasks = maxOf(0, currentDashboard.stats.pendingTasks + pendingDelta)
+        )
+        _uiState.update {
+            it.copy(
+                dashboard = currentDashboard.copy(
+                    upcoming = updatedUpcoming,
+                    stats = updatedStats
+                )
+            )
+        }
+
+        viewModelScope.launch {
+            val result = dashboardRepository.toggleTaskCompletion(taskId, newStatus)
+            if (result.isFailure) {
+                // Revert on failure
+                loadDashboard()
+            }
+        }
+    }
 }
 
