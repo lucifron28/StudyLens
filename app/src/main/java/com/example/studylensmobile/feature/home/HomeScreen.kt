@@ -139,7 +139,7 @@ private fun DashboardContent(
         item {
             LumiHeroBanner(
                 firstName = firstName,
-                modulesInProgress = dashboard.stats.modulesInProgress
+                pendingTasks = dashboard.stats.pendingTasks
             )
         }
 
@@ -207,7 +207,7 @@ private fun DashboardContent(
 }
 
 @Composable
-private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
+private fun LumiHeroBanner(firstName: String, pendingTasks: Int) {
     StudyLensCard {
         Row(
             modifier = Modifier
@@ -224,7 +224,7 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (modulesInProgress > 0) "You have $modulesInProgress modules to review. Ready to jump in?" else "Ready to start learning today?",
+                    text = if (pendingTasks > 0) "You have $pendingTasks tasks to review. Ready to jump in?" else "Ready to start learning today?",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 8.dp)
