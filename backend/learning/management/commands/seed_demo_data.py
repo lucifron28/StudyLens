@@ -268,7 +268,7 @@ class Command(BaseCommand):
             (
                 "Debug Session with TA",
                 "Went over memory leaks in valgrind. Need to remember to free all mallocs in reverse order.",
-                StudyTask.TaskType.LOG,
+                StudyTask.TaskType.NOTE,
                 False,
             ),
         ]

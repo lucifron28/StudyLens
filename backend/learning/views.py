@@ -60,7 +60,7 @@ class DashboardView(APIView):
 
         recent_tasks = StudyTask.objects.select_related("subject").filter(owner=user).order_by(
             "-is_pinned",
-            "-posted_at",
+            "-created_at",
         )[:5]
 
         upcoming = []
@@ -326,7 +326,7 @@ class StudyTaskViewSet(OwnedModelViewSet):
             self.request.query_params,
             {
                 "subject": "subject_id",
-                "post_type": "post_type",
+                "task_type": "task_type",
                 "is_pinned": "is_pinned",
             },
             integer_params={"subject"},
