@@ -150,6 +150,11 @@ class Command(BaseCommand):
             ],
             "Software Engineering": [
                 ("Final Prototype", "Preparing a presentable midterm prototype and demo flow.", True),
+                (
+                    "System Design Fundamentals",
+                    "Core backend architecture ideas: proxies, reverse proxies, load balancing, and API gateways.",
+                    True,
+                ),
                 ("SDLC Overview", "Planning, analysis, design, implementation, testing, and maintenance.", False),
                 ("Use Case Diagrams", "Actors, system boundaries, and user goals.", False),
                 ("Design Patterns", "Reusable solutions for common software design problems.", False),
@@ -185,6 +190,64 @@ class Command(BaseCommand):
         }
 
         module_bodies = {
+            "System Design Fundamentals": markdown(
+                """
+                # System Design Fundamentals
+
+                System design explains how software parts work together when an application grows beyond a single
+                screen or a single server. In a mobile learning app such as StudyLens, the Android client talks to a
+                backend API, the backend reads and writes data in PostgreSQL, uploaded files are stored as media,
+                and AI requests may be sent to a local model service. System design helps decide where each
+                responsibility belongs and how requests move safely through the system.
+
+                ## Proxy
+
+                A proxy is an intermediate server that forwards requests on behalf of a client. In a forward proxy
+                setup, the client knows it is using the proxy. The proxy can hide the client's network details,
+                filter requests, cache responses, or enforce access rules before the request reaches the internet.
+
+                A simple way to remember it: a proxy usually represents the client side of the communication.
+
+                ## Reverse Proxy
+
+                A reverse proxy sits in front of one or more backend servers. Clients send requests to the reverse
+                proxy, and the reverse proxy decides which internal server should handle them. The client usually
+                does not know the exact internal server address.
+
+                Common reverse proxy responsibilities include TLS termination, request routing, compression,
+                rate limiting, and hiding private backend services from direct public access. Nginx and Caddy are
+                common examples used in small deployments.
+
+                ## Load Balancing
+
+                Load balancing distributes incoming traffic across multiple backend instances. Instead of one
+                server handling every request, several servers share the work. This improves availability and helps
+                the system handle more users.
+
+                Common strategies include round robin, least connections, and health-check based routing. Health
+                checks matter because the load balancer should stop sending traffic to an unhealthy server.
+
+                ## API Gateway
+
+                An API gateway is an entry point for API clients. It can route requests to different backend
+                services, validate authentication, apply rate limits, transform requests, and centralize API
+                documentation or versioning. In larger systems, the API gateway protects clients from needing to
+                know every internal service.
+
+                For StudyLens, the first version is simple: Android talks directly to the Django REST API. In a
+                production-style design, a reverse proxy or API gateway could sit in front of Django and route
+                `/api/` requests to the backend while serving media or static files separately.
+
+                ## Key Takeaways
+
+                - A proxy commonly represents the client side.
+                - A reverse proxy represents and protects backend servers.
+                - Load balancing spreads traffic across healthy server instances.
+                - An API gateway centralizes API entry, authentication, routing, and limits.
+                - Simple projects may start with one backend, then add these pieces when scale or deployment
+                  needs become real.
+                """
+            ),
             "C Basics and Control Flow": markdown(
                 """
                 # C Basics and Control Flow
@@ -416,6 +479,121 @@ class Command(BaseCommand):
             ],
             "Final Prototype": [
                 ("Prototype Checklist", "Screens should be consistent, linked, and ready for presentation."),
+            ],
+            "System Design Fundamentals": [
+                (
+                    "Overview",
+                    markdown(
+                        """
+                        System design is the process of planning how software components communicate, scale, and
+                        stay reliable. A small school project may run on one backend container, but the same ideas
+                        still explain how production systems are organized.
+
+                        In StudyLens, the Android app sends HTTP requests to Django REST Framework. Django checks
+                        JWT authentication, talks to PostgreSQL, stores uploaded files, and calls the local AI
+                        provider when study tools are generated. As the app grows, a reverse proxy, load balancer,
+                        or API gateway could be added in front of Django.
+                        """
+                    ),
+                ),
+                (
+                    "Proxy vs Reverse Proxy",
+                    markdown(
+                        """
+                        A proxy forwards traffic on behalf of a client. For example, a school network might use a
+                        forward proxy to filter browsing, cache common responses, or hide client IP addresses.
+                        The proxy is closer to the client side of the request.
+
+                        A reverse proxy forwards traffic on behalf of backend servers. The client sends a request
+                        to one public address, but the reverse proxy forwards it to an internal backend. This keeps
+                        backend server addresses private and gives the system one place to handle TLS, compression,
+                        routing, and rate limits.
+
+                        Example flow:
+
+                        ```text
+                        Android App -> Reverse Proxy -> Django API -> PostgreSQL
+                        ```
+
+                        The Android app only knows the public API URL. It does not need to know which internal
+                        Django container handled the request.
+                        """
+                    ),
+                ),
+                (
+                    "Load Balancing",
+                    markdown(
+                        """
+                        Load balancing spreads requests across multiple backend instances. This matters when one
+                        server is not enough or when the app needs to stay available even if one server fails.
+
+                        Common algorithms:
+
+                        - Round robin: send each new request to the next server in order.
+                        - Least connections: send traffic to the server with fewer active connections.
+                        - Health-check routing: avoid servers that fail a health check.
+
+                        A load balancer should know which servers are healthy. If one Django instance crashes, the
+                        load balancer should stop sending requests to it until it recovers.
+
+                        In a final project demo, one Django container is enough. In a production diagram, multiple
+                        Django containers can sit behind a reverse proxy or load balancer.
+                        """
+                    ),
+                ),
+                (
+                    "API Gateway",
+                    markdown(
+                        """
+                        An API gateway is a controlled entry point for API traffic. It is useful when a system has
+                        many services or when API rules must be enforced consistently.
+
+                        Responsibilities can include:
+
+                        - Checking authentication tokens.
+                        - Routing `/api/auth/` to an auth service and `/api/learning/` to a learning service.
+                        - Applying rate limits to protect the backend.
+                        - Logging request metrics.
+                        - Handling API versioning such as `/api/v1/`.
+
+                        StudyLens currently uses a simple monolithic Django backend, so a full API gateway would
+                        be overkill. The architecture is still compatible with one later because all Android
+                        traffic already goes through REST endpoints.
+                        """
+                    ),
+                ),
+                (
+                    "StudyLens Deployment Example",
+                    markdown(
+                        """
+                        A simple local StudyLens setup uses Docker Compose:
+
+                        ```text
+                        Android Emulator -> Django container -> PostgreSQL container
+                                       -> Local Ollama on host machine
+                        ```
+
+                        A more production-like setup could be:
+
+                        ```text
+                        Android App
+                            -> HTTPS Reverse Proxy
+                            -> Django API containers
+                            -> PostgreSQL database
+                            -> Media storage
+                            -> AI provider
+                        ```
+
+                        The reverse proxy would handle public HTTPS traffic. The load balancer would spread API
+                        requests across Django instances. The API gateway pattern could be added if the backend
+                        were split into separate auth, learning, OCR, and AI services.
+
+                        The important design decision is to keep the Android app from talking directly to the
+                        database or AI provider. Android should call the backend API, and the backend should protect
+                        secrets, validate ownership, and coordinate system behavior.
+                        """
+                    ),
+                ),
             ],
             "C Basics and Control Flow": [
                 (
@@ -860,6 +1038,17 @@ class Command(BaseCommand):
                 BoardScan.ReviewStatus.NEEDS_REVIEW,
                 ["architecture", "android", "review"],
                 now - timedelta(hours=1),
+            ),
+            (
+                "Software Engineering",
+                "System Design Fundamentals",
+                "Proxy vs Reverse Proxy",
+                "Sept 16 - Proxy and Gateway Notes",
+                "Proxy represents the client side. Reverse proxy sits in front of servers. Load balancer spreads traffic across healthy backend instances. API gateway centralizes auth, routing, rate limits, and logging.",
+                "System design note covering proxy, reverse proxy, load balancing, and API gateway responsibilities.",
+                BoardScan.ReviewStatus.NEEDS_REVIEW,
+                ["architecture", "important", "review"],
+                now - timedelta(hours=3),
             ),
             (
                 "Database Systems",
