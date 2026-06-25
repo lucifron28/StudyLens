@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
-import com.example.studylensmobile.domain.model.SubjectPostPreview
+import com.example.studylensmobile.domain.model.StudyTaskPreview
 import com.example.studylensmobile.core.utils.displayName
 import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
@@ -248,15 +248,15 @@ private fun SubjectOverviewContent(
         }
 
         item {
-            SectionHeader(title = "Latest Posts")
+            SectionHeader(title = "Tasks & Logs")
         }
-        if (overview.latestPosts.isEmpty()) {
+        if (overview.tasks.isEmpty()) {
             item {
-                StudyLensEmptyState(text = "No posts for this subject yet.")
+                StudyLensEmptyState(text = "No study tasks or logs recorded yet.")
             }
         } else {
-            items(overview.latestPosts, key = { "post-${it.id}" }) { post ->
-                PostPreviewCard(post = post)
+            items(overview.tasks, key = { "task-${it.id}" }) { task ->
+                StudyTaskPreviewCard(task = task)
             }
         }
     }
@@ -554,7 +554,7 @@ private fun BoardScanPreviewCard(boardScan: SubjectBoardScanPreview) {
 }
 
 @Composable
-private fun PostPreviewCard(post: SubjectPostPreview) {
+private fun StudyTaskPreviewCard(task: StudyTaskPreview) {
     StudyLensCard {
         Column(
             modifier = Modifier
@@ -567,29 +567,42 @@ private fun PostPreviewCard(post: SubjectPostPreview) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = post.title,
+                    text = task.title,
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                StatusChip(status = post.postType)
+                StatusChip(status = task.taskType)
             }
-            Text(
-                text = post.content,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            Text(
-                text = post.postedAt,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+            if (task.content.isNotBlank()) {
+                Text(
+                    text = task.content,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = task.createdAt,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (task.dueDate != null) {
+                    Text(
+                        text = "Due: ${task.dueDate}",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }

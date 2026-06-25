@@ -18,13 +18,13 @@ import com.example.studylensmobile.data.remote.dto.SubjectBoardScanPreviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectDto
 import com.example.studylensmobile.data.remote.dto.SubjectModulePreviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectOverviewDto
-import com.example.studylensmobile.data.remote.dto.SubjectPostPreviewDto
+import com.example.studylensmobile.data.remote.dto.StudyTaskPreviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectWriteRequest
 import com.example.studylensmobile.domain.model.Subject
 import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
-import com.example.studylensmobile.domain.model.SubjectPostPreview
+import com.example.studylensmobile.domain.model.StudyTaskPreview
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -248,14 +248,14 @@ private fun SubjectOverviewDto.toDomain(): SubjectOverview {
         code = title.toSubjectCode(id),
         title = title,
         description = description,
-        itemSummary = "$moduleCount Modules - $boardScanCount Notes - $postCount Posts"
+        itemSummary = "$moduleCount Modules - $boardScanCount Notes - $taskCount Tasks"
     )
 
     return SubjectOverview(
         subject = subject,
         latestModules = latestModules.map { it.toDomain() },
         recentBoardScans = recentBoardScans.map { it.toDomain() },
-        latestPosts = latestPosts.map { it.toDomain() }
+        tasks = tasks.map { it.toDomain() }
     )
 }
 
@@ -290,14 +290,16 @@ private fun SubjectBoardScanPreviewDto.toDomain(): SubjectBoardScanPreview {
     )
 }
 
-private fun SubjectPostPreviewDto.toDomain(): SubjectPostPreview {
-    return SubjectPostPreview(
+private fun StudyTaskPreviewDto.toDomain(): StudyTaskPreview {
+    return StudyTaskPreview(
         id = id.toString(),
         title = title,
         content = content,
-        postType = postType.toDisplayLabel(),
+        taskType = taskType.toDisplayLabel(),
+        isCompleted = isCompleted,
+        dueDate = dueDate?.toReadableDate(),
         isPinned = isPinned,
-        postedAt = postedAt.toReadableDate()
+        createdAt = createdAt.toReadableDate()
     )
 }
 
