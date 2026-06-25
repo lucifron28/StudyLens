@@ -57,6 +57,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Checkbox
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.material3.FilterChip
 import com.example.studylensmobile.ui.components.StudyLensLoadingState
 import com.example.studylensmobile.ui.components.StudyLensTopBar
 import com.example.studylensmobile.ui.components.SectionHeader
@@ -315,6 +316,11 @@ private fun SubjectOverviewContent(
     actionsEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var selectedTaskFilter by remember { mutableStateOf(TaskNoteFilter.ALL) }
+    val filteredTasks = remember(overview.tasks, selectedTaskFilter) {
+        overview.tasks.filter { task -> selectedTaskFilter.matches(task) }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(20.dp),
@@ -365,12 +371,24 @@ private fun SubjectOverviewContent(
         item {
             SectionHeader(title = "Tasks & Notes")
         }
+        if (overview.tasks.isNotEmpty()) {
+            item {
+                TaskNoteFilterRow(
+                    selectedFilter = selectedTaskFilter,
+                    onFilterSelected = { selectedTaskFilter = it }
+                )
+            }
+        }
         if (overview.tasks.isEmpty()) {
             item {
                 StudyLensEmptyState(text = "No tasks or notes recorded yet.")
             }
+        } else if (filteredTasks.isEmpty()) {
+            item {
+                StudyLensEmptyState(text = "No ${selectedTaskFilter.emptyLabel} recorded yet.")
+            }
         } else {
-            items(overview.tasks, key = { "task-${it.id}" }) { task ->
+            items(filteredTasks, key = { "task-${it.id}" }) { task ->
                 StudyTaskPreviewCard(
                     task = task,
                     onEdit = { onEditTask(task) },
@@ -382,6 +400,26 @@ private fun SubjectOverviewContent(
         }
     }
 }
+
+@Composable
+private fun TaskNoteFilterRow(
+    selectedFilter: TaskNoteFilter,
+    onFilterSelected: (TaskNoteFilter) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        TaskNoteFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = selectedFilter == filter,
+                onClick = { onFilterSelected(filter) },
+                label = { Text(filter.label) }
+            )
+        }
+    }
+}
+
 @Composable
 private fun HeaderCard(
     overview: SubjectOverview,
@@ -782,3 +820,20 @@ private fun StudyTaskPreviewCard(
 }
 
 private val actionableTaskTypes = setOf("todo", "reminder")
+
+private enum class TaskNoteFilter(
+    val label: String,
+    val emptyLabel: String
+) {
+    ALL("All", "items"),
+    TASKS("Tasks", "tasks"),
+    NOTES("Notes", "notes");
+
+    fun matches(task: StudyTaskPreview): Boolean {
+        return when (this) {
+            ALL -> true
+            TASKS -> task.taskType.lowercase() in actionableTaskTypes
+            NOTES -> task.taskType.lowercase() !in actionableTaskTypes
+        }
+    }
+}
