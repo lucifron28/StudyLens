@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -50,8 +52,6 @@ import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
 import com.example.studylensmobile.ui.components.StudyLensInlineError
 import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
@@ -165,11 +165,15 @@ fun SubjectDetailScreen(
     if (showAddActionSheet) {
         ModalBottomSheet(onDismissRequest = { showAddActionSheet = false }) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "Add to Subject", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(
+                    text = "Add to Subject",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
                 ListItem(
                     headlineContent = { Text("Add Module") },
                     supportingContent = { Text("Create a new learning module") },
-                    leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    leadingContent = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
                     modifier = Modifier.clickable { 
                         showAddActionSheet = false
                         showCreateModuleDialog = true 
@@ -178,7 +182,7 @@ fun SubjectDetailScreen(
                 ListItem(
                     headlineContent = { Text("Add Task / Note") },
                     supportingContent = { Text("Create a to-do item, reminder, or note") },
-                    leadingContent = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                    leadingContent = { Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = null) },
                     modifier = Modifier.clickable { 
                         showAddActionSheet = false
                         showCreateTaskDialog = true 
@@ -680,6 +684,9 @@ private fun StudyTaskPreviewCard(
     onCheckedChange: (Boolean) -> Unit,
     actionsEnabled: Boolean
 ) {
+    val isActionable = task.taskType.lowercase() in actionableTaskTypes
+    val itemLabel = if (isActionable) "task" else "note"
+
     StudyLensCard {
         Row(
             modifier = Modifier
@@ -687,7 +694,7 @@ private fun StudyTaskPreviewCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (task.taskType.lowercase() in listOf("todo", "reminder")) {
+            if (isActionable) {
                 Checkbox(
                     checked = task.isCompleted,
                     onCheckedChange = onCheckedChange,
@@ -729,7 +736,7 @@ private fun StudyTaskPreviewCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = task.createdAt,
+                        text = if (isActionable) task.createdAt else "Saved ${task.createdAt}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -754,7 +761,7 @@ private fun StudyTaskPreviewCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit task",
+                            contentDescription = "Edit $itemLabel",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -764,7 +771,7 @@ private fun StudyTaskPreviewCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete task",
+                            contentDescription = "Delete $itemLabel",
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -773,3 +780,5 @@ private fun StudyTaskPreviewCard(
         }
     }
 }
+
+private val actionableTaskTypes = setOf("todo", "reminder")
