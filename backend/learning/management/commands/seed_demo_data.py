@@ -764,45 +764,65 @@ class Command(BaseCommand):
                 "Don't forget to read chapter 1 of Introduction before next week's lecture.",
                 StudyTask.TaskType.TODO,
                 True,
+                now + timedelta(days=3),
             ),
             (
                 "CS50 Lecture Notes Uploaded",
                 "Uploaded the notes from the CS50 introductory lecture.",
                 StudyTask.TaskType.NOTE,
                 False,
+                None,
             ),
             (
                 "Midterm Date Changed",
                 "The midterm has been pushed back to November 15th.",
                 StudyTask.TaskType.REMINDER,
                 False,
+                now + timedelta(days=7),
             ),
         ]
 
         c_tasks_to_create = [
             (
-                "Finish Linked List Assignment",
-                "Due next Friday. Must use malloc and free correctly.",
+                "Finish linked list practice",
+                "Implement insert, delete, and traversal. Check every malloc call and free the full list.",
                 StudyTask.TaskType.TODO,
                 True,
+                now + timedelta(days=1),
             ),
             (
-                "Midterm 1 Topics",
-                "Pointers, arrays, and basic dynamic memory.",
+                "Review pointer arithmetic",
+                "Practice array decay, pointer increments, and why pointer arithmetic scales by type size.",
+                StudyTask.TaskType.TODO,
+                False,
+                now + timedelta(days=2),
+            ),
+            (
+                "Summarize malloc vs calloc",
+                "Write a short comparison of allocation behavior, zero initialization, and when to check for NULL.",
+                StudyTask.TaskType.REMINDER,
+                False,
+                now + timedelta(days=4),
+            ),
+            (
+                "Midterm 1 notes",
+                "Focus topics: pointers, arrays, functions, structs, dynamic memory, and linked list diagrams.",
                 StudyTask.TaskType.NOTE,
                 False,
+                None,
             ),
             (
-                "Debug Session with TA",
+                "Debug session with TA",
                 "Went over memory leaks in valgrind. Need to remember to free all mallocs in reverse order.",
                 StudyTask.TaskType.NOTE,
                 False,
+                None,
             ),
         ]
 
         c_subject = subjects.get("C Programming Fundamentals")
         if c_subject:
-            for title, content, task_type, is_pinned in c_tasks_to_create:
+            for title, content, task_type, is_pinned, due_date in c_tasks_to_create:
                 StudyTask.objects.update_or_create(
                     owner=user,
                     subject=c_subject,
@@ -811,10 +831,11 @@ class Command(BaseCommand):
                         "content": content,
                         "task_type": task_type,
                         "is_pinned": is_pinned,
+                        "due_date": due_date,
                     },
                 )
 
-        for title, content, task_type, is_pinned in tasks_to_create:
+        for title, content, task_type, is_pinned, due_date in tasks_to_create:
             StudyTask.objects.update_or_create(
                 owner=user,
                 subject=cs_subject,
@@ -823,6 +844,7 @@ class Command(BaseCommand):
                     "content": content,
                     "task_type": task_type,
                     "is_pinned": is_pinned,
+                    "due_date": due_date,
                 },
             )
 
