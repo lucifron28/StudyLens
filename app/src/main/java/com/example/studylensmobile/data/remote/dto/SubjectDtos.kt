@@ -65,4 +65,14 @@ data class StudyTaskPreviewDto(
     @SerializedName("due_date") val dueDate: String?,
     @SerializedName("is_pinned") val isPinned: Boolean,
     @SerializedName("created_at") val createdAt: String
+}
+
+data class StudyTaskWriteRequest(
+    val subject: Int,
+    val title: String,
+    val content: String,
+    @SerializedName("task_type") val taskType: String,
+    @SerializedName("is_completed") val isCompleted: Boolean = false,
+    @SerializedName("due_date") val dueDate: String? = null,
+    @SerializedName("is_pinned") val isPinned: Boolean = false
 )

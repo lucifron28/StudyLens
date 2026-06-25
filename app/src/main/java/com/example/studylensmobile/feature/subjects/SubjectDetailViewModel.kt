@@ -120,6 +120,58 @@ class SubjectDetailViewModel(
         }
     }
 
+    fun createTask(
+        title: String,
+        content: String,
+        taskType: String,
+        isCompleted: Boolean = false,
+        dueDate: String? = null,
+        isPinned: Boolean = false,
+        onSaved: () -> Unit
+    ) {
+        performMutation(onSaved) {
+            subjectsRepository.createTask(
+                subjectId = subjectId,
+                title = title,
+                content = content,
+                taskType = taskType,
+                isCompleted = isCompleted,
+                dueDate = dueDate,
+                isPinned = isPinned
+            )
+        }
+    }
+
+    fun updateTask(
+        taskId: String,
+        title: String,
+        content: String,
+        taskType: String,
+        isCompleted: Boolean,
+        dueDate: String?,
+        isPinned: Boolean,
+        onSaved: () -> Unit = {}
+    ) {
+        performMutation(onSaved) {
+            subjectsRepository.updateTask(
+                taskId = taskId,
+                subjectId = subjectId,
+                title = title,
+                content = content,
+                taskType = taskType,
+                isCompleted = isCompleted,
+                dueDate = dueDate,
+                isPinned = isPinned
+            )
+        }
+    }
+
+    fun deleteTask(taskId: String, onDeleted: () -> Unit) {
+        performMutation(onDeleted) {
+            subjectsRepository.deleteTask(taskId)
+        }
+    }
+
     private suspend fun refreshOverview(showRefreshing: Boolean = true) {
         val hasContent = _uiState.value.overview != null
         _uiState.update {

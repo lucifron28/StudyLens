@@ -218,6 +218,69 @@ class SubjectsRepository(
         }
     }
 
+    suspend fun createTask(
+        subjectId: String,
+        title: String,
+        content: String,
+        taskType: String,
+        isCompleted: Boolean = false,
+        dueDate: String? = null,
+        isPinned: Boolean = false
+    ): Result<Unit> {
+        return apiResult(
+            label = "Create task",
+            call = {
+                learningApi.createStudyTask(
+                    request = com.example.studylensmobile.data.remote.dto.StudyTaskWriteRequest(
+                        subject = subjectId.toInt(),
+                        title = title.trim(),
+                        content = content.trim(),
+                        taskType = taskType,
+                        isCompleted = isCompleted,
+                        dueDate = dueDate,
+                        isPinned = isPinned
+                    )
+                )
+            }
+        ) { Unit }
+    }
+
+    suspend fun updateTask(
+        taskId: String,
+        subjectId: String,
+        title: String,
+        content: String,
+        taskType: String,
+        isCompleted: Boolean,
+        dueDate: String?,
+        isPinned: Boolean
+    ): Result<Unit> {
+        return apiResult(
+            label = "Update task",
+            call = {
+                learningApi.updateStudyTask(
+                    taskId = taskId,
+                    request = com.example.studylensmobile.data.remote.dto.StudyTaskWriteRequest(
+                        subject = subjectId.toInt(),
+                        title = title.trim(),
+                        content = content.trim(),
+                        taskType = taskType,
+                        isCompleted = isCompleted,
+                        dueDate = dueDate,
+                        isPinned = isPinned
+                    )
+                )
+            }
+        ) { Unit }
+    }
+
+    suspend fun deleteTask(taskId: String): Result<Unit> {
+        return emptyApiResult(
+            label = "Delete task",
+            call = { learningApi.deleteStudyTask(taskId) }
+        )
+    }
+
     private fun ContentResolver.toFilePart(uri: Uri, partName: String): MultipartBody.Part {
         val mediaType = getType(uri)?.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType()
         val body = object : RequestBody() {
