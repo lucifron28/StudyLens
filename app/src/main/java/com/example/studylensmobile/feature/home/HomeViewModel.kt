@@ -56,9 +56,13 @@ class HomeViewModel(
         val task = currentDashboard.upcoming.find { it.id == taskId } ?: return
         val newStatus = !task.isCompleted
 
-        // Optimistically update UI
-        val updatedUpcoming = currentDashboard.upcoming.map {
-            if (it.id == taskId) it.copy(isCompleted = newStatus) else it
+        // Optimistically update UI: filter out completed tasks from the dashboard view
+        val updatedUpcoming = if (newStatus) {
+            currentDashboard.upcoming.filterNot { it.id == taskId }
+        } else {
+            currentDashboard.upcoming.map {
+                if (it.id == taskId) it.copy(isCompleted = newStatus) else it
+            }
         }
         val pendingDelta = if (newStatus) -1 else 1
         val updatedStats = currentDashboard.stats.copy(

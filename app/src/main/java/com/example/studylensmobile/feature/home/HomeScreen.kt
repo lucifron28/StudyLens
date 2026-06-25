@@ -153,7 +153,7 @@ private fun DashboardContent(
 
         if (dashboard.upcoming.isNotEmpty()) {
             item {
-                SectionHeader(title = "Upcoming Tasks")
+                SectionHeader(title = "Current Tasks")
             }
             item {
                 LazyRow(
@@ -290,8 +290,7 @@ private fun UpcomingTaskCard(
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier.clickable { onTaskToggle() }
+                verticalAlignment = Alignment.Top
             ) {
                 Icon(
                     imageVector = if (item.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
@@ -300,7 +299,8 @@ private fun UpcomingTaskCard(
                         MaterialTheme.colorScheme.secondary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    },
+                    modifier = Modifier.clickable { onTaskToggle() }
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
