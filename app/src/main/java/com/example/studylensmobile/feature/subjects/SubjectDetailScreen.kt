@@ -27,7 +27,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
+import com.example.studylensmobile.domain.model.SubjectModulePreview
+import com.example.studylensmobile.domain.model.SubjectOverview
+import com.example.studylensmobile.domain.model.StudyTaskPreview
+import com.example.studylensmobile.core.utils.displayName
+import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
+import com.example.studylensmobile.ui.components.StudyLensCard
+import com.example.studylensmobile.ui.components.StudyLensEmptyState
+import com.example.studylensmobile.ui.components.StudyLensErrorState
+import com.example.studylensmobile.ui.components.StudyLensInlineError
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,8 +91,12 @@ fun SubjectDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val overview = uiState.overview
     var showCreateModuleDialog by remember { mutableStateOf(false) }
+    var showCreateTaskDialog by remember { mutableStateOf(false) }
+    var showAddActionSheet by remember { mutableStateOf(false) }
     var editingModule by remember { mutableStateOf<SubjectModulePreview?>(null) }
     var deletingModule by remember { mutableStateOf<SubjectModulePreview?>(null) }
+    var editingTask by remember { mutableStateOf<StudyTaskPreview?>(null) }
+    var deletingTask by remember { mutableStateOf<StudyTaskPreview?>(null) }
 
     Scaffold(
         topBar = {
@@ -79,7 +112,7 @@ fun SubjectDetailScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { showCreateModuleDialog = true },
+                        onClick = { showAddActionSheet = true },
                         enabled = !uiState.isMutating
                     ) {
                         Icon(
@@ -128,9 +161,50 @@ fun SubjectDetailScreen(
                     onNavigateToModuleReader = onNavigateToModuleReader,
                     onEditModule = { editingModule = it },
                     onDeleteModule = { deletingModule = it },
+                    onEditTask = { editingTask = it },
+                    onDeleteTask = { deletingTask = it },
+                    onTaskChecked = { task, isChecked ->
+                        viewModel.updateTask(
+                            taskId = task.id.toString(),
+                            title = task.title,
+                            content = task.content,
+                            taskType = task.taskType,
+                            isCompleted = isChecked,
+                            dueDate = task.dueDate,
+                            isPinned = task.isPinned
+                        )
+                    },
                     actionsEnabled = !uiState.isMutating,
                     modifier = Modifier.padding(padding)
                 )
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    if (showAddActionSheet) {
+        ModalBottomSheet(onDismissRequest = { showAddActionSheet = false }) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = "Add to Subject", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                ListItem(
+                    headlineContent = { Text("Add Module") },
+                    supportingContent = { Text("Create a new learning module") },
+                    leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    modifier = Modifier.clickable { 
+                        showAddActionSheet = false
+                        showCreateModuleDialog = true 
+                    }
+                )
+                ListItem(
+                    headlineContent = { Text("Add Task / Log") },
+                    supportingContent = { Text("Create a to-do item, note, or reminder") },
+                    leadingContent = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                    modifier = Modifier.clickable { 
+                        showAddActionSheet = false
+                        showCreateTaskDialog = true 
+                    }
+                )
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -186,6 +260,60 @@ fun SubjectDetailScreen(
             onDismiss = { deletingModule = null }
         )
     }
+
+    if (showCreateTaskDialog && overview != null) {
+        StudyTaskFormDialog(
+            task = null,
+            isSaving = uiState.isMutating,
+            onDismiss = { showCreateTaskDialog = false },
+            onSave = { title, content, taskType, isCompleted, dueDate, isPinned ->
+                viewModel.createTask(
+                    title = title,
+                    content = content,
+                    taskType = taskType,
+                    isCompleted = isCompleted,
+                    dueDate = dueDate,
+                    isPinned = isPinned,
+                    onSaved = { showCreateTaskDialog = false }
+                )
+            }
+        )
+    }
+
+    editingTask?.let { task ->
+        StudyTaskFormDialog(
+            task = task,
+            isSaving = uiState.isMutating,
+            onDismiss = { editingTask = null },
+            onSave = { title, content, taskType, isCompleted, dueDate, isPinned ->
+                viewModel.updateTask(
+                    taskId = task.id.toString(),
+                    title = title,
+                    content = content,
+                    taskType = taskType,
+                    isCompleted = isCompleted,
+                    dueDate = dueDate,
+                    isPinned = isPinned,
+                    onSaved = { editingTask = null }
+                )
+            }
+        )
+    }
+
+    deletingTask?.let { task ->
+        DeleteConfirmationDialog(
+            title = "Delete task/log?",
+            message = "Are you sure you want to delete ${task.title}?",
+            isDeleting = uiState.isMutating,
+            onConfirm = {
+                viewModel.deleteTask(
+                    taskId = task.id.toString(),
+                    onDeleted = { deletingTask = null }
+                )
+            },
+            onDismiss = { deletingTask = null }
+        )
+    }
 }
 @Composable
 private fun SubjectOverviewContent(
@@ -197,6 +325,9 @@ private fun SubjectOverviewContent(
     onNavigateToModuleReader: (String) -> Unit,
     onEditModule: (SubjectModulePreview) -> Unit,
     onDeleteModule: (SubjectModulePreview) -> Unit,
+    onEditTask: (StudyTaskPreview) -> Unit,
+    onDeleteTask: (StudyTaskPreview) -> Unit,
+    onTaskChecked: (StudyTaskPreview, Boolean) -> Unit,
     actionsEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -455,15 +586,17 @@ private fun ModuleFormDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                item {
-                    OutlinedTextField(
-                        value = markdownContent,
-                        onValueChange = { markdownContent = it },
-                        enabled = !isSaving,
-                        label = { Text(if (module == null) "Markdown Content (Optional)" else "New markdown (Optional)") },
-                        minLines = 3,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                if (contentType.trim().lowercase() in listOf("markdown", "text", "")) {
+                    item {
+                        OutlinedTextField(
+                            value = markdownContent,
+                            onValueChange = { markdownContent = it },
+                            enabled = !isSaving,
+                            label = { Text(if (module == null) "Markdown Content (Optional)" else "New markdown (Optional)") },
+                            minLines = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 item {
                     validationMessage?.let { message ->
