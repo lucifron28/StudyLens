@@ -140,7 +140,7 @@ class SubjectViewSet(OwnedModelViewSet):
         return queryset.annotate(
             module_count_value=Count("modules", distinct=True),
             board_scan_count_value=Count("board_scans", distinct=True),
-            post_count_value=Count("posts", distinct=True),
+            task_count_value=Count("tasks", distinct=True),
             progress_average=Avg(
                 "modules__reading_progress__progress_percentage",
                 filter=Q(modules__reading_progress__owner=self.request.user),
