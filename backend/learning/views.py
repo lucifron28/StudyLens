@@ -81,19 +81,17 @@ class DashboardView(APIView):
                 }
             )
 
-        continue_learning = [
+        recent_board_scans = [
             {
-                "id": progress.id,
-                "module": progress.module_id,
-                "module_title": progress.module.title,
-                "chapter": progress.chapter_id,
-                "chapter_title": progress.chapter.title if progress.chapter else "",
-                "progress_percentage": progress.progress_percentage,
-                "last_position": progress.last_position,
-                "status": progress.status,
-                "last_read_at": progress.last_read_at,
+                "id": scan.id,
+                "subject": scan.subject_id,
+                "subject_title": scan.subject.title if scan.subject else "",
+                "module_title": scan.module.title if scan.module else "",
+                "summary": scan.summary or "",
+                "review_status": scan.review_status,
+                "created_at": scan.created_at,
             }
-            for progress in progress_qs.order_by("-last_read_at")[:5]
+            for scan in BoardScan.objects.select_related("subject", "module").filter(owner=user).order_by("-created_at")[:5]
         ]
 
         recent_activity = []
@@ -126,7 +124,7 @@ class DashboardView(APIView):
                 "quizzes_completed": QuizAttempt.objects.filter(owner=user, completed_at__isnull=False).count(),
             },
             "upcoming": upcoming,
-            "continue_learning": continue_learning,
+            "recent_board_scans": recent_board_scans,
             "recent_activity": recent_activity,
         }
         return Response(data)

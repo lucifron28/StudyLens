@@ -4,7 +4,7 @@ data class Dashboard(
     val overallProgress: Int,
     val stats: DashboardStats,
     val upcoming: List<DashboardUpcomingItem>,
-    val continueLearning: List<DashboardContinueLearningItem>,
+    val recentBoardScans: List<DashboardBoardScanItem>,
     val recentActivity: List<DashboardActivityItem>
 )
 
@@ -27,13 +27,14 @@ data class DashboardUpcomingItem(
     val postedAt: String?
 )
 
-data class DashboardContinueLearningItem(
+data class DashboardBoardScanItem(
     val id: Int,
-    val moduleId: Int,
+    val subjectId: Int?,
+    val subjectTitle: String,
     val moduleTitle: String,
-    val lastPosition: String,
-    val status: String,
-    val lastReadAt: String
+    val summary: String,
+    val reviewStatus: String,
+    val createdAt: String
 )
 
 data class DashboardActivityItem(

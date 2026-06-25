@@ -47,7 +47,7 @@ import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.ui.components.floatingAnimation
 import com.example.studylensmobile.domain.model.Dashboard
 import com.example.studylensmobile.domain.model.DashboardActivityItem
-import com.example.studylensmobile.domain.model.DashboardContinueLearningItem
+import com.example.studylensmobile.domain.model.DashboardBoardScanItem
 import com.example.studylensmobile.domain.model.DashboardUpcomingItem
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -159,17 +159,17 @@ private fun DashboardContent(
             }
         }
 
-        if (dashboard.continueLearning.isNotEmpty()) {
+        if (dashboard.recentBoardScans.isNotEmpty()) {
             item {
-                SectionHeader(title = "Continue Learning")
+                SectionHeader(title = "Recent Board Notes")
             }
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
                 ) {
-                    items(dashboard.continueLearning, key = { "continue-${it.id}" }) { item ->
-                        ContinueLearningCard(item = item, modifier = Modifier.width(280.dp))
+                    items(dashboard.recentBoardScans, key = { "scan-${it.id}" }) { item ->
+                        BoardScanCard(item = item, modifier = Modifier.width(280.dp))
                     }
                 }
             }
@@ -315,26 +315,52 @@ private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = M
 }
 
 @Composable
-private fun ContinueLearningCard(item: DashboardContinueLearningItem, modifier: Modifier = Modifier) {
+private fun BoardScanCard(item: DashboardBoardScanItem, modifier: Modifier = Modifier) {
     StudyLensCard(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusChip(status = item.reviewStatus.toDisplayLabel())
+                Text(
+                    text = item.createdAt,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+            if (item.moduleTitle.isNotBlank()) {
+                Text(
+                    text = item.moduleTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Text(
-                text = item.moduleTitle,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
+                text = item.subjectTitle,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Last read ${item.lastReadAt}",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (item.summary.isNotBlank()) {
+                Text(
+                    text = item.summary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

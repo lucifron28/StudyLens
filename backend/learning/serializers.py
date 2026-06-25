@@ -404,16 +404,14 @@ class DashboardUpcomingItemSerializer(serializers.Serializer):
     posted_at = serializers.DateTimeField(allow_null=True, required=False)
 
 
-class DashboardContinueLearningSerializer(serializers.Serializer):
+class DashboardBoardScanSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-    module = serializers.IntegerField()
-    module_title = serializers.CharField()
-    chapter = serializers.IntegerField(allow_null=True)
-    chapter_title = serializers.CharField(allow_blank=True)
-    progress_percentage = serializers.IntegerField()
-    last_position = serializers.CharField(allow_blank=True)
-    status = serializers.CharField()
-    last_read_at = serializers.DateTimeField()
+    subject = serializers.IntegerField(allow_null=True)
+    subject_title = serializers.CharField(allow_blank=True)
+    module_title = serializers.CharField(allow_blank=True)
+    summary = serializers.CharField(allow_blank=True)
+    review_status = serializers.CharField()
+    created_at = serializers.DateTimeField()
 
 
 class DashboardActivityItemSerializer(serializers.Serializer):
@@ -428,7 +426,7 @@ class DashboardSerializer(serializers.Serializer):
     overall_progress = serializers.IntegerField()
     stats = DashboardStatsSerializer()
     upcoming = DashboardUpcomingItemSerializer(many=True)
-    continue_learning = DashboardContinueLearningSerializer(many=True)
+    recent_board_scans = DashboardBoardScanSerializer(many=True)
     recent_activity = DashboardActivityItemSerializer(many=True)
 
 

@@ -6,12 +6,12 @@ import com.example.studylensmobile.data.local.dao.SubjectDao
 import com.example.studylensmobile.data.remote.apiResult
 import com.example.studylensmobile.data.remote.api.LearningApi
 import com.example.studylensmobile.data.remote.dto.DashboardActivityItemDto
-import com.example.studylensmobile.data.remote.dto.DashboardContinueLearningDto
+import com.example.studylensmobile.data.remote.dto.DashboardBoardScanDto
 import com.example.studylensmobile.data.remote.dto.DashboardDto
 import com.example.studylensmobile.data.remote.dto.DashboardUpcomingItemDto
 import com.example.studylensmobile.domain.model.Dashboard
 import com.example.studylensmobile.domain.model.DashboardActivityItem
-import com.example.studylensmobile.domain.model.DashboardContinueLearningItem
+import com.example.studylensmobile.domain.model.DashboardBoardScanItem
 import com.example.studylensmobile.domain.model.DashboardStats
 import com.example.studylensmobile.domain.model.DashboardUpcomingItem
 
@@ -37,7 +37,7 @@ class DashboardRepository(
                         quizzesCompleted = 0
                     ),
                     upcoming = emptyList(),
-                    continueLearning = emptyList(),
+                    recentBoardScans = emptyList(),
                     recentActivity = emptyList()
                 )
             )
@@ -56,7 +56,7 @@ private fun DashboardDto.toDomain(): Dashboard {
             quizzesCompleted = stats.quizzesCompleted
         ),
         upcoming = upcoming.map { it.toDomain() },
-        continueLearning = continueLearning.map { it.toDomain() },
+        recentBoardScans = recentBoardScans.map { it.toDomain() },
         recentActivity = recentActivity.map { it.toDomain() }
     )
 }
@@ -76,14 +76,15 @@ private fun DashboardUpcomingItemDto.toDomain(): DashboardUpcomingItem {
     )
 }
 
-private fun DashboardContinueLearningDto.toDomain(): DashboardContinueLearningItem {
-    return DashboardContinueLearningItem(
+private fun DashboardBoardScanDto.toDomain(): DashboardBoardScanItem {
+    return DashboardBoardScanItem(
         id = id,
-        moduleId = module,
+        subjectId = subject,
+        subjectTitle = subjectTitle,
         moduleTitle = moduleTitle,
-        lastPosition = lastPosition,
-        status = status,
-        lastReadAt = lastReadAt.toReadableDate()
+        summary = summary,
+        reviewStatus = reviewStatus,
+        createdAt = createdAt.toReadableDate()
     )
 }
 
