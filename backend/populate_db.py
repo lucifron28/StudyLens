@@ -9,7 +9,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.contrib.auth.models import User
-from learning.models import Subject, Module
+from django.core.files.base import ContentFile
+from learning.models import Subject, Module, BoardScan
+from PIL import Image, ImageDraw
 
 def generate_pdf(filename, title, text):
     doc = fitz.open()
@@ -31,11 +33,17 @@ def populate():
     # Ensure demo_files directory exists
     os.makedirs('demo_files', exist_ok=True)
 
-    # Get the user "ron" or the first available user
-    owner = User.objects.filter(username="ron").first() or User.objects.first()
-    if not owner:
-        print("No users found in the database. Please create a user first.")
-        return
+    # Get the user "ron" or create if not exists
+    owner, created = User.objects.get_or_create(
+        username="ron",
+        defaults={"email": "ron@example.com"}
+    )
+    if created:
+        owner.set_password("password")
+        owner.save()
+        print("Created default user: ron / password")
+    else:
+        print("Using existing user: ron")
 
     # 1. C Programming Fundamentals
     subj_c, _ = Subject.objects.get_or_create(
@@ -132,8 +140,25 @@ def populate():
         }
     )
 
-    # Generate sample documents
-    print("Generating demo PDF and DOCX files...")
+    # Generate sample documents and images
+    print("Generating demo files and board scans...")
+    
+    # 5. Add a mock Board Scan
+    img = Image.new('RGB', (800, 600), color=(255, 255, 255))
+    d = ImageDraw.Draw(img)
+    d.text((50, 50), "Mock Whiteboard Scan: Binary Search Trees", fill=(0, 0, 0))
+    img_path = "demo_files/mock_board_scan.jpg"
+    img.save(img_path)
+    
+    board_scan = BoardScan.objects.create(
+        owner=owner,
+        subject=subj_sd,
+        raw_ocr_text="Binary Search Trees (BST): A tree data structure where each node has at most two children. The left subtree contains only nodes with keys lesser than the node's key. The right subtree contains only nodes with keys greater than the node's key.",
+        cleaned_text="Binary Search Trees (BST): A tree data structure where each node has at most two children. The left subtree contains only nodes with keys lesser than the node's key. The right subtree contains only nodes with keys greater than the node's key."
+    )
+    with open(img_path, 'rb') as f:
+        board_scan.image.save("mock_board_scan.jpg", ContentFile(f.read()), save=True)
+    print("Created mock BoardScan for System Design.")
     
     pdf_text = "This is a sample document about Artificial Intelligence.\nAI is transforming the modern world, impacting everything from healthcare to autonomous vehicles.\nMachine learning models, particularly deep neural networks, have driven recent breakthroughs."
     generate_pdf("demo_files/ai_overview.pdf", "Artificial Intelligence Overview", pdf_text)
