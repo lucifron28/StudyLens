@@ -25,13 +25,13 @@ fun StudyTaskFormDialog(
     var isPinned by remember { mutableStateOf(task?.isPinned ?: false) }
     var validationMessage by remember { mutableStateOf<String?>(null) }
     
-    val validTypes = listOf("todo", "note", "reminder", "update")
+    val validTypes = listOf("todo", "note", "reminder")
 
     AlertDialog(
         onDismissRequest = {
             if (!isSaving) onDismiss()
         },
-        title = { Text(if (task == null) "Add task/log" else "Edit task/log") },
+        title = { Text(if (task == null) "Add task/note" else "Edit task/note") },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item {
@@ -66,7 +66,7 @@ fun StudyTaskFormDialog(
                         },
                         enabled = !isSaving,
                         label = { Text("Task type") },
-                        placeholder = { Text("todo, note, reminder, update") },
+                        placeholder = { Text("todo, note, reminder") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -125,7 +125,7 @@ fun StudyTaskFormDialog(
                     val cleanedType = taskType.trim().lowercase(Locale.getDefault())
                     when {
                         cleanedTitle.isBlank() -> validationMessage = "Title is required."
-                        cleanedType !in validTypes -> validationMessage = "Use todo, note, reminder, or update."
+                        cleanedType !in validTypes -> validationMessage = "Use todo, note, or reminder."
                         else -> {
                             onSave(
                                 cleanedTitle,

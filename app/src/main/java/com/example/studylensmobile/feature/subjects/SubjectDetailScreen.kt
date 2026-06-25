@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.studylensmobile.core.format.toDisplayLabel
 import com.example.studylensmobile.domain.model.SubjectBoardScanPreview
 import com.example.studylensmobile.domain.model.SubjectModulePreview
 import com.example.studylensmobile.domain.model.SubjectOverview
@@ -96,7 +97,7 @@ fun SubjectDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Add module"
+                            contentDescription = "Add to subject"
                         )
                     }
                     IconButton(
@@ -175,8 +176,8 @@ fun SubjectDetailScreen(
                     }
                 )
                 ListItem(
-                    headlineContent = { Text("Add Task / Log") },
-                    supportingContent = { Text("Create a to-do item, note, or reminder") },
+                    headlineContent = { Text("Add Task / Note") },
+                    supportingContent = { Text("Create a to-do item, reminder, or note") },
                     leadingContent = { Icon(Icons.Default.Assignment, contentDescription = null) },
                     modifier = Modifier.clickable { 
                         showAddActionSheet = false
@@ -358,11 +359,11 @@ private fun SubjectOverviewContent(
         }
 
         item {
-            SectionHeader(title = "Tasks & Logs")
+            SectionHeader(title = "Tasks & Notes")
         }
         if (overview.tasks.isEmpty()) {
             item {
-                StudyLensEmptyState(text = "No study tasks or logs recorded yet.")
+                StudyLensEmptyState(text = "No tasks or notes recorded yet.")
             }
         } else {
             items(overview.tasks, key = { "task-${it.id}" }) { task ->
@@ -710,7 +711,7 @@ private fun StudyTaskPreviewCard(
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null,
                         modifier = Modifier.weight(1f)
                     )
-                    StatusChip(status = task.taskType)
+                    StatusChip(status = task.taskType.toDisplayLabel())
                 }
                 if (task.content.isNotBlank()) {
                     Text(

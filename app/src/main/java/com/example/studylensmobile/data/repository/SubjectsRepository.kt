@@ -358,7 +358,7 @@ private fun StudyTaskPreviewDto.toDomain(): StudyTaskPreview {
         id = id.toString(),
         title = title,
         content = content,
-        taskType = taskType.toDisplayLabel(),
+        taskType = taskType,
         isCompleted = isCompleted,
         dueDate = dueDate?.toReadableDate(),
         isPinned = isPinned,
