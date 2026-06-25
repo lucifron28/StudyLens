@@ -23,6 +23,9 @@ data class DashboardUpcomingItemDto(
     val description: String,
     val subject: Int?,
     @SerializedName("subject_title") val subjectTitle: String,
+    @SerializedName("task_type") val taskType: String? = null,
+    @SerializedName("is_completed") val isCompleted: Boolean = false,
+    @SerializedName("due_date") val dueDate: String? = null,
     @SerializedName("posted_at") val postedAt: String? = null
 )
 
