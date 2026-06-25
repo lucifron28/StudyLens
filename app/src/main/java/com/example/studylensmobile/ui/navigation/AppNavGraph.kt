@@ -120,7 +120,12 @@ fun AppNavGraph(navController: NavHostController, app: StudyLensApp) {
                         )
                     }
                 )
-                HomeScreen(viewModel = homeViewModel)
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    onNavigateToSubjectDetail = { subjectId ->
+                        navController.navigate(AppRoutes.createSubjectDetailRoute(subjectId.toString()))
+                    }
+                )
             }
             composable(AppRoutes.SUBJECTS) {
                 val subjectsViewModel: SubjectsViewModel = viewModel(

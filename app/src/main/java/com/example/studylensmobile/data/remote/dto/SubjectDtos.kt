@@ -76,3 +76,7 @@ data class StudyTaskWriteRequest(
     @SerializedName("due_date") val dueDate: String? = null,
     @SerializedName("is_pinned") val isPinned: Boolean = false
 )
+
+data class StudyTaskCompletionRequest(
+    @SerializedName("is_completed") val isCompleted: Boolean
+)

@@ -325,7 +325,7 @@ def start_tutor_session(user, data: dict) -> tuple[TutorSession, TutorMessage]:
     return session, message
 
 
-def _conversation_for_tutor(session: TutorSession, source: SourceBundle) -> str:
+def _conversation_for_tutor(session: TutorSession, source: SourceBundle, new_message: str = None) -> str:
     history = session.messages.order_by("created_at", "id")
     lines = [
         f"Source: {source.title}",
@@ -337,6 +337,8 @@ def _conversation_for_tutor(session: TutorSession, source: SourceBundle) -> str:
     for message in history:
         clarity = f" ({message.clarity_result})" if message.clarity_result else ""
         lines.append(f"{message.role}{clarity}: {message.content}")
+    if new_message:
+        lines.append(f"{TutorMessage.Role.USER}: {new_message}")
     return "\n".join(lines)
 
 
@@ -359,7 +361,7 @@ def create_tutor_reply(user, data: dict) -> tuple[TutorSession, TutorMessage]:
     )
     provider = get_provider()
     raw_output = provider.generate_text(
-        messages=[{"role": "user", "content": _conversation_for_tutor(session, source)}],
+        messages=[{"role": "user", "content": _conversation_for_tutor(session, source, new_message=data["message"].strip())}],
         system_prompt=TUTOR_CHECK_SYSTEM_PROMPT,
     )
     parsed = parse_json_output(raw_output)

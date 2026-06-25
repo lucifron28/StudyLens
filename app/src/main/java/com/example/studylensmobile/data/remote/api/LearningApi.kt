@@ -15,6 +15,7 @@ import com.example.studylensmobile.data.remote.dto.SubjectOverviewDto
 import com.example.studylensmobile.data.remote.dto.SubjectWriteRequest
 import com.example.studylensmobile.data.remote.dto.StudyTaskPreviewDto
 import com.example.studylensmobile.data.remote.dto.StudyTaskWriteRequest
+import com.example.studylensmobile.data.remote.dto.StudyTaskCompletionRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -166,5 +167,11 @@ interface LearningApi {
     suspend fun deleteStudyTask(
         @Path("taskId") taskId: String
     ): Response<Unit>
+
+    @PATCH("api/learning/tasks/{taskId}/")
+    suspend fun patchStudyTaskCompletion(
+        @Path("taskId") taskId: String,
+        @Body request: StudyTaskCompletionRequest
+    ): Response<StudyTaskPreviewDto>
 
 }

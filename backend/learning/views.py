@@ -116,10 +116,7 @@ class DashboardView(APIView):
         data = {
             "overall_progress": round(average_progress),
             "stats": {
-                "modules_in_progress": progress_qs.filter(status=ReadingProgress.Status.READING)
-                .values("module_id")
-                .distinct()
-                .count(),
+                "pending_tasks": StudyTask.objects.filter(owner=user, is_completed=False).count(),
                 "notes_saved": BoardScan.objects.filter(owner=user).count(),
                 "quizzes_completed": QuizAttempt.objects.filter(owner=user, completed_at__isnull=False).count(),
             },

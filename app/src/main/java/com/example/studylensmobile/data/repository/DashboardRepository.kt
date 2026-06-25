@@ -32,7 +32,7 @@ class DashboardRepository(
                 Dashboard(
                     overallProgress = 0,
                     stats = DashboardStats(
-                        modulesInProgress = 0,
+                        pendingTasks = 0,
                         notesSaved = cachedScans.size,
                         quizzesCompleted = 0
                     ),
@@ -45,13 +45,25 @@ class DashboardRepository(
             networkResult
         }
     }
+
+    suspend fun toggleTaskCompletion(taskId: Int, isCompleted: Boolean): Result<Unit> {
+        return apiResult(
+            label = "Toggle task completion",
+            call = { 
+                learningApi.patchStudyTaskCompletion(
+                    taskId = taskId.toString(),
+                    request = com.example.studylensmobile.data.remote.dto.StudyTaskCompletionRequest(isCompleted = isCompleted)
+                ) 
+            }
+        ) { Unit }
+    }
 }
 
 private fun DashboardDto.toDomain(): Dashboard {
     return Dashboard(
         overallProgress = overallProgress,
         stats = DashboardStats(
-            modulesInProgress = stats.modulesInProgress,
+            pendingTasks = stats.pendingTasks,
             notesSaved = stats.notesSaved,
             quizzesCompleted = stats.quizzesCompleted
         ),

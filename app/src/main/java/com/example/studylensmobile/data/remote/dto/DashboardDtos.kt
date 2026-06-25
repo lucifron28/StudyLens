@@ -11,7 +11,7 @@ data class DashboardDto(
 )
 
 data class DashboardStatsDto(
-    @SerializedName("modules_in_progress") val modulesInProgress: Int,
+    @SerializedName("pending_tasks") val pendingTasks: Int,
     @SerializedName("notes_saved") val notesSaved: Int,
     @SerializedName("quizzes_completed") val quizzesCompleted: Int
 )

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -61,7 +62,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel) {
+fun HomeScreen(
+    viewModel: HomeViewModel,
+    onNavigateToSubjectDetail: (Int) -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsState()
     val dashboard = uiState.dashboard
 
@@ -107,6 +111,8 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     errorMessage = uiState.errorMessage,
                     isRefreshing = uiState.isRefreshing,
                     onRetry = viewModel::loadDashboard,
+                    onNavigateToSubjectDetail = onNavigateToSubjectDetail,
+                    onTaskToggle = viewModel::toggleTaskCompletion,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -121,6 +127,8 @@ private fun DashboardContent(
     errorMessage: String?,
     isRefreshing: Boolean,
     onRetry: () -> Unit,
+    onNavigateToSubjectDetail: (Int) -> Unit,
+    onTaskToggle: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isActivityExpanded by remember { mutableStateOf(false) }
@@ -139,13 +147,13 @@ private fun DashboardContent(
         item {
             LumiHeroBanner(
                 firstName = firstName,
-                modulesInProgress = dashboard.stats.modulesInProgress
+                pendingTasks = dashboard.stats.pendingTasks
             )
         }
 
         if (dashboard.upcoming.isNotEmpty()) {
             item {
-                SectionHeader(title = "Upcoming Tasks")
+                SectionHeader(title = "Current Tasks")
             }
             item {
                 LazyRow(
@@ -153,27 +161,18 @@ private fun DashboardContent(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
                 ) {
                     items(dashboard.upcoming, key = { "upcoming-${it.id}" }) { item ->
-                        UpcomingTaskCard(item = item, modifier = Modifier.width(300.dp))
+                        UpcomingTaskCard(
+                            item = item, 
+                            modifier = Modifier.width(300.dp),
+                            onTaskToggle = { onTaskToggle(item.id) },
+                            onClick = { item.subjectId?.let { onNavigateToSubjectDetail(it) } }
+                        )
                     }
                 }
             }
         }
 
-        if (dashboard.recentBoardScans.isNotEmpty()) {
-            item {
-                SectionHeader(title = "Recent Board Notes")
-            }
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
-                ) {
-                    items(dashboard.recentBoardScans, key = { "scan-${it.id}" }) { item ->
-                        BoardScanCard(item = item, modifier = Modifier.width(280.dp))
-                    }
-                }
-            }
-        }
+
 
         item {
             SectionHeader(title = "Recent Activity")
@@ -207,7 +206,7 @@ private fun DashboardContent(
 }
 
 @Composable
-private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
+private fun LumiHeroBanner(firstName: String, pendingTasks: Int) {
     StudyLensCard {
         Row(
             modifier = Modifier
@@ -224,7 +223,7 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (modulesInProgress > 0) "You have $modulesInProgress modules to review. Ready to jump in?" else "Ready to start learning today?",
+                    text = if (pendingTasks > 0) "You have $pendingTasks tasks to review. Ready to jump in?" else "Ready to start learning today?",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 8.dp)
@@ -245,8 +244,15 @@ private fun LumiHeroBanner(firstName: String, modulesInProgress: Int) {
 
 
 @Composable
-private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = Modifier) {
-    StudyLensCard(modifier = modifier) {
+private fun UpcomingTaskCard(
+    item: DashboardUpcomingItem, 
+    modifier: Modifier = Modifier,
+    onTaskToggle: () -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    StudyLensCard(
+        modifier = modifier.clickable { onClick() }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -274,12 +280,13 @@ private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = M
             ) {
                 Icon(
                     imageVector = if (item.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                    contentDescription = null,
+                    contentDescription = "Toggle completion",
                     tint = if (item.isCompleted) {
                         MaterialTheme.colorScheme.secondary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    },
+                    modifier = Modifier.clickable { onTaskToggle() }
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -314,56 +321,7 @@ private fun UpcomingTaskCard(item: DashboardUpcomingItem, modifier: Modifier = M
     }
 }
 
-@Composable
-private fun BoardScanCard(item: DashboardBoardScanItem, modifier: Modifier = Modifier) {
-    StudyLensCard(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusChip(status = item.reviewStatus.toDisplayLabel())
-                Text(
-                    text = item.createdAt,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-            if (item.moduleTitle.isNotBlank()) {
-                Text(
-                    text = item.moduleTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Text(
-                text = item.subjectTitle,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (item.summary.isNotBlank()) {
-                Text(
-                    text = item.summary,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
+
 
 private fun String.toDueLabel(): String {
     val dueDate = try {
