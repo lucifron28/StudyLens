@@ -148,7 +148,8 @@ fun StudyLensEmptyState(
                 painter = painterResource(id = R.drawable.lumi_default),
                 contentDescription = "Lumi Greeting",
                 modifier = Modifier
-                    .size(140.dp)
+                    .size(96.dp)
+                    .align(Alignment.CenterHorizontally)
                     .floatingAnimation()
             )
             Spacer(modifier = Modifier.height(16.dp))

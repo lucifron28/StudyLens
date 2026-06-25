@@ -265,6 +265,12 @@ class Command(BaseCommand):
                 StudyTask.TaskType.NOTE,
                 False,
             ),
+            (
+                "Debug Session with TA",
+                "Went over memory leaks in valgrind. Need to remember to free all mallocs in reverse order.",
+                StudyTask.TaskType.LOG,
+                False,
+            ),
         ]
 
         c_subject = subjects.get("C Programming Fundamentals")
@@ -338,6 +344,17 @@ class Command(BaseCommand):
                 BoardScan.ReviewStatus.NEW,
                 ["important", "review"],
                 now - timedelta(days=2),
+            ),
+            (
+                "C Programming Fundamentals",
+                "Data Structures",
+                "Overview",
+                "Oct 15 - Linked Lists",
+                "A linked list node contains data and a pointer to the next node. Useful for dynamic size allocations compared to arrays.",
+                "Board note on linked lists creation and traversal.",
+                BoardScan.ReviewStatus.NEEDS_REVIEW,
+                ["important"],
+                now - timedelta(days=1),
             ),
             (
                 "Database Systems",
