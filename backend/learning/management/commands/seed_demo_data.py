@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from textwrap import dedent
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -9,6 +10,10 @@ from django.utils import timezone
 from ai_services.models import TutorMessage, TutorSession
 from learning.models import BoardScan, Chapter, Module, ReadingProgress, StudyTask, Subject, Tag
 from studytools.models import Difficulty, Flashcard, Quiz, QuizAttempt, QuizQuestion, SourceType, Summary
+
+
+def markdown(text: str) -> str:
+    return dedent(text).strip()
 
 
 class Command(BaseCommand):
@@ -156,9 +161,234 @@ class Command(BaseCommand):
                 ("Integrals", "Area under curves and accumulation."),
             ],
             "C Programming Fundamentals": [
-                ("Pointers and Memory", "Understanding how pointers work and managing memory manually.", True),
-                ("Data Structures", "Implementing linked lists, stacks, and queues in C.", False),
+                (
+                    "C Basics and Control Flow",
+                    "Program structure, variables, operators, decisions, loops, and basic console input.",
+                    True,
+                ),
+                (
+                    "Pointers and Memory",
+                    "Addresses, pointer variables, arrays, pointer arithmetic, dynamic allocation, and memory safety.",
+                    True,
+                ),
+                (
+                    "Functions and Files",
+                    "Function design, parameter passing, scope, header files, and basic file input/output.",
+                    False,
+                ),
+                (
+                    "Data Structures",
+                    "Structs, linked lists, stacks, queues, and memory-aware data structure design in C.",
+                    False,
+                ),
             ],
+        }
+
+        module_bodies = {
+            "C Basics and Control Flow": markdown(
+                """
+                # C Basics and Control Flow
+
+                C is a compiled, procedural programming language. A C program is usually written in one or more
+                `.c` source files, compiled into machine code, and then executed by the operating system. The
+                language gives the programmer direct control over memory and data representation, which makes it
+                powerful but less forgiving than higher-level languages.
+
+                ## Program Structure
+
+                Most beginner programs start with `#include <stdio.h>` and a `main` function. The `#include`
+                line asks the preprocessor to copy declarations from the standard input/output header. The
+                `main` function is the program entry point. A return value of `0` usually means the program
+                finished successfully.
+
+                ```c
+                #include <stdio.h>
+
+                int main(void) {
+                    printf("Hello, StudyLens!\\n");
+                    return 0;
+                }
+                ```
+
+                ## Variables and Types
+
+                A variable reserves storage for a value. Common primitive types include `int`, `float`, `double`,
+                and `char`. C does not automatically protect you from every conversion problem, so it is important
+                to choose a type that matches the data. For example, use `double` for decimal calculations that
+                need more precision, and use `int` for whole-number counters.
+
+                ## Decisions and Loops
+
+                `if`, `else if`, and `else` control which block executes. `for` loops are often used when the
+                number of repetitions is known, while `while` loops are useful when repetition depends on a
+                condition. A common beginner mistake is writing loop conditions that never become false.
+
+                ## Key Takeaways
+
+                - C programs run from `main`.
+                - Variables must be declared with a type.
+                - Format specifiers such as `%d`, `%f`, and `%c` must match the value being printed.
+                - Loops need clear initialization, condition checks, and updates.
+                - Small test cases make logic errors easier to find.
+                """
+            ),
+            "Pointers and Memory": markdown(
+                """
+                # Pointers and Memory
+
+                A pointer is a variable that stores the address of another value. This is one of the most important
+                ideas in C because arrays, strings, dynamic memory, and many data structures rely on addresses.
+                Instead of only asking "what is the value?", C often asks "where is the value stored?"
+
+                ## Address and Dereference
+
+                The address-of operator `&` gets the memory address of a variable. The dereference operator `*`
+                accesses the value stored at an address.
+
+                ```c
+                int score = 95;
+                int *ptr = &score;
+                printf("%d\\n", *ptr); // prints 95
+                ```
+
+                `ptr` does not store `95`; it stores the address where `score` lives. Dereferencing `ptr` reads or
+                writes the value at that address.
+
+                ## Arrays and Pointer Arithmetic
+
+                In many expressions, an array name decays into a pointer to its first element. If `numbers` is an
+                array of integers, then `numbers + 1` points to the next integer, not the next byte. Pointer
+                arithmetic scales by the size of the pointed type.
+
+                ## Dynamic Memory
+
+                `malloc` requests memory from the heap. `free` returns that memory when it is no longer needed.
+                Every successful allocation should have a matching `free`. Forgetting to free memory creates a
+                memory leak. Using memory after freeing it is called a use-after-free bug.
+
+                ```c
+                int *items = malloc(5 * sizeof(int));
+                if (items == NULL) {
+                    return 1;
+                }
+                items[0] = 10;
+                free(items);
+                items = NULL;
+                ```
+
+                ## Common Bugs
+
+                - Dereferencing an uninitialized pointer.
+                - Writing beyond the end of an array.
+                - Calling `free` twice on the same pointer.
+                - Returning the address of a local variable.
+                - Forgetting to check whether `malloc` returned `NULL`.
+                """
+            ),
+            "Functions and Files": markdown(
+                """
+                # Functions and Files
+
+                Functions let a C program be divided into smaller parts. A good function performs one clear task,
+                has a meaningful name, receives only the data it needs, and returns a useful result. This makes
+                programs easier to test and easier to explain during a defense or code review.
+
+                ## Function Design
+
+                A function declaration tells the compiler the function name, return type, and parameter types.
+                A function definition contains the actual body.
+
+                ```c
+                int add(int left, int right);
+
+                int add(int left, int right) {
+                    return left + right;
+                }
+                ```
+
+                C passes function arguments by value. If a function needs to modify the caller's variable, pass a
+                pointer to that variable.
+
+                ## Scope and Header Files
+
+                A variable declared inside a function has local scope. It exists only while that function is
+                running. Header files usually contain declarations, constants, and shared struct definitions.
+                Source files contain implementation details.
+
+                ## File Input and Output
+
+                The `FILE *` type represents an open file. Use `fopen` to open a file, `fprintf` or `fscanf` to
+                write or read formatted data, and `fclose` when finished. Always check if `fopen` returns `NULL`,
+                because the file might not exist or the program might not have permission.
+
+                ```c
+                FILE *file = fopen("scores.txt", "r");
+                if (file == NULL) {
+                    printf("Could not open file.\\n");
+                    return 1;
+                }
+                fclose(file);
+                ```
+
+                ## Key Takeaways
+
+                - Functions reduce repeated code.
+                - Use pointers when a function must update caller-owned data.
+                - Header files describe shared interfaces.
+                - Always close files after use.
+                - File operations can fail, so check return values.
+                """
+            ),
+            "Data Structures": markdown(
+                """
+                # Data Structures in C
+
+                A data structure organizes values so a program can store, search, insert, and remove data
+                efficiently. In C, data structures are often built from `struct` types and pointers. Because C does
+                not manage memory automatically, the programmer must also decide when each node or record is
+                allocated and freed.
+
+                ## Structs
+
+                A `struct` groups related fields into one custom type.
+
+                ```c
+                typedef struct {
+                    int id;
+                    char name[50];
+                    double grade;
+                } Student;
+                ```
+
+                Structs are useful for records such as students, products, accounts, and nodes.
+
+                ## Linked Lists
+
+                A linked list stores each item in a node. Each node contains data and a pointer to the next node.
+                Unlike arrays, linked lists can grow one node at a time. The tradeoff is that linked lists do not
+                support direct indexing; to reach an item, the program must follow links from the head node.
+
+                ## Stacks and Queues
+
+                A stack follows last-in, first-out behavior. It is useful for undo actions, expression parsing, and
+                function call tracking. A queue follows first-in, first-out behavior. It is useful for scheduling,
+                print jobs, and request processing.
+
+                ## Memory Discipline
+
+                Every dynamically allocated node must eventually be freed. When deleting from a linked structure,
+                update the surrounding links before freeing the removed node. Losing the only pointer to allocated
+                memory causes a leak.
+
+                ## Key Takeaways
+
+                - Structs model records.
+                - Linked lists are flexible but require pointer traversal.
+                - Stacks use push and pop.
+                - Queues use enqueue and dequeue.
+                - Dynamic structures require careful allocation and cleanup.
+                """
+            ),
         }
 
         chapter_specs = {
@@ -187,6 +417,303 @@ class Command(BaseCommand):
             "Final Prototype": [
                 ("Prototype Checklist", "Screens should be consistent, linked, and ready for presentation."),
             ],
+            "C Basics and Control Flow": [
+                (
+                    "Overview",
+                    markdown(
+                        """
+                        C is a low-level procedural language used for systems programming, embedded software,
+                        operating systems, and performance-sensitive applications. A C program is compiled before
+                        it runs, so syntax and type mistakes are usually caught by the compiler.
+
+                        The basic workflow is: write source code, compile it, run the executable, then test the
+                        result. A beginner should learn to read compiler messages carefully because they often
+                        point directly to missing semicolons, undeclared variables, or mismatched types.
+                        """
+                    ),
+                ),
+                (
+                    "Variables and Operators",
+                    markdown(
+                        """
+                        Variables store values in memory. Common types include `int` for whole numbers, `float`
+                        and `double` for decimal values, and `char` for single characters. Each type has a size,
+                        a range, and a matching format specifier when printed with `printf`.
+
+                        Operators perform calculations and comparisons. Arithmetic operators include `+`, `-`,
+                        `*`, `/`, and `%`. Relational operators such as `==`, `!=`, `<`, and `>` create conditions.
+                        Logical operators such as `&&`, `||`, and `!` combine conditions.
+
+                        ```c
+                        int age = 20;
+                        if (age >= 18 && age <= 25) {
+                            printf("College age range\\n");
+                        }
+                        ```
+                        """
+                    ),
+                ),
+                (
+                    "Control Flow and Loops",
+                    markdown(
+                        """
+                        Control flow decides which statements execute. Use `if` when there are choices, `switch`
+                        when one value is compared against several cases, and loops when work must repeat.
+
+                        A `for` loop is best when the counter is clear. A `while` loop is best when the program
+                        repeats until an input or state changes.
+
+                        ```c
+                        for (int i = 1; i <= 5; i++) {
+                            printf("%d\\n", i);
+                        }
+                        ```
+
+                        Common loop bugs include off-by-one errors, missing updates, and conditions that never
+                        become false. Tracing the value of the loop variable by hand is a useful debugging habit.
+                        """
+                    ),
+                ),
+            ],
+            "Pointers and Memory": [
+                (
+                    "Overview",
+                    markdown(
+                        """
+                        Pointers are variables that store memory addresses. They allow a program to work directly
+                        with where data is stored. This is useful for arrays, dynamic memory, linked lists, and
+                        functions that need to modify caller-owned values.
+
+                        A pointer has a type. An `int *` points to an integer. A `char *` points to a character.
+                        The type matters because pointer arithmetic depends on the size of the pointed value.
+                        """
+                    ),
+                ),
+                (
+                    "Pointer Fundamentals",
+                    markdown(
+                        """
+                        The address-of operator `&` gets the address of a variable. The dereference operator `*`
+                        accesses the value stored at an address.
+
+                        ```c
+                        int number = 42;
+                        int *p = &number;
+                        *p = 50;
+                        ```
+
+                        After this code, `number` becomes `50` because `p` points to `number`. This is why pointers
+                        can be used to update values inside helper functions.
+
+                        A pointer should point to valid memory before it is dereferenced. Dereferencing an
+                        uninitialized pointer can crash the program or corrupt data.
+                        """
+                    ),
+                ),
+                (
+                    "Arrays and Pointer Arithmetic",
+                    markdown(
+                        """
+                        Arrays and pointers are closely related in C. In many expressions, an array name behaves
+                        like a pointer to the first element.
+
+                        ```c
+                        int values[3] = {10, 20, 30};
+                        printf("%d\\n", *(values + 1)); // prints 20
+                        ```
+
+                        Pointer arithmetic moves by element size. If an integer uses four bytes, `values + 1`
+                        moves four bytes forward. This is why pointer type is important.
+
+                        C does not automatically check array bounds. Writing to `values[3]` in a three-element
+                        array is invalid and may overwrite unrelated memory.
+                        """
+                    ),
+                ),
+                (
+                    "Dynamic Memory",
+                    markdown(
+                        """
+                        Dynamic memory is requested from the heap with `malloc`, `calloc`, or `realloc`. It must
+                        be released with `free`.
+
+                        ```c
+                        int *scores = malloc(count * sizeof(int));
+                        if (scores == NULL) {
+                            return 1;
+                        }
+
+                        free(scores);
+                        scores = NULL;
+                        ```
+
+                        Use `sizeof(*scores)` or `sizeof(int)` to allocate the correct number of bytes. Always
+                        check for `NULL` before using allocated memory. After freeing a pointer, setting it to
+                        `NULL` helps avoid accidental reuse.
+                        """
+                    ),
+                ),
+            ],
+            "Functions and Files": [
+                (
+                    "Overview",
+                    markdown(
+                        """
+                        Functions organize a program into named actions. Instead of writing one long `main`
+                        function, a C program should separate input, processing, output, and cleanup into smaller
+                        functions.
+
+                        File handling lets a C program keep data after the program exits. A file can store scores,
+                        logs, records, configuration values, or generated reports.
+                        """
+                    ),
+                ),
+                (
+                    "Parameter Passing",
+                    markdown(
+                        """
+                        C passes arguments by value. The function receives a copy of the argument. If the function
+                        changes the parameter, the caller's original variable does not change.
+
+                        To modify caller data, pass a pointer:
+
+                        ```c
+                        void reset(int *value) {
+                            *value = 0;
+                        }
+                        ```
+
+                        This pattern is common for functions that need to return more than one result, update a
+                        counter, or fill an array.
+                        """
+                    ),
+                ),
+                (
+                    "Header Files",
+                    markdown(
+                        """
+                        Header files usually contain function prototypes, constants, and shared type definitions.
+                        Source files contain function implementations. This separation makes larger programs easier
+                        to maintain.
+
+                        A simple project might have `student.h` for declarations and `student.c` for function
+                        bodies. The `main.c` file includes the header and calls the functions without needing to
+                        know every implementation detail.
+                        """
+                    ),
+                ),
+                (
+                    "File Input and Output",
+                    markdown(
+                        """
+                        Use `fopen` to open a file. The mode controls whether the program reads, writes, or appends.
+                        `r` reads, `w` writes and replaces existing content, and `a` appends to the end.
+
+                        ```c
+                        FILE *file = fopen("students.txt", "w");
+                        if (file == NULL) {
+                            printf("Unable to open file.\\n");
+                            return 1;
+                        }
+                        fprintf(file, "Ana 92\\n");
+                        fclose(file);
+                        ```
+
+                        Always close files with `fclose`. Check return values because file operations can fail.
+                        """
+                    ),
+                ),
+            ],
+            "Data Structures": [
+                (
+                    "Overview",
+                    markdown(
+                        """
+                        Data structures describe how values are organized in memory. In C, the programmer often
+                        builds structures manually using `struct`, arrays, and pointers.
+
+                        The correct structure depends on the operation. Arrays are simple and fast for indexing.
+                        Linked lists are flexible for insertion and deletion. Stacks and queues enforce specific
+                        access rules.
+                        """
+                    ),
+                ),
+                (
+                    "Structs and Records",
+                    markdown(
+                        """
+                        A `struct` combines multiple fields into one custom type. It is useful when one record has
+                        several related values.
+
+                        ```c
+                        typedef struct {
+                            int id;
+                            char name[50];
+                            double grade;
+                        } Student;
+                        ```
+
+                        Struct variables can be stored in arrays, passed to functions, or used inside linked list
+                        nodes. Use the dot operator for normal struct variables and the arrow operator for struct
+                        pointers.
+                        """
+                    ),
+                ),
+                (
+                    "Linked Lists",
+                    markdown(
+                        """
+                        A linked list node stores data and a pointer to the next node.
+
+                        ```c
+                        typedef struct Node {
+                            int value;
+                            struct Node *next;
+                        } Node;
+                        ```
+
+                        The first node is called the head. To traverse the list, start at the head and follow
+                        `next` until it becomes `NULL`. Inserting at the beginning is usually simple: allocate a new
+                        node, point it to the old head, then update the head pointer.
+
+                        Linked lists are flexible, but they require careful memory management. Every allocated node
+                        should be freed when the list is destroyed.
+                        """
+                    ),
+                ),
+                (
+                    "Stacks and Queues",
+                    markdown(
+                        """
+                        A stack follows last-in, first-out behavior. The main operations are `push`, `pop`, and
+                        `peek`. A queue follows first-in, first-out behavior. The main operations are `enqueue`,
+                        `dequeue`, and `front`.
+
+                        Stacks can be implemented with arrays or linked lists. Queues often keep both front and
+                        rear pointers so insertion and removal stay efficient.
+
+                        Practical uses:
+
+                        - Stack: undo feature, expression checking, function calls.
+                        - Queue: task scheduling, print queue, request processing.
+                        """
+                    ),
+                ),
+                (
+                    "Debugging Memory Bugs",
+                    markdown(
+                        """
+                        Dynamic data structures can fail in subtle ways. Common bugs include losing the head
+                        pointer, skipping nodes during traversal, forgetting to link a new node, and freeing memory
+                        too early.
+
+                        A good debugging approach is to draw the nodes and arrows before coding. After every insert
+                        or delete operation, verify which pointer changes first. When deleting a node, save the next
+                        pointer before freeing the current node.
+                        """
+                    ),
+                ),
+            ],
         }
 
         modules = {}
@@ -203,8 +730,8 @@ class Command(BaseCommand):
                     defaults={
                         "description": description,
                         "content_type": Module.ContentType.MARKDOWN,
-                        "markdown_content": f"# {title}\n\n{description}",
-                        "extracted_text": description,
+                        "markdown_content": module_bodies.get(title, f"# {title}\n\n{description}"),
+                        "extracted_text": module_bodies.get(title, description),
                         "is_favorite": is_favorite,
                     },
                 )
