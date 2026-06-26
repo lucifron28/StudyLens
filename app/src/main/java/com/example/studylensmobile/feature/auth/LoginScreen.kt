@@ -85,7 +85,8 @@ fun LoginScreen(
 
             AuthMascotHeader(
                 subtitle = "Your learning workspace",
-                modifier = Modifier.padding(bottom = 28.dp)
+                modifier = Modifier.padding(bottom = 28.dp),
+                mascotSize = 136.dp
             )
 
             Card(

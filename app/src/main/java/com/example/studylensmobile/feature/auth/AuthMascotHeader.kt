@@ -13,13 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.R
 
 @Composable
 fun AuthMascotHeader(
     subtitle: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    mascotSize: Dp = 104.dp
 ) {
     Column(
         modifier = modifier,
@@ -28,7 +30,7 @@ fun AuthMascotHeader(
         Image(
             painter = painterResource(id = R.drawable.lumi_scanning),
             contentDescription = "Lumi scanning mascot",
-            modifier = Modifier.size(104.dp)
+            modifier = Modifier.size(mascotSize)
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
