@@ -81,19 +81,12 @@ fun LoginScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-            Text(
-                text = "StudyLens",
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Your learning workspace",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp, bottom = 40.dp)
+            AuthMascotHeader(
+                subtitle = "Your learning workspace",
+                modifier = Modifier.padding(bottom = 28.dp),
+                mascotSize = 136.dp
             )
 
             Card(
