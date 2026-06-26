@@ -12,10 +12,43 @@ import com.example.studylensmobile.data.remote.api.LearningApi
 import com.example.studylensmobile.data.remote.dto.ModuleDto
 import com.example.studylensmobile.domain.model.LearningModule
 
+import com.example.studylensmobile.data.repository.AiCacheInvalidator
+import com.example.studylensmobile.data.remote.dto.ModuleWriteRequest
+
 class ModulesRepository(
     private val learningApi: LearningApi,
-    private val moduleDao: ModuleDao
+    private val moduleDao: ModuleDao,
+    private val aiCacheInvalidator: AiCacheInvalidator
 ) {
+    suspend fun updateModule(
+        moduleId: String,
+        title: String,
+        description: String,
+        contentType: String,
+        markdownContent: String? = null
+    ): Result<LearningModule> {
+        return try {
+            val response = learningApi.updateModule(
+                moduleId = moduleId,
+                request = ModuleWriteRequest(
+                    title = title.trim(),
+                    description = description.trim(),
+                    contentType = contentType.toApiContentType(),
+                    markdownContent = markdownContent?.trim()?.takeIf { it.isNotBlank() }
+                )
+            )
+            if (!response.isSuccessful) {
+                return Result.failure(Exception("Failed to update module: ${response.message()}"))
+            }
+            val dto = response.body() ?: return Result.failure(Exception("Empty response body"))
+            val domain = dto.toDomain()
+            moduleDao.upsert(domain.toEntity())
+            aiCacheInvalidator.invalidateSource("module", moduleId)
+            Result.success(domain)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     suspend fun getModuleReader(moduleId: String): Result<LearningModule> {
         return try {
             val module = learningApi.getModule(moduleId)
@@ -55,4 +88,11 @@ private fun ModuleDto.toDomain(): LearningModule {
         isFavorite = isFavorite,
         updatedAt = updatedAt.toReadableDate()
     )
+}
+
+private fun String.toApiContentType(): String {
+    return trim()
+        .lowercase()
+        .replace(" ", "_")
+        .ifBlank { "markdown" }
 }

@@ -47,6 +47,7 @@ import com.example.studylensmobile.domain.model.SubjectOverview
 import com.example.studylensmobile.domain.model.StudyTaskPreview
 import com.example.studylensmobile.core.utils.displayName
 import com.example.studylensmobile.ui.components.DeleteConfirmationDialog
+import com.example.studylensmobile.ui.components.ModuleFormDialog
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensEmptyState
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -196,7 +197,11 @@ fun SubjectDetailScreen(
 
     if (showCreateModuleDialog && overview != null) {
         ModuleFormDialog(
-            module = null,
+            titleText = "Add module",
+            initialTitle = "",
+            initialDescription = "",
+            initialContentType = "markdown",
+            initialMarkdownContent = "",
             isSaving = uiState.isMutating,
             onDismiss = { showCreateModuleDialog = false },
             onSave = { title, description, contentType, markdownContent, fileUri ->
@@ -214,7 +219,11 @@ fun SubjectDetailScreen(
 
     editingModule?.let { module ->
         ModuleFormDialog(
-            module = module,
+            titleText = "Edit module",
+            initialTitle = module.title,
+            initialDescription = module.description,
+            initialContentType = module.contentType,
+            initialMarkdownContent = "",
             isSaving = uiState.isMutating,
             onDismiss = { editingModule = null },
             onSave = { title, description, contentType, markdownContent, fileUri ->
@@ -524,163 +533,6 @@ private fun ModulePreviewCard(
         }
     }
 }
-
-@Composable
-private fun ModuleFormDialog(
-    module: SubjectModulePreview?,
-    isSaving: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (
-        title: String,
-        description: String,
-        contentType: String,
-        markdownContent: String,
-        fileUri: android.net.Uri?
-    ) -> Unit
-) {
-    val context = LocalContext.current
-    var title by remember(module?.id) { mutableStateOf(module?.title.orEmpty()) }
-    var description by remember(module?.id) { mutableStateOf(module?.description.orEmpty()) }
-    var contentType by remember(module?.id) { mutableStateOf(module?.contentType?.lowercase() ?: "markdown") }
-    var markdownContent by remember(module?.id) { mutableStateOf("") }
-    var fileUri by remember { mutableStateOf<android.net.Uri?>(null) }
-    var validationMessage by remember(module?.id) { mutableStateOf<String?>(null) }
-
-    val filePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
-    ) { uri: android.net.Uri? ->
-        fileUri = uri
-        if (uri != null) {
-            val type = context.contentResolver.displayName(uri).lowercase()
-            if (type.endsWith("pdf")) contentType = "pdf"
-            else if (type.endsWith("docx")) contentType = "docx"
-            else if (type.endsWith("pptx")) contentType = "pptx"
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = {
-            if (!isSaving) {
-                onDismiss()
-            }
-        },
-        title = { Text(if (module == null) "Add module" else "Edit module") },
-        text = {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                item {
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = {
-                            title = it
-                            validationMessage = null
-                        },
-                        enabled = !isSaving,
-                        label = { Text("Title") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                item {
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        enabled = !isSaving,
-                        label = { Text("Description") },
-                        minLines = 2,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                item {
-                    Button(
-                        onClick = { filePickerLauncher.launch(supportedDocumentMimeTypes) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        enabled = !isSaving
-                    ) {
-                        val selectedFileName = fileUri?.let(context.contentResolver::displayName)
-                        Text(selectedFileName?.let { "File Selected: $it" } ?: "Upload Document")
-                    }
-                }
-                item {
-                    OutlinedTextField(
-                        value = contentType,
-                        onValueChange = {
-                            contentType = it
-                            validationMessage = null
-                        },
-                        enabled = !isSaving,
-                        label = { Text("Content type") },
-                        placeholder = { Text("markdown, text, pdf, docx, pptx") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (contentType.trim().lowercase() in listOf("markdown", "text", "")) {
-                    item {
-                        OutlinedTextField(
-                            value = markdownContent,
-                            onValueChange = { markdownContent = it },
-                            enabled = !isSaving,
-                            label = { Text(if (module == null) "Markdown Content (Optional)" else "New markdown (Optional)") },
-                            minLines = 3,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-                item {
-                    validationMessage?.let { message ->
-                        Text(
-                            text = message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val cleanedTitle = title.trim()
-                    val cleanedContentType = contentType.trim().lowercase()
-                    when {
-                        cleanedTitle.isBlank() -> validationMessage = "Module title is required."
-                        cleanedContentType !in validModuleContentTypes -> {
-                            validationMessage = "Use markdown, text, pdf, docx, or pptx."
-                        }
-                        else -> {
-                            onSave(
-                                cleanedTitle,
-                                description.trim(),
-                                cleanedContentType,
-                                markdownContent.trim(),
-                                fileUri
-                            )
-                        }
-                    }
-                },
-                enabled = !isSaving && title.trim().isNotBlank()
-            ) {
-                Text(if (isSaving) "Saving..." else "Save")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                enabled = !isSaving
-            ) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-private val validModuleContentTypes = setOf("markdown", "text", "pdf", "docx", "pptx")
-
-private val supportedDocumentMimeTypes = arrayOf(
-    "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-)
 
 @Composable
 private fun BoardScanPreviewCard(boardScan: SubjectBoardScanPreview) {

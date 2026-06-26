@@ -43,4 +43,33 @@ class ModuleReaderViewModel(
             }
         }
     }
+
+    fun updateModule(
+        title: String,
+        description: String,
+        contentType: String,
+        markdownContent: String,
+        onSaved: () -> Unit
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMutating = true) }
+            val result = modulesRepository.updateModule(
+                moduleId = moduleId,
+                title = title,
+                description = description,
+                contentType = contentType,
+                markdownContent = markdownContent
+            )
+            _uiState.update {
+                it.copy(
+                    isMutating = false,
+                    module = result.getOrNull() ?: it.module,
+                    errorMessage = result.exceptionOrNull()?.message
+                )
+            }
+            if (result.isSuccess) {
+                onSaved()
+            }
+        }
+    }
 }

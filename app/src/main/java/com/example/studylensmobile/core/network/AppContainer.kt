@@ -61,7 +61,7 @@ class AppContainer(private val context: Context) {
     }
 
     val modulesRepository: ModulesRepository by lazy {
-        ModulesRepository(learningApi, database.moduleDao())
+        ModulesRepository(learningApi, database.moduleDao(), aiRepository)
     }
 
     val aiRepository: AiRepository by lazy {

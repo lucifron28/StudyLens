@@ -40,6 +40,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.studylensmobile.R
 import com.example.studylensmobile.domain.model.LearningModule
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Edit
+import com.example.studylensmobile.ui.components.ModuleFormDialog
 import com.example.studylensmobile.ui.components.MarkdownText
 import com.example.studylensmobile.ui.components.StudyLensCard
 import com.example.studylensmobile.ui.components.StudyLensErrorState
@@ -60,6 +65,7 @@ fun ModuleReaderScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val module = uiState.module
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -74,7 +80,15 @@ fun ModuleReaderScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::loadModule) {
+                    if (module != null) {
+                        IconButton(onClick = { showEditDialog = true }, enabled = !uiState.isMutating) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit module"
+                            )
+                        }
+                    }
+                    IconButton(onClick = viewModel::loadModule, enabled = !uiState.isMutating) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh module"
@@ -115,6 +129,27 @@ fun ModuleReaderScreen(
                 )
             }
         }
+    }
+
+    if (showEditDialog && module != null) {
+        ModuleFormDialog(
+            titleText = "Edit module",
+            initialTitle = module.title,
+            initialDescription = module.description,
+            initialContentType = module.contentType,
+            initialMarkdownContent = module.markdownContent ?: "",
+            isSaving = uiState.isMutating,
+            onDismiss = { showEditDialog = false },
+            onSave = { title, description, contentType, markdownContent, _ ->
+                viewModel.updateModule(
+                    title = title,
+                    description = description,
+                    contentType = contentType,
+                    markdownContent = markdownContent,
+                    onSaved = { showEditDialog = false }
+                )
+            }
+        )
     }
 }
 
